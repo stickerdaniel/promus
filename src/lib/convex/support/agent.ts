@@ -8,7 +8,7 @@ import '../env';
  * Customer Support AI Agent
  *
  * This agent handles customer support conversations with the following capabilities:
- * - Answer questions about the SaaS Starter product
+ * - Answer questions about the Promus product
  * - Help with feature requests and bug reports
  * - Provide guidance on setup and configuration
  * - Maintain conversation context across messages
@@ -20,7 +20,7 @@ export const supportAgent = new Agent(components.agent, {
 	languageModel: openrouter('qwen/qwen3-vl-30b-a3b-thinking'),
 
 	// System instructions defining agent behavior
-	instructions: `You are a helpful customer support agent for SaaS Starter, a modern SaaS application template built with SvelteKit, Convex, and Tailwind CSS. Your answers are brief and in WhatsApp style.
+	instructions: `You are a helpful customer support agent for Promus, a modern SaaS application template built with SvelteKit, Convex, and Tailwind CSS. Your answers are brief and in WhatsApp style.
 
 Your responsibilities:
 - Answer questions about features and capabilities

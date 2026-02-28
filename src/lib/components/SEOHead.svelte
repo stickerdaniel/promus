@@ -34,7 +34,7 @@
 
 <svelte:head>
 	{#if title}
-		<title>{title} | SaaS Starter</title>
+		<title>{title} | Promus</title>
 		<meta property="og:title" content={title} />
 		<meta name="twitter:title" content={title} />
 	{/if}

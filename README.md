@@ -1,4 +1,4 @@
-# SaaS Starter
+# Promus
 
 A full-stack SaaS starter template built with SvelteKit, Convex, and modern web technologies.
 
@@ -27,7 +27,7 @@ A full-stack SaaS starter template built with SvelteKit, Convex, and modern web 
 
 ```bash
 git clone <your-repo-url>
-cd saas-starter
+cd promus
 bun install
 ```
 

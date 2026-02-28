@@ -17,6 +17,8 @@ src/lib/convex/emails/_generated/
 Thumbs.db
 
 # Env
+*.local*
+
 .env
 .env.*
 !.env.example
@@ -42,7 +44,6 @@ Library/
 react-reference
 references/
 
-*.local*
 
 .opencode/plans
 .eslintcache

@@ -44,7 +44,7 @@
 				<!-- Logo -->
 				<a href={resolve(localizedHref('/'))} class="flex items-center space-x-2">
 					<Logo class="size-5" />
-					<span class="font-semibold">SaaS Starter</span>
+					<span class="font-semibold">Promus</span>
 				</a>
 
 				<!-- Desktop Navigation -->
@@ -67,7 +67,7 @@
 					<Button
 						variant="ghost"
 						size="icon"
-						href="https://github.com/stickerdaniel/saas-starter"
+						href="https://github.com/stickerdaniel/promus"
 						target="_blank"
 						rel="noopener noreferrer"
 						aria-label={$t('aria.github_repository')}
@@ -109,7 +109,7 @@
 					<Button
 						variant="ghost"
 						size="icon"
-						href="https://github.com/stickerdaniel/saas-starter"
+						href="https://github.com/stickerdaniel/promus"
 						target="_blank"
 						rel="noopener noreferrer"
 						aria-label={$t('aria.github_repository')}

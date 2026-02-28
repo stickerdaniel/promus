@@ -132,7 +132,7 @@ In development mode, **Tolgee DevTools** are automatically enabled:
 </script>
 
 <section class="hero">
-	<h1><T keyName="hero.title" defaultValue="SaaS Starter Template" /></h1>
+	<h1><T keyName="hero.title" defaultValue="Promus" /></h1>
 	<p><T keyName="hero.tagline" defaultValue="Focus on your product and ship faster." /></p>
 	<button><T keyName="hero.cta" defaultValue="Get Started" /></button>
 </section>

@@ -247,7 +247,7 @@
 		}
 	},
 	"app": {
-		"name": "SaaS Starter",
+		"name": "Promus",
 		"sidebar": {
 			"admin_panel": "Admin Panel",
 			"community_chat": "Community Chat",
@@ -581,7 +581,7 @@
 		"description": "Bring your SaaS to life in minutes, not months. Open-source template loaded with the tech that gets you shipping.",
 		"section_label": "Home",
 		"tagline": "Focus on your product and ship faster.",
-		"title": "SaaS Starter Template"
+		"title": "Promus"
 	},
 	"integrations": {
 		"cards": {
@@ -965,7 +965,7 @@
 			"help_label": "Help me with...",
 			"help_text": "Help me set up the project.",
 			"question_label": "Ask a question",
-			"question_text": "Why SaaS Starter?"
+			"question_text": "Why Promus?"
 		},
 		"thread": {
 			"new_conversation": "New conversation"

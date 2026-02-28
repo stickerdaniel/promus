@@ -1,8 +1,9 @@
 {
   "lockfileVersion": 1,
+  "configVersion": 0,
   "workspaces": {
     "": {
-      "name": "saas-starter",
+      "name": "promus",
       "dependencies": {
         "@better-auth/passkey": "^1.4.10",
         "@convex-dev/agent": "^0.3.0",

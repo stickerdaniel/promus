@@ -247,7 +247,7 @@
 		}
 	},
 	"app": {
-		"name": "SaaS Starter",
+		"name": "Promus",
 		"sidebar": {
 			"admin_panel": "Admin-Bereich",
 			"community_chat": "Community-Chat",
@@ -581,7 +581,7 @@
 		"description": "Erwecke dein SaaS zum Leben in Minuten, nicht in Monaten. Open-Source Template mit einem Tech-Stack, der dich schnell shippen lässt.",
 		"section_label": "Start",
 		"tagline": "Mit Produktfokus schneller zum Ziel",
-		"title": "SaaS-Starter-Vorlage"
+		"title": "Promus"
 	},
 	"integrations": {
 		"cards": {
@@ -708,7 +708,7 @@
 			}
 		},
 		"home": {
-			"description": "Die ultimative SaaS-Starter-Vorlage mit SvelteKit, Convex und modernen Web-Technologien. Erstellen Sie Ihre Marke in Minuten, nicht in Wochen. Fokussieren Sie sich auf Ihr Produkt und veröffentlichen Sie schneller.",
+			"description": "Die ultimative Promus mit SvelteKit, Convex und modernen Web-Technologien. Erstellen Sie Ihre Marke in Minuten, nicht in Wochen. Fokussieren Sie sich auf Ihr Produkt und veröffentlichen Sie schneller.",
 			"title": "Schneller entwickeln und veröffentlichen"
 		},
 		"pricing": {
@@ -738,7 +738,7 @@
 		},
 		"current_plan": "Aktueller Plan",
 		"current_plan_badge": "(Aktueller Plan)",
-		"description": "Diese SaaS-Starter-Vorlage ist vollständig kostenlos und Open Source. Testen Sie den Zahlungsablauf mit der Testkartennummer 4242 4242 4242 4242 und einem beliebigen zukünftigen Ablaufdatum.",
+		"description": "Diese Promus ist vollständig kostenlos und Open Source. Testen Sie den Zahlungsablauf mit der Testkartennummer 4242 4242 4242 4242 und einem beliebigen zukünftigen Ablaufdatum.",
 		"description_autumn": "Testen Sie das integrierte Zahlungssystem powered by Autumn - eine Open-Source-Abrechnungsplattform, die Abonnements, Nutzungslimits und Stripe-Webhooks automatisch verwaltet.",
 		"features": {
 			"enterprise": {
@@ -965,7 +965,7 @@
 			"help_label": "Hilfe bei...",
 			"help_text": "Helfen Sie mir bei der Einrichtung.",
 			"question_label": "Frage stellen",
-			"question_text": "Warum SaaS Starter?"
+			"question_text": "Warum Promus?"
 		},
 		"thread": {
 			"new_conversation": "Neue Unterhaltung"

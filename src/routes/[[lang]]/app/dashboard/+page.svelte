@@ -1,10 +1,7 @@
 <script lang="ts">
 	import SEOHead from '$lib/components/SEOHead.svelte';
 	import { getTranslate } from '@tolgee/svelte';
-	import data from './data.js';
-	import SectionCards from '$lib/components/section-cards.svelte';
-	import ChartAreaInteractive from '$lib/components/chart-area-interactive.svelte';
-	import DataTable from '$lib/components/data-table.svelte';
+	import KanbanBoard from '$lib/components/todo-demo/kanban-board.svelte';
 
 	const { t } = getTranslate();
 </script>
@@ -14,8 +11,8 @@
 	description={$t('meta.app.dashboard.description')}
 />
 
-<SectionCards />
-<div class="px-4 lg:px-6">
-	<ChartAreaInteractive />
+<div class="px-4 py-6 lg:px-6">
+	<div>
+		<KanbanBoard />
+	</div>
 </div>
-<DataTable {data} />

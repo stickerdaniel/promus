@@ -580,6 +580,7 @@
 		"companies_text": "Propulsant les meilleures équipes",
 		"cta": "Commencer maintenant",
 		"cta_demo": "Demander une démo",
+		"cta_sourcecode": "Voir le code source",
 		"description": "Donne vie à ton SaaS en quelques minutes, pas en mois. Template open-source bourré de tech qui te fait shipper direct.",
 		"section_label": "Accueil",
 		"tagline": "Focus sur ton produit. Lancement plus rapide.",
@@ -710,8 +711,8 @@
 			}
 		},
 		"home": {
-			"description": "Le modèle SaaS ultime avec SvelteKit, Convex et les technologies web modernes. Construisez votre marque en minutes, pas en semaines. Concentrez-vous sur votre produit et lancez plus rapidement.",
-			"title": "Construisez et lancez votre produit plus rapidement"
+			"description": "Organisez votre travail avec des tableaux kanban en glisser-déposer. Suivez les tâches, définissez les priorités et collaborez en temps réel.",
+			"title": "Gestion des tâches simplifiée"
 		},
 		"pricing": {
 			"description": "Choisissez une offre et testez le flux de facturation intégré.",
@@ -729,6 +730,8 @@
 		"get_started": "Commencer",
 		"home": "Accueil",
 		"login": "Connexion",
+		"my_tasks": "Mes tâches",
+		"open_app": "Ouvrir l'app",
 		"pricing": "Tarifs",
 		"signup": "S'inscrire",
 		"solution": "Solution"
@@ -860,6 +863,7 @@
 			"connect_failed": "Impossible d'obtenir le lien de connexion",
 			"connecting": "Connexion en cours...",
 			"description": "Connectez et gérez vos comptes externes.",
+			"disconnect_button_label": "Déconnecter le compte",
 			"disconnect_confirm": "Déconnecter",
 			"disconnect_description": "Êtes-vous sûr de vouloir déconnecter {name} ({type}) ? Cette action est irréversible.",
 			"disconnect_failed": "Impossible de déconnecter le compte",
@@ -932,29 +936,6 @@
 			"passkey_name_label": "Nom du passkey",
 			"title": "Sécurité",
 			"your_passkeys_title": "Vos Passkeys"
-		},
-		"connections": {
-			"connect_button": "Connecter un compte",
-			"connect_failed": "Impossible d'obtenir le lien de connexion",
-			"connecting": "Connexion en cours...",
-			"description": "Connectez et gérez vos comptes externes.",
-			"disconnect_button_label": "Déconnecter le compte",
-			"disconnect_confirm": "Déconnecter",
-			"disconnect_description": "Êtes-vous sûr de vouloir déconnecter {name} ({type}) ? Cette action est irréversible.",
-			"disconnect_failed": "Impossible de déconnecter le compte",
-			"disconnect_title": "Déconnecter le compte",
-			"disconnected": "Compte déconnecté",
-			"error_title": "Erreur",
-			"info_description": "Connectez vos comptes de messagerie et d'e-mail pour activer les fonctionnalités de communication unifiée.",
-			"info_title": "Comptes connectés",
-			"load_failed": "Impossible de charger les comptes",
-			"loading": "Chargement des comptes...",
-			"no_accounts": "Aucun compte connecté pour le moment.",
-			"status_connecting": "Connexion en cours",
-			"status_error": "Erreur",
-			"status_ok": "Connecté",
-			"title": "Connexions",
-			"your_accounts_title": "Vos comptes"
 		},
 		"tabs": {
 			"account": "Compte",
@@ -1056,6 +1037,38 @@
 		},
 		"section_label": "Équipe",
 		"title": "Notre équipe de rêve"
+	},
+	"todo_demo": {
+		"add_card": "Ajouter une carte",
+		"add_placeholder": "Ajouter une tâche...",
+		"aria": {
+			"delete_task": "Supprimer la tâche",
+			"drag_handle": "Glisser pour réorganiser",
+			"toggle_task": "Marquer la tâche comme terminée"
+		},
+		"column": {
+			"done": "Terminé",
+			"in-progress": "En cours",
+			"todo": "À faire"
+		},
+		"cta": "Commencer gratuitement",
+		"drag_hint": "Glissez et déposez pour réorganiser les tâches",
+		"heading": "Gestion des tâches simplifiée",
+		"priority": {
+			"high": "Haute",
+			"low": "Basse",
+			"medium": "Moyenne"
+		},
+		"sample": {
+			"task_1": "Concevoir la page d'accueil",
+			"task_2": "Configurer le pipeline CI/CD",
+			"task_3": "Créer les endpoints API",
+			"task_4": "Rédiger la documentation",
+			"task_5": "Créer le schéma de base de données",
+			"task_6": "Configurer le système d'auth"
+		},
+		"subheading": "Organisez votre travail avec la simplicité du glisser-déposer. Déplacez les tâches entre les colonnes, définissez les priorités et suivez la progression en temps réel.",
+		"save_failed": "Impossible d'enregistrer les modifications du tableau. Veuillez réessayer."
 	},
 	"validation": {
 		"confirm_password": {

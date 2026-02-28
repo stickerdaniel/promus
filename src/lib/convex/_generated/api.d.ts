@@ -54,6 +54,7 @@ import type * as support_rateLimit from "../support/rateLimit.js";
 import type * as support_threads from "../support/threads.js";
 import type * as support_types from "../support/types.js";
 import type * as tests from "../tests.js";
+import type * as todos from "../todos.js";
 import type * as unipile from "../unipile.js";
 import type * as users from "../users.js";
 import type * as utils_anonymousUser from "../utils/anonymousUser.js";
@@ -111,6 +112,7 @@ declare const fullApi: ApiFromModules<{
   "support/threads": typeof support_threads;
   "support/types": typeof support_types;
   tests: typeof tests;
+  todos: typeof todos;
   unipile: typeof unipile;
   users: typeof users;
   "utils/anonymousUser": typeof utils_anonymousUser;

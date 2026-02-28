@@ -580,6 +580,7 @@
 		"companies_text": "Impulsando a los mejores equipos",
 		"cta": "Comenzar ahora",
 		"cta_demo": "Solicitar una demo",
+		"cta_sourcecode": "Ver código fuente",
 		"description": "Dale vida a tu SaaS en minutos, no en meses. Plantilla open-source cargada con la tecnología que te hace lanzar rápido.",
 		"section_label": "Inicio",
 		"tagline": "Foco en tu producto. Lanzamiento más rápido.",
@@ -710,8 +711,8 @@
 			}
 		},
 		"home": {
-			"description": "La plantilla SaaS definitiva con SvelteKit, Convex y tecnologías web modernas. Construye tu marca en minutos, no en semanas. Enfócate en tu producto y lanza más rápido.",
-			"title": "Construye y lanza tu producto más rápido"
+			"description": "Organiza tu trabajo con tableros kanban de arrastrar y soltar. Rastrea tareas, establece prioridades y colabora en tiempo real.",
+			"title": "Gestión de tareas simplificada"
 		},
 		"pricing": {
 			"description": "Elige un plan y prueba el flujo de facturación integrado.",
@@ -729,6 +730,8 @@
 		"get_started": "Comenzar",
 		"home": "Inicio",
 		"login": "Iniciar sesión",
+		"my_tasks": "Mis tareas",
+		"open_app": "Abrir app",
 		"pricing": "Precios",
 		"signup": "Registrarse",
 		"solution": "Solución"
@@ -860,6 +863,7 @@
 			"connect_failed": "No se pudo obtener el enlace de conexión",
 			"connecting": "Conectando...",
 			"description": "Conecta y administra tus cuentas externas.",
+			"disconnect_button_label": "Desconectar cuenta",
 			"disconnect_confirm": "Desconectar",
 			"disconnect_description": "¿Estás seguro de que deseas desconectar {name} ({type})? Esta acción no se puede deshacer.",
 			"disconnect_failed": "No se pudo desconectar la cuenta",
@@ -932,29 +936,6 @@
 			"passkey_name_label": "Nombre del passkey",
 			"title": "Seguridad",
 			"your_passkeys_title": "Tus Passkeys"
-		},
-		"connections": {
-			"connect_button": "Conectar cuenta",
-			"connect_failed": "No se pudo obtener el enlace de conexión",
-			"connecting": "Conectando...",
-			"description": "Conecta y administra tus cuentas externas.",
-			"disconnect_button_label": "Desconectar cuenta",
-			"disconnect_confirm": "Desconectar",
-			"disconnect_description": "¿Estás seguro de que deseas desconectar {name} ({type})? Esta acción no se puede deshacer.",
-			"disconnect_failed": "No se pudo desconectar la cuenta",
-			"disconnect_title": "Desconectar cuenta",
-			"disconnected": "Cuenta desconectada",
-			"error_title": "Error",
-			"info_description": "Conecta tus cuentas de mensajería y correo electrónico para habilitar funciones de comunicación unificada.",
-			"info_title": "Cuentas conectadas",
-			"load_failed": "No se pudieron cargar las cuentas",
-			"loading": "Cargando cuentas...",
-			"no_accounts": "Aún no hay cuentas conectadas.",
-			"status_connecting": "Conectando",
-			"status_error": "Error",
-			"status_ok": "Conectado",
-			"title": "Conexiones",
-			"your_accounts_title": "Tus cuentas"
 		},
 		"tabs": {
 			"account": "Cuenta",
@@ -1056,6 +1037,38 @@
 		},
 		"section_label": "Equipo",
 		"title": "Nuestro equipo soñado"
+	},
+	"todo_demo": {
+		"add_card": "Agregar una tarjeta",
+		"add_placeholder": "Agregar tarea...",
+		"aria": {
+			"delete_task": "Eliminar tarea",
+			"drag_handle": "Arrastrar para reordenar",
+			"toggle_task": "Marcar tarea como completada"
+		},
+		"column": {
+			"done": "Hecho",
+			"in-progress": "En progreso",
+			"todo": "Por hacer"
+		},
+		"cta": "Empezar gratis",
+		"drag_hint": "Arrastra y suelta para reordenar tareas",
+		"heading": "Gestión de tareas simplificada",
+		"priority": {
+			"high": "Alta",
+			"low": "Baja",
+			"medium": "Media"
+		},
+		"sample": {
+			"task_1": "Diseñar página de inicio",
+			"task_2": "Configurar pipeline CI/CD",
+			"task_3": "Crear endpoints de API",
+			"task_4": "Escribir documentación",
+			"task_5": "Crear esquema de base de datos",
+			"task_6": "Configurar sistema de auth"
+		},
+		"subheading": "Organiza tu trabajo con la simplicidad de arrastrar y soltar. Mueve tareas entre columnas, establece prioridades y sigue el progreso en tiempo real.",
+		"save_failed": "No se pudieron guardar los cambios del tablero. Por favor, inténtalo de nuevo."
 	},
 	"validation": {
 		"confirm_password": {

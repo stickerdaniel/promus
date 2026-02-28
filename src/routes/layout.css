@@ -426,6 +426,16 @@
 	-webkit-user-drag: none;
 }
 
+@utility drag-tilt-item {
+	transform: rotate(2deg) scale(1.02);
+	transform-origin: center;
+}
+
+@utility drag-tilt-column {
+	transform: rotate(2deg) scale(1.02);
+	transform-origin: center top;
+}
+
 @layer components {
 	.scrollbar-thin {
 		&::-webkit-scrollbar {

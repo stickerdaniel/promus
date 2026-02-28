@@ -580,6 +580,7 @@
 		"companies_text": "Vertrauen der besten Teams",
 		"cta": "Jetzt starten",
 		"cta_demo": "Demo anfordern",
+		"cta_sourcecode": "Quellcode ansehen",
 		"description": "Erwecke dein SaaS zum Leben in Minuten, nicht in Monaten. Open-Source Template mit einem Tech-Stack, der dich schnell shippen lässt.",
 		"section_label": "Start",
 		"tagline": "Mit Produktfokus schneller zum Ziel",
@@ -710,8 +711,8 @@
 			}
 		},
 		"home": {
-			"description": "Die ultimative Promus mit SvelteKit, Convex und modernen Web-Technologien. Erstellen Sie Ihre Marke in Minuten, nicht in Wochen. Fokussieren Sie sich auf Ihr Produkt und veröffentlichen Sie schneller.",
-			"title": "Schneller entwickeln und veröffentlichen"
+			"description": "Organisiere deine Arbeit mit Drag-and-Drop-Kanban-Boards. Verfolge Aufgaben, setze Prioritäten und arbeite in Echtzeit zusammen.",
+			"title": "Aufgabenverwaltung leicht gemacht"
 		},
 		"pricing": {
 			"description": "Wählen Sie einen Plan und testen Sie den integrierten Abrechnungsablauf.",
@@ -729,6 +730,8 @@
 		"get_started": "Jetzt starten",
 		"home": "Start",
 		"login": "Anmelden",
+		"my_tasks": "Meine Aufgaben",
+		"open_app": "App öffnen",
 		"pricing": "Pläne",
 		"signup": "Registrieren",
 		"solution": "Lösung"
@@ -860,6 +863,7 @@
 			"connect_failed": "Verbindungslink konnte nicht abgerufen werden",
 			"connecting": "Verbindung wird hergestellt...",
 			"description": "Verbinden und verwalten Sie Ihre externen Konten.",
+			"disconnect_button_label": "Konto trennen",
 			"disconnect_confirm": "Trennen",
 			"disconnect_description": "Möchten Sie {name} ({type}) wirklich trennen? Dies kann nicht rückgängig gemacht werden.",
 			"disconnect_failed": "Konto konnte nicht getrennt werden",
@@ -932,29 +936,6 @@
 			"passkey_name_label": "Passkey-Name",
 			"title": "Sicherheit",
 			"your_passkeys_title": "Ihre Passkeys"
-		},
-		"connections": {
-			"connect_button": "Konto verbinden",
-			"connect_failed": "Verbindungslink konnte nicht abgerufen werden",
-			"connecting": "Verbindung wird hergestellt...",
-			"description": "Verbinden und verwalten Sie Ihre externen Konten.",
-			"disconnect_button_label": "Konto trennen",
-			"disconnect_confirm": "Trennen",
-			"disconnect_description": "Möchten Sie {name} ({type}) wirklich trennen? Dies kann nicht rückgängig gemacht werden.",
-			"disconnect_failed": "Konto konnte nicht getrennt werden",
-			"disconnect_title": "Konto trennen",
-			"disconnected": "Konto getrennt",
-			"error_title": "Fehler",
-			"info_description": "Verbinden Sie Ihre Messaging- und E-Mail-Konten, um einheitliche Kommunikationsfunktionen zu ermöglichen.",
-			"info_title": "Verbundene Konten",
-			"load_failed": "Konten konnten nicht geladen werden",
-			"loading": "Konten werden geladen...",
-			"no_accounts": "Noch keine Konten verbunden.",
-			"status_connecting": "Verbindung wird hergestellt",
-			"status_error": "Fehler",
-			"status_ok": "Verbunden",
-			"title": "Verbindungen",
-			"your_accounts_title": "Ihre Konten"
 		},
 		"tabs": {
 			"account": "Konto",
@@ -1056,6 +1037,38 @@
 		},
 		"section_label": "Team",
 		"title": "Unser Traumteam"
+	},
+	"todo_demo": {
+		"add_card": "Karte hinzufügen",
+		"add_placeholder": "Aufgabe hinzufügen...",
+		"aria": {
+			"delete_task": "Aufgabe löschen",
+			"drag_handle": "Ziehen zum Neuordnen",
+			"toggle_task": "Aufgabe als erledigt markieren"
+		},
+		"column": {
+			"done": "Erledigt",
+			"in-progress": "In Bearbeitung",
+			"todo": "Zu erledigen"
+		},
+		"cta": "Kostenlos starten",
+		"drag_hint": "Aufgaben per Drag-and-Drop neu anordnen",
+		"heading": "Aufgabenverwaltung leicht gemacht",
+		"priority": {
+			"high": "Hoch",
+			"low": "Niedrig",
+			"medium": "Mittel"
+		},
+		"sample": {
+			"task_1": "Landingpage gestalten",
+			"task_2": "CI/CD-Pipeline einrichten",
+			"task_3": "API-Endpunkte erstellen",
+			"task_4": "Dokumentation schreiben",
+			"task_5": "Datenbankschema erstellen",
+			"task_6": "Auth-System konfigurieren"
+		},
+		"subheading": "Organisiere deine Arbeit mit Drag-and-Drop. Verschiebe Aufgaben zwischen Spalten, setze Prioritäten und verfolge den Fortschritt in Echtzeit.",
+		"save_failed": "Änderungen am Board konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
 	},
 	"validation": {
 		"confirm_password": {

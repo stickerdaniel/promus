@@ -5,6 +5,7 @@
 	import ProgressiveBlur from '../magic/ProgressiveBlur.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
+	import HeroOctopusAnimation from './hero-octopus-animation.svelte';
 	import nvidiaLogo from './logos/nvidia.svg';
 	import awsLightLogo from './logos/aws-light.svg';
 	import awsDarkLogo from './logos/aws-dark.svg';
@@ -24,9 +25,11 @@
 <main class="overflow-hidden">
 	<section class="flex items-center justify-center">
 		<div class="w-full pt-20 pb-24 lg:pt-40 lg:pb-28">
-			<div class="relative mx-auto flex max-w-6xl flex-col px-6 lg:block lg:px-12">
+			<div
+				class="relative mx-auto grid max-w-6xl grid-cols-1 items-center px-6 lg:grid-cols-2 lg:gap-12 lg:px-12"
+			>
 				<div class="mx-auto max-w-lg text-center lg:ml-0 lg:max-w-full lg:text-left">
-					<h1 class="mt-8 max-w-4xl text-5xl text-balance md:text-6xl lg:mt-16 xl:text-7xl">
+					<h1 class="mt-8 max-w-4xl text-4xl md:text-5xl lg:mt-16 xl:text-6xl">
 						<T keyName="hero.tagline" />
 					</h1>
 					<p class="mt-8 max-w-3xl text-lg text-balance">
@@ -56,6 +59,9 @@
 							</span>
 						</Button>
 					</div>
+				</div>
+				<div class="hidden lg:flex lg:items-center lg:justify-end">
+					<HeroOctopusAnimation />
 				</div>
 			</div>
 		</div>

@@ -9,6 +9,8 @@
  */
 
 import type * as actions from "../actions.js";
+import type * as mutations from "../mutations.js";
+import type * as queries from "../queries.js";
 
 import type {
   ApiFromModules,
@@ -19,6 +21,8 @@ import { anyApi, componentsGeneric } from "convex/server";
 
 const fullApi: ApiFromModules<{
   actions: typeof actions;
+  mutations: typeof mutations;
+  queries: typeof queries;
 }> = anyApi as any;
 
 /**

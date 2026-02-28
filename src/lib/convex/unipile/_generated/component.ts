@@ -54,4 +54,36 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         Name
       >;
     };
+    mutations: {
+      registerAccount: FunctionReference<
+        "mutation",
+        "internal",
+        { provider: string; unipileAccountId: string; userId: string },
+        null,
+        Name
+      >;
+      unregisterAccount: FunctionReference<
+        "mutation",
+        "internal",
+        { unipileAccountId: string; userId: string },
+        null,
+        Name
+      >;
+    };
+    queries: {
+      getAllRegisteredAccountIds: FunctionReference<
+        "query",
+        "internal",
+        {},
+        Array<string>,
+        Name
+      >;
+      getUserAccountIds: FunctionReference<
+        "query",
+        "internal",
+        { userId: string },
+        Array<string>,
+        Name
+      >;
+    };
   };

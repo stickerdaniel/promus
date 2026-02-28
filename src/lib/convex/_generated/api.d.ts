@@ -4904,5 +4904,33 @@ export declare const components: {
         }
       >;
     };
+    mutations: {
+      registerAccount: FunctionReference<
+        "mutation",
+        "internal",
+        { provider: string; unipileAccountId: string; userId: string },
+        null
+      >;
+      unregisterAccount: FunctionReference<
+        "mutation",
+        "internal",
+        { unipileAccountId: string; userId: string },
+        null
+      >;
+    };
+    queries: {
+      getAllRegisteredAccountIds: FunctionReference<
+        "query",
+        "internal",
+        {},
+        Array<string>
+      >;
+      getUserAccountIds: FunctionReference<
+        "query",
+        "internal",
+        { userId: string },
+        Array<string>
+      >;
+    };
   };
 };

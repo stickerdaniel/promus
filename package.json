@@ -37,6 +37,7 @@
 		"@convex-dev/better-auth": "^0.10.0",
 		"@convex-dev/rate-limiter": "^0.3.2",
 		"@convex-dev/resend": "^0.2.0",
+		"@daytonaio/sdk": "^0.148.0",
 		"@dnd-kit-svelte/svelte": "^0.1.6",
 		"@dnd-kit/abstract": "^0.3.2",
 		"@dnd-kit/dom": "^0.3.2",

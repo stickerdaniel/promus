@@ -255,7 +255,8 @@
 			"connect_accounts_error": "Verbindungslink konnte nicht abgerufen werden. Bitte versuch es erneut.",
 			"dashboard": "Dashboard",
 			"docs": "Dokumentation",
-			"home": "Start"
+			"home": "Start",
+			"sandbox": "Sandbox"
 		},
 		"user_menu": {
 			"account": "Konto",
@@ -681,6 +682,10 @@
 				"description": "Weiterleitung zu deinem Workspace-Dashboard.",
 				"title": "App-Start"
 			},
+			"sandbox": {
+				"description": "KI-gestützter Programmierassistent in einer Cloud-Sandbox",
+				"title": "Vibe Sandbox"
+			},
 			"settings": {
 				"description": "Verwalte deine Kontoeinstellungen und Präferenzen.",
 				"title": "Einstellungen"
@@ -805,6 +810,22 @@
 			}
 		},
 		"title": "Einfache Preise"
+	},
+	"sandbox": {
+		"delete_sandbox": "Löschen",
+		"description": "KI-gestützter Programmierassistent in einer Cloud-Sandbox",
+		"empty_state": "Starte eine Sandbox, um mit Vibe zu programmieren",
+		"input_placeholder": "Beschreibe, was du erstellen möchtest...",
+		"send": "Senden",
+		"start_sandbox": "Sandbox starten",
+		"status": {
+			"creating": "Wird erstellt...",
+			"error": "Fehler",
+			"ready": "Bereit",
+			"stopped": "Gestoppt"
+		},
+		"stop_sandbox": "Stoppen",
+		"title": "Vibe Sandbox"
 	},
 	"search": {
 		"command": {

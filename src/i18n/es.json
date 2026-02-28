@@ -680,7 +680,7 @@
 				"title": "Panel"
 			},
 			"home": {
-				"description": "Redirigiendo a tu espacio de trabajo.",
+				"description": "Redirigiendo al panel principal de tu espacio de trabajo.",
 				"title": "Inicio de App"
 			},
 			"sandbox": {
@@ -1080,6 +1080,17 @@
 			"todo": "Por hacer"
 		},
 		"cta": "Empezar gratis",
+		"detail": {
+			"agent_logs": "Registros del agente",
+			"cancel": "Cancelar",
+			"delete": "Eliminar",
+			"description": "Edita los detalles de la tarea o elimínala del tablero.",
+			"notes": "Notas",
+			"notes_placeholder": "Agregar notas o contexto...",
+			"save": "Guardar",
+			"task_name": "Nombre de la tarea",
+			"title": "Detalles de la tarea"
+		},
 		"drag_hint": "Arrastra y suelta para reordenar tareas",
 		"heading": "Tu lista de tareas acaba de crecer 8 brazos",
 		"priority": {
@@ -1094,17 +1105,6 @@
 			"task_4": "Reservar vuelos a Berlín",
 			"task_5": "Preparar reunión con Sarah",
 			"task_6": "Conectar con ponentes en LinkedIn"
-		},
-		"detail": {
-			"agent_logs": "Registros del agente",
-			"cancel": "Cancelar",
-			"delete": "Eliminar",
-			"description": "Edita los detalles de la tarea o elimínala del tablero.",
-			"notes": "Notas",
-			"notes_placeholder": "Agregar notas o contexto...",
-			"save": "Guardar",
-			"task_name": "Nombre de la tarea",
-			"title": "Detalles de la tarea"
 		},
 		"save_failed": "No se pudieron guardar los cambios del tablero. Por favor, inténtalo de nuevo.",
 		"subheading": "Añade una tarea. Promus investiga, redacta y ejecuta en segundo plano — conectado a todas tus herramientas profesionales."

@@ -22,8 +22,8 @@
 
 	const { t } = getTranslate();
 
-	let editTitle = $state(task.title);
-	let editNotes = $state(task.notes ?? '');
+	let editTitle = $state('');
+	let editNotes = $state('');
 
 	$effect(() => {
 		if (open) {

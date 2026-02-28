@@ -680,7 +680,7 @@
 				"title": "Dashboard"
 			},
 			"home": {
-				"description": "Redirecting to your workspace.",
+				"description": "Redirecting to your workspace dashboard.",
 				"title": "App Home"
 			},
 			"sandbox": {
@@ -1080,6 +1080,17 @@
 			"todo": "To Do"
 		},
 		"cta": "Get Started Free",
+		"detail": {
+			"agent_logs": "Agent logs",
+			"cancel": "Cancel",
+			"delete": "Delete",
+			"description": "Edit task details or remove it from the board.",
+			"notes": "Notes",
+			"notes_placeholder": "Add notes or context...",
+			"save": "Save",
+			"task_name": "Task name",
+			"title": "Task details"
+		},
 		"drag_hint": "Drag and drop to reorder tasks",
 		"heading": "Your todo list just grew 8 arms",
 		"priority": {
@@ -1094,17 +1105,6 @@
 			"task_4": "Book flights to Berlin",
 			"task_5": "Prepare for meeting with Sarah",
 			"task_6": "Connect with conference speakers on LinkedIn"
-		},
-		"detail": {
-			"agent_logs": "Agent logs",
-			"cancel": "Cancel",
-			"delete": "Delete",
-			"description": "Edit task details or remove it from the board.",
-			"notes": "Notes",
-			"notes_placeholder": "Add notes or context...",
-			"save": "Save",
-			"task_name": "Task name",
-			"title": "Task details"
 		},
 		"save_failed": "Failed to save board changes. Please try again.",
 		"subheading": "Add a task. Promus researches, drafts, and executes in the background — connected to all your professional tools."

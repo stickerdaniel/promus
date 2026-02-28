@@ -255,7 +255,8 @@
 			"connect_accounts_error": "No se pudo obtener el enlace de conexión. Inténtelo de nuevo.",
 			"dashboard": "Panel",
 			"docs": "Documentación",
-			"home": "Inicio"
+			"home": "Inicio",
+			"sandbox": "Sandbox"
 		},
 		"user_menu": {
 			"account": "Cuenta",
@@ -681,6 +682,10 @@
 				"description": "Redirigiendo al panel principal de tu espacio de trabajo.",
 				"title": "Inicio de App"
 			},
+			"sandbox": {
+				"description": "Asistente de programación con IA en una sandbox en la nube",
+				"title": "Vibe Sandbox"
+			},
 			"settings": {
 				"description": "Administra la configuración y preferencias de tu cuenta.",
 				"title": "Configuración"
@@ -805,6 +810,22 @@
 			}
 		},
 		"title": "Precios simples"
+	},
+	"sandbox": {
+		"delete_sandbox": "Eliminar",
+		"description": "Asistente de programación con IA en una sandbox en la nube",
+		"empty_state": "Inicia una sandbox para comenzar a programar con Vibe",
+		"input_placeholder": "Describe lo que quieres construir...",
+		"send": "Enviar",
+		"start_sandbox": "Iniciar Sandbox",
+		"status": {
+			"creating": "Creando...",
+			"error": "Error",
+			"ready": "Listo",
+			"stopped": "Detenido"
+		},
+		"stop_sandbox": "Detener",
+		"title": "Vibe Sandbox"
 	},
 	"search": {
 		"command": {
@@ -1066,6 +1087,17 @@
 			"task_4": "Reservar vuelos a Berlín",
 			"task_5": "Preparar reunión con Sarah",
 			"task_6": "Conectar con ponentes en LinkedIn"
+		},
+		"detail": {
+			"agent_logs": "Registros del agente",
+			"cancel": "Cancelar",
+			"delete": "Eliminar",
+			"description": "Edita los detalles de la tarea o elimínala del tablero.",
+			"notes": "Notas",
+			"notes_placeholder": "Agregar notas o contexto...",
+			"save": "Guardar",
+			"task_name": "Nombre de la tarea",
+			"title": "Detalles de la tarea"
 		},
 		"save_failed": "No se pudieron guardar los cambios del tablero. Por favor, inténtalo de nuevo.",
 		"subheading": "Añade una tarea. Promus investiga, redacta y ejecuta en segundo plano — conectado a todas tus herramientas profesionales."

@@ -8,11 +8,13 @@
 		isOverlay?: boolean;
 		overlayTilted?: boolean;
 		data?: { group: string | number };
+		onclick?: (task: TodoItem) => void;
 	}
 </script>
 
 <script lang="ts">
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
+	import StickyNoteIcon from '@lucide/svelte/icons/sticky-note';
 
 	let {
 		task,
@@ -20,7 +22,8 @@
 		group,
 		isOverlay = false,
 		overlayTilted = true,
-		data
+		data,
+		onclick
 	}: KanbanItemProps = $props();
 
 	const { ref, isDragging, isDropping, isDropTarget } = useSortable({
@@ -37,19 +40,41 @@
 			return data;
 		}
 	});
+
+	let pointerStart: { x: number; y: number } | null = null;
+
+	function handlePointerDown(e: PointerEvent) {
+		pointerStart = { x: e.clientX, y: e.clientY };
+	}
+
+	function handlePointerUp(e: PointerEvent) {
+		if (!pointerStart || !onclick) return;
+		const dx = Math.abs(e.clientX - pointerStart.x);
+		const dy = Math.abs(e.clientY - pointerStart.y);
+		// Only treat as click if pointer barely moved (not a drag)
+		if (dx < 5 && dy < 5) {
+			onclick(task);
+		}
+		pointerStart = null;
+	}
 </script>
 
 <div class="relative select-none cursor-grab active:cursor-grabbing" {@attach ref}>
 	<div
-		class="rounded-lg border border-border/80 bg-card p-3 text-sm text-foreground dark:border-border/60 dark:bg-background {(isDragging.current ||
+		class="rounded-lg border border-border/80 bg-card p-3 text-sm text-foreground transition-colors hover:border-primary/40 dark:border-border/60 dark:bg-background {(isDragging.current ||
 			isDropping.current) &&
 		!isOverlay
 			? 'invisible'
 			: ''} {isDropTarget.current
 			? 'border-primary/35 ring-2 ring-primary/25 bg-primary/[0.04] dark:border-primary/35 dark:ring-primary/25'
 			: ''} {isOverlay && overlayTilted ? 'drag-tilt-item' : ''}"
+		onpointerdown={handlePointerDown}
+		onpointerup={handlePointerUp}
 	>
 		<span>{task.title}</span>
+		{#if task.notes}
+			<StickyNoteIcon class="mt-1.5 size-3.5 text-muted-foreground" />
+		{/if}
 	</div>
 
 	{#if !isOverlay && (isDragging.current || isDropping.current)}

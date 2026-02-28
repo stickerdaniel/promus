@@ -255,7 +255,8 @@
 			"connect_accounts_error": "Impossible d'obtenir le lien de connexion. Réessaie.",
 			"dashboard": "Tableau de bord",
 			"docs": "Documentation",
-			"home": "Accueil"
+			"home": "Accueil",
+			"sandbox": "Sandbox"
 		},
 		"user_menu": {
 			"account": "Compte",
@@ -681,6 +682,10 @@
 				"description": "Redirection vers le tableau de bord de ton espace de travail.",
 				"title": "Accueil App"
 			},
+			"sandbox": {
+				"description": "Assistant de programmation IA dans un sandbox cloud",
+				"title": "Vibe Sandbox"
+			},
 			"settings": {
 				"description": "Gère les paramètres et préférences de ton compte.",
 				"title": "Paramètres"
@@ -805,6 +810,22 @@
 			}
 		},
 		"title": "Tarifs simples"
+	},
+	"sandbox": {
+		"delete_sandbox": "Supprimer",
+		"description": "Assistant de programmation IA dans un sandbox cloud",
+		"empty_state": "Démarrez un sandbox pour commencer à coder avec Vibe",
+		"input_placeholder": "Décrivez ce que vous souhaitez construire...",
+		"send": "Envoyer",
+		"start_sandbox": "Démarrer le Sandbox",
+		"status": {
+			"creating": "Création...",
+			"error": "Erreur",
+			"ready": "Prêt",
+			"stopped": "Arrêté"
+		},
+		"stop_sandbox": "Arrêter",
+		"title": "Vibe Sandbox"
 	},
 	"search": {
 		"command": {
@@ -1066,6 +1087,17 @@
 			"task_4": "Réserver des vols pour Berlin",
 			"task_5": "Préparer la réunion avec Sarah",
 			"task_6": "Se connecter avec les intervenants sur LinkedIn"
+		},
+		"detail": {
+			"agent_logs": "Journaux de l'agent",
+			"cancel": "Annuler",
+			"delete": "Supprimer",
+			"description": "Modifier les détails de la tâche ou la retirer du tableau.",
+			"notes": "Notes",
+			"notes_placeholder": "Ajouter des notes ou du contexte...",
+			"save": "Enregistrer",
+			"task_name": "Nom de la tâche",
+			"title": "Détails de la tâche"
 		},
 		"save_failed": "Impossible d'enregistrer les modifications du tableau. Réessaie.",
 		"subheading": "Ajoute une tâche. Promus recherche, rédige et exécute en arrière-plan — connecté à tous tes outils professionnels."

@@ -5,17 +5,21 @@ const COLUMN_IDS = ['todo', 'in-progress', 'done'] as const;
 
 const taskValidator = v.object({
 	id: v.string(),
-	title: v.string()
+	title: v.string(),
+	notes: v.optional(v.string()),
+	agentLogs: v.optional(v.string())
 });
 
 const boardValidator = v.record(v.string(), v.array(taskValidator));
 
 type ColumnId = (typeof COLUMN_IDS)[number];
-type BoardTask = { id: string; title: string };
+type BoardTask = { id: string; title: string; notes?: string; agentLogs?: string };
 type Board = Record<ColumnId, BoardTask[]>;
 type StoredTask = {
 	id: string;
 	title: string;
+	notes?: string;
+	agentLogs?: string;
 	columnId: ColumnId;
 	order: number;
 	createdAt: number;
@@ -60,7 +64,9 @@ function toBoard(tasks: StoredTask[]): Board {
 			.sort((a, b) => a.order - b.order || a.createdAt - b.createdAt)
 			.map((task) => ({
 				id: task.id,
-				title: task.title
+				title: task.title,
+				...(task.notes ? { notes: task.notes } : {}),
+				...(task.agentLogs ? { agentLogs: task.agentLogs } : {})
 			}));
 	}
 
@@ -91,9 +97,13 @@ function sanitizeAndFlattenBoard(
 			seenIds.add(id);
 
 			const existing = existingTasksById.get(id);
+			const notes = rawTask.notes?.trim() || undefined;
+			const agentLogs = rawTask.agentLogs?.trim() || existing?.agentLogs || undefined;
 			tasks.push({
 				id,
 				title,
+				...(notes ? { notes } : {}),
+				...(agentLogs ? { agentLogs } : {}),
 				columnId,
 				order: index,
 				createdAt: existing?.createdAt ?? now,

@@ -30,8 +30,17 @@
 	let isConnecting = $state(false);
 	let error = $state('');
 
-	$effect(() => {
+	async function registerAndLoad() {
+		try {
+			await client.action(api.unipile.registerNewAccount, {});
+		} catch {
+			// Registration failure is non-fatal; loadAccounts will still show existing accounts
+		}
 		loadAccounts();
+	}
+
+	$effect(() => {
+		registerAndLoad();
 	});
 
 	// Auto-refresh accounts when user returns from the auth wizard tab
@@ -40,7 +49,7 @@
 		'visibilitychange',
 		() => {
 			if (document.visibilityState === 'visible' && !isLoading) {
-				loadAccounts();
+				registerAndLoad();
 			}
 		}
 	);

@@ -45,6 +45,8 @@ import type * as helpers from "../helpers.js";
 import type * as http from "../http.js";
 import type * as i18n_translations from "../i18n/translations.js";
 import type * as messages from "../messages.js";
+import type * as sandboxAgent from "../sandboxAgent.js";
+import type * as sandboxApi from "../sandboxApi.js";
 import type * as storage from "../storage.js";
 import type * as support_agent from "../support/agent.js";
 import type * as support_files from "../support/files.js";
@@ -103,6 +105,8 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   "i18n/translations": typeof i18n_translations;
   messages: typeof messages;
+  sandboxAgent: typeof sandboxAgent;
+  sandboxApi: typeof sandboxApi;
   storage: typeof storage;
   "support/agent": typeof support_agent;
   "support/files": typeof support_files;
@@ -4932,6 +4936,55 @@ export declare const components: {
         "internal",
         { userId: string },
         Array<string>
+      >;
+    };
+  };
+  sandbox: {
+    sessions: {
+      createSession: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          previewToken?: string;
+          previewUrl?: string;
+          sandboxId: string;
+          status: "creating" | "ready" | "stopped" | "error" | "deleted";
+          threadId?: string;
+          userId: string;
+        },
+        any
+      >;
+      deleteSession: FunctionReference<
+        "mutation",
+        "internal",
+        { sessionId: string },
+        any
+      >;
+      getUserSession: FunctionReference<
+        "query",
+        "internal",
+        { userId: string },
+        any
+      >;
+      updateLastActive: FunctionReference<
+        "mutation",
+        "internal",
+        { sessionId: string },
+        any
+      >;
+      updateSessionStatus: FunctionReference<
+        "mutation",
+        "internal",
+        {
+          errorMessage?: string;
+          previewToken?: string;
+          previewUrl?: string;
+          sandboxId?: string;
+          sessionId: string;
+          status: "creating" | "ready" | "stopped" | "error" | "deleted";
+          threadId?: string;
+        },
+        any
       >;
     };
   };

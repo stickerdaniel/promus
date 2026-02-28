@@ -255,7 +255,8 @@
 			"connect_accounts_error": "Failed to get connection link. Please try again.",
 			"dashboard": "Dashboard",
 			"docs": "Docs",
-			"home": "Home"
+			"home": "Home",
+			"sandbox": "Sandbox"
 		},
 		"user_menu": {
 			"account": "Account",
@@ -681,6 +682,10 @@
 				"description": "Redirecting to your workspace dashboard.",
 				"title": "App Home"
 			},
+			"sandbox": {
+				"description": "AI-powered coding assistant running in a cloud sandbox",
+				"title": "Vibe Sandbox"
+			},
 			"settings": {
 				"description": "Manage your account settings and preferences.",
 				"title": "Settings"
@@ -805,6 +810,22 @@
 			}
 		},
 		"title": "Simple pricing"
+	},
+	"sandbox": {
+		"delete_sandbox": "Delete",
+		"description": "AI-powered coding assistant running in a cloud sandbox",
+		"empty_state": "Start a sandbox to begin coding with Vibe",
+		"input_placeholder": "Describe what you want to build...",
+		"send": "Send",
+		"start_sandbox": "Start Sandbox",
+		"status": {
+			"creating": "Creating...",
+			"error": "Error",
+			"ready": "Ready",
+			"stopped": "Stopped"
+		},
+		"stop_sandbox": "Stop",
+		"title": "Vibe Sandbox"
 	},
 	"search": {
 		"command": {
@@ -1066,6 +1087,17 @@
 			"task_4": "Book flights to Berlin",
 			"task_5": "Prepare for meeting with Sarah",
 			"task_6": "Connect with conference speakers on LinkedIn"
+		},
+		"detail": {
+			"agent_logs": "Agent logs",
+			"cancel": "Cancel",
+			"delete": "Delete",
+			"description": "Edit task details or remove it from the board.",
+			"notes": "Notes",
+			"notes_placeholder": "Add notes or context...",
+			"save": "Save",
+			"task_name": "Task name",
+			"title": "Task details"
 		},
 		"save_failed": "Failed to save board changes. Please try again.",
 		"subheading": "Add a task. Promus researches, drafts, and executes in the background — connected to all your professional tools."

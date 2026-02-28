@@ -6,6 +6,7 @@ import agent from '@convex-dev/agent/convex.config';
 import rateLimiter from '@convex-dev/rate-limiter/convex.config';
 import convexFilesControl from '@gilhrpenner/convex-files-control/convex.config';
 import unipile from './unipile/convex.config';
+import sandbox from './sandbox/convex.config';
 
 const app = defineApp();
 app.use(betterAuth);
@@ -15,6 +16,7 @@ app.use(agent);
 app.use(rateLimiter);
 app.use(convexFilesControl);
 app.use(unipile);
+app.use(sandbox);
 /**
  * Convex application configured with Autumn billing, Resend email, and AI Agent.
  *

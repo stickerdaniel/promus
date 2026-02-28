@@ -1,5 +1,6 @@
 <script lang="ts">
 	import NavUser from '../nav-user.svelte';
+	import ConnectAccountsButton from './connect-accounts-button.svelte';
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { resolve } from '$app/paths';
@@ -87,6 +88,7 @@
 				</Sidebar.Menu>
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
+		<ConnectAccountsButton />
 	</Sidebar.Content>
 
 	<Sidebar.Footer>

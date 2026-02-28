@@ -251,6 +251,8 @@
 		"sidebar": {
 			"admin_panel": "Panel de Admin",
 			"community_chat": "Chat comunitario",
+			"connect_accounts": "Conectar cuentas",
+			"connect_accounts_error": "No se pudo obtener el enlace de conexión. Inténtelo de nuevo.",
 			"dashboard": "Panel",
 			"docs": "Documentación",
 			"home": "Inicio"
@@ -909,8 +911,31 @@
 			"title": "Seguridad",
 			"your_passkeys_title": "Tus Passkeys"
 		},
+		"connections": {
+			"connect_button": "Conectar cuenta",
+			"connect_failed": "No se pudo obtener el enlace de conexión",
+			"connecting": "Conectando...",
+			"description": "Conecta y administra tus cuentas externas.",
+			"disconnect_confirm": "Desconectar",
+			"disconnect_description": "¿Estás seguro de que deseas desconectar {name} ({type})? Esta acción no se puede deshacer.",
+			"disconnect_failed": "No se pudo desconectar la cuenta",
+			"disconnect_title": "Desconectar cuenta",
+			"disconnected": "Cuenta desconectada",
+			"error_title": "Error",
+			"info_description": "Conecta tus cuentas de mensajería y correo electrónico para habilitar funciones de comunicación unificada.",
+			"info_title": "Cuentas conectadas",
+			"load_failed": "No se pudieron cargar las cuentas",
+			"loading": "Cargando cuentas...",
+			"no_accounts": "Aún no hay cuentas conectadas.",
+			"status_connecting": "Conectando",
+			"status_error": "Error",
+			"status_ok": "Conectado",
+			"title": "Conexiones",
+			"your_accounts_title": "Tus cuentas"
+		},
 		"tabs": {
 			"account": "Cuenta",
+			"connections": "Conexiones",
 			"email": "Correo electrónico",
 			"password": "Contraseña",
 			"security": "Seguridad"

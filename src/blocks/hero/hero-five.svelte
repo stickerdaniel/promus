@@ -5,26 +5,25 @@
 	import ProgressiveBlur from '../magic/ProgressiveBlur.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import ChevronRight from '@lucide/svelte/icons/chevron-right';
-	import RiveBackground from '$lib/components/RiveBackground.svelte';
 	import nvidiaLogo from './logos/nvidia.svg';
-	import columnLogo from './logos/column.svg';
-	import githubLogo from './logos/github.svg';
-	import nikeLogo from './logos/nike.svg';
-	import lemonsqueezyLogo from './logos/lemonsqueezy.svg';
-	import laravelLogo from './logos/laravel.svg';
-	import lillyLogo from './logos/lilly.svg';
-	import openaiLogo from './logos/openai.svg';
+	import awsLightLogo from './logos/aws-light.svg';
+	import awsDarkLogo from './logos/aws-dark.svg';
+	import elevenlabsLightLogo from './logos/elevenlabs-light.svg';
+	import elevenlabsDarkLogo from './logos/elevenlabs-dark.svg';
+	import mistralLightLogo from './logos/mistral-light.svg';
+	import hfLightLogo from './logos/hf-light.svg';
+	import hfDarkLogo from './logos/hf-dark.svg';
+	import wandbLightLogo from './logos/wandb-light.svg';
+	import wandbDarkLogo from './logos/wandb-dark.svg';
+	import orbmarkLightLogo from './logos/orbmark-light.svg';
+	import orbmarkDarkLogo from './logos/orbmark-dark.svg';
+	import supercellLightLogo from './logos/supercell-light.svg';
+	import supercellDarkLogo from './logos/supercell-dark.svg';
 </script>
 
 <main class="overflow-hidden">
-	<section class="relative flex items-center justify-center">
-		<RiveBackground
-			src="/animations/spring-demo.riv"
-			stateMachine="Motion"
-			className="absolute lg:left-[45%] xl:left-[52%] -bottom-1/5 lg:-bottom-1/6 w-[550px] h-[550px] lg:w-[700px] lg:h-[700px]"
-		/>
-
-		<div class="pointer-events-none w-full pt-20 pb-56 lg:pt-40 lg:pb-36">
+	<section class="flex items-center justify-center">
+		<div class="w-full pt-20 pb-24 lg:pt-40 lg:pb-28">
 			<div class="relative mx-auto flex max-w-6xl flex-col px-6 lg:block lg:px-12">
 				<div class="mx-auto max-w-lg text-center lg:ml-0 lg:max-w-full lg:text-left">
 					<h1 class="mt-8 max-w-4xl text-5xl text-balance md:text-6xl lg:mt-16 xl:text-7xl">
@@ -39,7 +38,7 @@
 						<Button
 							size="lg"
 							href={localizedHref('/signin?tab=signup')}
-							class=" pointer-events-auto h-12 rounded-full pr-3 pl-5 text-sm"
+							class="h-12 rounded-full pr-3 pl-5 text-sm"
 						>
 							<span class="text-nowrap"><T keyName="hero.cta" /></span>
 							<ChevronRight class="ml-1" />
@@ -47,24 +46,18 @@
 						<Button
 							size="lg"
 							variant="ghost"
-							href="#link"
-							class="pointer-events-auto h-12 rounded-full px-5 text-base hover:bg-zinc-950/5 dark:hover:bg-white/5"
+							href="https://github.com/stickerdaniel/promus"
+							target="_blank"
+							rel="noopener noreferrer"
+							class="h-12 rounded-full px-5 text-base hover:bg-zinc-950/5 dark:hover:bg-white/5"
 						>
-							<span class="text-nowrap"><T keyName="hero.cta_demo" /></span>
+							<span class="text-nowrap">
+								<T keyName="hero.cta_sourcecode" defaultValue="View sourcecode" />
+							</span>
 						</Button>
 					</div>
 				</div>
 			</div>
-			<!-- <div
-        class="aspect-2/3 absolute inset-1 -z-10 overflow-hidden rounded-3xl border border-black/10 lg:aspect-video lg:rounded-[3rem] dark:border-white/5"
-      >
-        <video
-          autoPlay
-          loop
-          class="size-full -scale-x-100 object-cover opacity-50 invert dark:opacity-35 dark:invert-0 dark:lg:opacity-75"
-          src="https://res.cloudinary.com/dg4jhba5c/video/upload/v1741605033/dna_ttplyu.mp4"
-        ></video>
-      </div> -->
 		</div>
 	</section>
 	<section>
@@ -73,79 +66,119 @@
 				<div class="md:max-w-44 md:border-r md:pr-6">
 					<p class="text-end text-sm"><T keyName="hero.companies_text" /></p>
 				</div>
-				<!-- Checkout Logo Cloud Three  -->
-				<!-- I have provided progressive blur snippet code & Marquee code -->
 				<div class="relative py-6 md:w-[calc(100%-11rem)]">
 					<Marquee>
-						<div class="flex">
+						<div class="flex h-8 items-center">
 							<img
-								class="mx-auto h-5 w-fit dark:invert"
+								class="h-4 w-auto shrink-0 object-contain dark:invert"
 								src={nvidiaLogo}
-								alt="Nvidia Logo"
-								height="20"
-								width="auto"
-							/>
-						</div>
-						<div class="flex">
-							<img
-								class="mx-auto h-4 w-fit dark:invert"
-								src={columnLogo}
-								alt="Column Logo"
+								alt="NVIDIA Logo"
 								height="16"
 								width="auto"
 							/>
 						</div>
-						<div class="flex">
+						<div class="flex h-8 items-center">
 							<img
-								class="mx-auto h-4 w-fit dark:invert"
-								src={githubLogo}
-								alt="GitHub Logo"
-								height="16"
+								class="h-6 w-auto shrink-0 object-contain dark:hidden"
+								src={awsLightLogo}
+								alt="AWS Logo"
+								height="24"
+								width="auto"
+							/>
+							<img
+								class="hidden h-6 w-auto shrink-0 object-contain dark:block"
+								src={awsDarkLogo}
+								alt="AWS Logo"
+								height="24"
 								width="auto"
 							/>
 						</div>
-						<div class="flex">
+						<div class="flex h-8 items-center">
 							<img
-								class="mx-auto h-5 w-fit dark:invert"
-								src={nikeLogo}
-								alt="Nike Logo"
+								class="h-3.5 w-auto shrink-0 object-contain dark:hidden"
+								src={elevenlabsLightLogo}
+								alt="ElevenLabs Logo"
+								height="14"
+								width="auto"
+							/>
+							<img
+								class="hidden h-3.5 w-auto shrink-0 object-contain dark:block"
+								src={elevenlabsDarkLogo}
+								alt="ElevenLabs Logo"
+								height="14"
+								width="auto"
+							/>
+						</div>
+						<div class="flex h-8 items-center">
+							<img
+								class="h-5 w-auto shrink-0 object-contain dark:invert"
+								src={mistralLightLogo}
+								alt="Mistral Logo"
 								height="20"
 								width="auto"
 							/>
 						</div>
-						<div class="flex">
+						<div class="flex h-8 items-center">
 							<img
-								class="mx-auto h-5 w-fit dark:invert"
-								src={lemonsqueezyLogo}
-								alt="Lemon Squeezy Logo"
+								class="h-6 w-auto shrink-0 object-contain dark:hidden"
+								src={hfLightLogo}
+								alt="Hugging Face Logo"
+								height="24"
+								width="auto"
+							/>
+							<img
+								class="hidden h-6 w-auto shrink-0 object-contain dark:block"
+								src={hfDarkLogo}
+								alt="Hugging Face Logo"
+								height="24"
+								width="auto"
+							/>
+						</div>
+						<div class="flex h-8 items-center">
+							<img
+								class="h-5 w-auto shrink-0 object-contain dark:hidden"
+								src={wandbLightLogo}
+								alt="Weights & Biases Logo"
+								height="20"
+								width="auto"
+							/>
+							<img
+								class="hidden h-5 w-auto shrink-0 object-contain dark:block"
+								src={wandbDarkLogo}
+								alt="Weights & Biases Logo"
 								height="20"
 								width="auto"
 							/>
 						</div>
-						<div class="flex">
+						<div class="flex h-8 items-center">
 							<img
-								class="mx-auto h-4 w-fit dark:invert"
-								src={laravelLogo}
-								alt="Laravel Logo"
-								height="16"
+								class="h-5 w-auto shrink-0 object-contain dark:hidden"
+								src={orbmarkLightLogo}
+								alt="Orbmark Logo"
+								height="20"
+								width="auto"
+							/>
+							<img
+								class="hidden h-5 w-auto shrink-0 object-contain dark:block"
+								src={orbmarkDarkLogo}
+								alt="Orbmark Logo"
+								height="20"
 								width="auto"
 							/>
 						</div>
-						<div class="flex">
+						<div class="flex h-8 items-center">
 							<img
-								class="mx-auto h-7 w-fit dark:invert"
-								src={lillyLogo}
-								alt="Lilly Logo"
+								class="h-7 w-auto shrink-0 object-contain dark:hidden"
+								src={supercellLightLogo}
+								alt="Supercell Logo"
 								height="28"
 								width="auto"
 							/>
-						</div>
-						<div class="flex">
 							<img
-								class="mx-auto h-6 w-fit dark:invert"
-								src={openaiLogo}
-								alt="OpenAI Logo"
-								height="24"
+								class="hidden h-7 w-auto shrink-0 object-contain dark:block"
+								src={supercellDarkLogo}
+								alt="Supercell Logo"
+								height="28"
 								width="auto"
 							/>
 						</div>

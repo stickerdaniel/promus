@@ -1,7 +1,6 @@
 <script lang="ts">
 	import LightSwitch from '$lib/components/ui/light-switch/light-switch.svelte';
 	import LanguageSwitcher from '$lib/components/LanguageSwitcher.svelte';
-	import CommandTrigger from '$lib/components/global-search/command-trigger.svelte';
 	import Button from '$lib/components/ui/button/button.svelte';
 	import { cn } from '$lib/utils';
 	import { localizedHref } from '$lib/utils/i18n';
@@ -9,7 +8,6 @@
 	import Menu from '@lucide/svelte/icons/menu';
 	import X from '@lucide/svelte/icons/x';
 	import LogOut from '@lucide/svelte/icons/log-out';
-	import Github from '@lucide/svelte/icons/github';
 	import Logo from '$lib/components/icons/logo.svelte';
 	import { useAuth } from '@mmailaender/convex-better-auth-svelte/svelte';
 	import { authClient } from '$lib/auth-client';
@@ -22,13 +20,6 @@
 	// Scroll detection for button swap
 	let scrollY = $state(0);
 	const isAtTop = $derived(scrollY < 10);
-
-	// $derived menu items (href must update on lang switch)
-	let menuItems = $derived([
-		{ translationKey: 'nav.home', href: localizedHref('/') },
-		{ translationKey: 'nav.pricing', href: localizedHref('/pricing') },
-		{ translationKey: 'nav.about', href: localizedHref('/about') }
-	]);
 
 	let menuState = $state(false);
 </script>
@@ -47,39 +38,13 @@
 					<span class="font-semibold">Promus</span>
 				</a>
 
-				<!-- Desktop Navigation -->
-				<ul class="hidden gap-8 text-sm lg:flex">
-					{#each menuItems as item (item.translationKey)}
-						<li>
-							<a
-								href={resolve(item.href)}
-								class="block text-muted-foreground duration-150 hover:text-accent-foreground"
-							>
-								<span><T keyName={item.translationKey} /></span>
-							</a>
-						</li>
-					{/each}
-				</ul>
-
 				<!-- Desktop Actions -->
 				<div class="hidden items-center gap-3 lg:flex">
-					<CommandTrigger />
-					<Button
-						variant="ghost"
-						size="icon"
-						href="https://github.com/stickerdaniel/promus"
-						target="_blank"
-						rel="noopener noreferrer"
-						aria-label={$t('aria.github_repository')}
-						class="size-8"
-					>
-						<Github class="size-4" />
-					</Button>
 					<LightSwitch variant="ghost" />
 					<LanguageSwitcher variant="ghost" />
 					{#if auth.isAuthenticated}
 						<Button size="sm" href={localizedHref('/app')}>
-							<T keyName="nav.dashboard" />
+							<T keyName="nav.my_tasks" defaultValue="My tasks" />
 						</Button>
 						<Button
 							variant="outline"
@@ -106,17 +71,6 @@
 
 				<!-- Mobile Menu Button -->
 				<div class="flex items-center gap-1 lg:hidden">
-					<Button
-						variant="ghost"
-						size="icon"
-						href="https://github.com/stickerdaniel/promus"
-						target="_blank"
-						rel="noopener noreferrer"
-						aria-label={$t('aria.github_repository')}
-						class="size-8"
-					>
-						<Github class="size-4" />
-					</Button>
 					<LightSwitch variant="ghost" />
 					<LanguageSwitcher variant="ghost" />
 					<button
@@ -144,23 +98,10 @@
 		<div
 			class="fixed top-24 right-4 left-4 z-30 rounded-2xl border border-white/[0.06] bg-background/95 p-6 backdrop-blur-xl lg:hidden"
 		>
-			<ul class="space-y-4 text-base">
-				{#each menuItems as item (item.translationKey)}
-					<li>
-						<a
-							href={resolve(item.href)}
-							class="block text-muted-foreground duration-150 hover:text-accent-foreground"
-							onclick={() => (menuState = false)}
-						>
-							<span><T keyName={item.translationKey} /></span>
-						</a>
-					</li>
-				{/each}
-			</ul>
-			<div class="mt-6 flex flex-col gap-3">
+			<div class="flex flex-col gap-3">
 				{#if auth.isAuthenticated}
 					<Button size="sm" href={localizedHref('/app')} class="w-full">
-						<T keyName="nav.dashboard" />
+						<T keyName="nav.my_tasks" defaultValue="My tasks" />
 					</Button>
 				{:else if isAtTop}
 					<Button variant="ghost" size="sm" href={localizedHref('/signin')} class="w-full">

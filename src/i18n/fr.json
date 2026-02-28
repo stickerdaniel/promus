@@ -577,7 +577,7 @@
 		"search_placeholder": "Essayez de rechercher des pages..."
 	},
 	"hero": {
-		"companies_text": "Propulsant les meilleures équipes",
+		"companies_text": "rendu possible par",
 		"cta": "Commencer maintenant",
 		"cta_demo": "Demander une démo",
 		"cta_sourcecode": "Voir le code source",
@@ -1067,8 +1067,8 @@
 			"task_5": "Créer le schéma de base de données",
 			"task_6": "Configurer le système d'auth"
 		},
-		"subheading": "Organisez votre travail avec la simplicité du glisser-déposer. Déplacez les tâches entre les colonnes, définissez les priorités et suivez la progression en temps réel.",
-		"save_failed": "Impossible d'enregistrer les modifications du tableau. Veuillez réessayer."
+		"save_failed": "Impossible d'enregistrer les modifications du tableau. Veuillez réessayer.",
+		"subheading": "Organisez votre travail avec la simplicité du glisser-déposer. Déplacez les tâches entre les colonnes, définissez les priorités et suivez la progression en temps réel."
 	},
 	"validation": {
 		"confirm_password": {

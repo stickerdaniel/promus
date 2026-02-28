@@ -577,7 +577,7 @@
 		"search_placeholder": "Prueba a buscar páginas..."
 	},
 	"hero": {
-		"companies_text": "Impulsando a los mejores equipos",
+		"companies_text": "hecho posible por",
 		"cta": "Comenzar ahora",
 		"cta_demo": "Solicitar una demo",
 		"cta_sourcecode": "Ver código fuente",
@@ -1067,8 +1067,8 @@
 			"task_5": "Crear esquema de base de datos",
 			"task_6": "Configurar sistema de auth"
 		},
-		"subheading": "Organiza tu trabajo con la simplicidad de arrastrar y soltar. Mueve tareas entre columnas, establece prioridades y sigue el progreso en tiempo real.",
-		"save_failed": "No se pudieron guardar los cambios del tablero. Por favor, inténtalo de nuevo."
+		"save_failed": "No se pudieron guardar los cambios del tablero. Por favor, inténtalo de nuevo.",
+		"subheading": "Organiza tu trabajo con la simplicidad de arrastrar y soltar. Mueve tareas entre columnas, establece prioridades y sigue el progreso en tiempo real."
 	},
 	"validation": {
 		"confirm_password": {

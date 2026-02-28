@@ -577,7 +577,7 @@
 		"search_placeholder": "Versuchen Sie, nach Seiten zu suchen..."
 	},
 	"hero": {
-		"companies_text": "Vertrauen der besten Teams",
+		"companies_text": "ermöglicht durch",
 		"cta": "Jetzt starten",
 		"cta_demo": "Demo anfordern",
 		"cta_sourcecode": "Quellcode ansehen",
@@ -1067,8 +1067,8 @@
 			"task_5": "Datenbankschema erstellen",
 			"task_6": "Auth-System konfigurieren"
 		},
-		"subheading": "Organisiere deine Arbeit mit Drag-and-Drop. Verschiebe Aufgaben zwischen Spalten, setze Prioritäten und verfolge den Fortschritt in Echtzeit.",
-		"save_failed": "Änderungen am Board konnten nicht gespeichert werden. Bitte versuchen Sie es erneut."
+		"save_failed": "Änderungen am Board konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.",
+		"subheading": "Organisiere deine Arbeit mit Drag-and-Drop. Verschiebe Aufgaben zwischen Spalten, setze Prioritäten und verfolge den Fortschritt in Echtzeit."
 	},
 	"validation": {
 		"confirm_password": {

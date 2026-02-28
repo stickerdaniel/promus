@@ -32,7 +32,7 @@
 >
 	{#each { length: repeat } as _, i (i)}
 		<div
-			class={cn('flex shrink-0 justify-around [gap:var(--gap)]', {
+			class={cn('flex shrink-0 items-center justify-start [gap:var(--gap)]', {
 				'animate-marquee flex-row': !vertical,
 				'animate-marquee-vertical flex-col': vertical,
 				'group-hover:[animation-play-state:paused]': pauseOnHover

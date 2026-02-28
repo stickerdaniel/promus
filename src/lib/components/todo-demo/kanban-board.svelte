@@ -7,52 +7,139 @@
 	} from '@dnd-kit-svelte/svelte';
 	import { RestrictToWindowEdges } from '@dnd-kit-svelte/svelte/modifiers';
 	import { move } from '@dnd-kit/helpers';
+	import { useConvexClient, useQuery } from 'convex-svelte';
+	import { toast } from 'svelte-sonner';
 	import { getTranslate } from '@tolgee/svelte';
+	import { api } from '$lib/convex/_generated/api';
 	import type { KanbanData, ColumnId } from './types.js';
 	import KanbanColumn from './kanban-column.svelte';
 	import KanbanItem from './kanban-item.svelte';
 
 	const { t } = getTranslate();
+	const convexClient = useConvexClient();
 
 	const sensors = [PointerSensor, KeyboardSensor];
-
 	const columnIds: ColumnId[] = ['todo', 'in-progress', 'done'];
+	const boardQuery = useQuery(api.todos.getBoard, {});
 
 	let items: KanbanData = $state({
-		todo: [
-			{ id: 'task-1', title: $t('todo_demo.sample.task_1') },
-			{ id: 'task-2', title: $t('todo_demo.sample.task_2') }
-		],
-		'in-progress': [
-			{ id: 'task-3', title: $t('todo_demo.sample.task_3') },
-			{ id: 'task-4', title: $t('todo_demo.sample.task_4') }
-		],
-		done: [
-			{ id: 'task-5', title: $t('todo_demo.sample.task_5') },
-			{ id: 'task-6', title: $t('todo_demo.sample.task_6') }
-		]
+		todo: [],
+		'in-progress': [],
+		done: []
+	});
+	let overlayTilted = $state(false);
+	let isDragging = $state(false);
+	let pendingSaveCount = $state(0);
+	let dragStartSnapshot = $state<KanbanData | null>(null);
+
+	type SyncEvent = {
+		operation: { source?: { type?: unknown } | null; target?: unknown | null };
+	};
+
+	type EndEvent = SyncEvent & {
+		suspend: () => { resume: () => void };
+	};
+
+	function cloneBoard(board: KanbanData): KanbanData {
+		return {
+			todo: board.todo.map((task) => ({ ...task })),
+			'in-progress': board['in-progress'].map((task) => ({ ...task })),
+			done: board.done.map((task) => ({ ...task }))
+		};
+	}
+
+	function isSameBoard(a: KanbanData, b: KanbanData): boolean {
+		for (const columnId of columnIds) {
+			if (a[columnId].length !== b[columnId].length) {
+				return false;
+			}
+			for (const [index, task] of a[columnId].entries()) {
+				const other = b[columnId][index];
+				if (!other || other.id !== task.id || other.title !== task.title) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
+
+	function createTaskId(): string {
+		if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
+			return crypto.randomUUID();
+		}
+		return `task-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+	}
+
+	$effect(() => {
+		if (!boardQuery.data || isDragging || pendingSaveCount > 0) return;
+		items = cloneBoard(boardQuery.data);
 	});
 
-	let nextId = 7;
-	let overlayTilted = $state(false);
-
-	function syncItemOrder(event: {
-		operation: { source?: { type?: unknown } | null; target?: unknown | null };
-	}) {
+	function syncItemOrder(event: SyncEvent) {
 		const { source, target } = event.operation;
 		if (!source || !target || source.type === 'column') return;
 
-		items = move(items, event as any);
+		items = move(items, event as any) as KanbanData;
 	}
 
-	function addTodo(columnId: ColumnId, title: string) {
-		items[columnId] = [
-			...items[columnId],
+	async function persistBoard(nextBoard: KanbanData, rollbackBoard: KanbanData): Promise<void> {
+		const nextSnapshot = cloneBoard(nextBoard);
+		const rollbackSnapshot = cloneBoard(rollbackBoard);
+		pendingSaveCount += 1;
+
+		try {
+			await convexClient.mutation(
+				api.todos.saveBoard,
+				{ board: nextSnapshot },
+				{
+					optimisticUpdate: (store) => {
+						store.setQuery(api.todos.getBoard, {}, nextSnapshot);
+					}
+				}
+			);
+		} catch (error) {
+			console.error('[kanban] Failed to save board:', error);
+			items = rollbackSnapshot;
+			toast.error($t('todo_demo.save_failed'));
+		} finally {
+			pendingSaveCount = Math.max(0, pendingSaveCount - 1);
+		}
+	}
+
+	async function addTodo(columnId: ColumnId, title: string): Promise<void> {
+		const trimmed = title.trim();
+		if (!trimmed) return;
+
+		const rollbackBoard = cloneBoard(items);
+		const nextBoard = cloneBoard(items);
+		nextBoard[columnId] = [
+			...nextBoard[columnId],
 			{
-				id: `task-${nextId++}`,
-				title
+				id: createTaskId(),
+				title: trimmed
 			}
 		];
+		items = nextBoard;
+		await persistBoard(nextBoard, rollbackBoard);
+	}
+
+	async function handleDragEnd(event: EndEvent): Promise<void> {
+		syncItemOrder(event);
+		overlayTilted = false;
+		isDragging = false;
+
+		// Let overlay re-render without tilt before drop animation snapshot is taken.
+		const suspended = event.suspend();
+		requestAnimationFrame(() => suspended.resume());
+
+		const startBoard = dragStartSnapshot;
+		dragStartSnapshot = null;
+		if (!startBoard) return;
+
+		const nextBoard = cloneBoard(items);
+		if (isSameBoard(startBoard, nextBoard)) return;
+
+		await persistBoard(nextBoard, startBoard);
 	}
 </script>
 
@@ -60,15 +147,12 @@
 	{sensors}
 	modifiers={[RestrictToWindowEdges]}
 	onDragStart={() => {
+		dragStartSnapshot = cloneBoard(items);
 		overlayTilted = true;
+		isDragging = true;
 	}}
 	onDragEnd={(event) => {
-		syncItemOrder(event);
-		overlayTilted = false;
-
-		// Let overlay re-render without tilt before drop animation snapshot is taken.
-		const suspended = event.suspend();
-		requestAnimationFrame(() => suspended.resume());
+		void handleDragEnd(event as EndEvent);
 	}}
 	onDragOver={syncItemOrder}
 >

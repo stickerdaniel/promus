@@ -578,8 +578,9 @@
 	},
 	"hero": {
 		"companies_text": "Powering the best teams",
-		"cta": "Start Building",
+		"cta": "Start now",
 		"cta_demo": "Request a demo",
+		"cta_sourcecode": "View sourcecode",
 		"description": "Bring your SaaS to life in minutes, not months. Open-source template loaded with the tech that gets you shipping.",
 		"section_label": "Home",
 		"tagline": "Focus on your product and ship faster.",
@@ -639,27 +640,6 @@
 		},
 		"description": "Super fast solutions that are actually fun to build with",
 		"title": "Real {year} Developer Experience"
-	},
-	"todo_demo": {
-		"heading": "Task Management Made Simple",
-		"subheading": "Organize your work with drag-and-drop simplicity. Move tasks between columns, set priorities, and track progress in real time.",
-		"cta": "Get Started Free",
-		"column": {
-			"todo": "To Do",
-			"in-progress": "In Progress",
-			"done": "Done"
-		},
-		"add_placeholder": "Add a task...",
-		"add_card": "Add a card",
-		"drag_hint": "Drag and drop to reorder tasks",
-		"sample": {
-			"task_1": "Design landing page",
-			"task_2": "Set up CI/CD pipeline",
-			"task_3": "Build API endpoints",
-			"task_4": "Write documentation",
-			"task_5": "Create database schema",
-			"task_6": "Configure auth system"
-		}
 	},
 	"meta": {
 		"about": {
@@ -750,6 +730,8 @@
 		"get_started": "Get Started",
 		"home": "Home",
 		"login": "Login",
+		"my_tasks": "My tasks",
+		"open_app": "Open app",
 		"pricing": "Pricing",
 		"signup": "Sign up",
 		"solution": "Solution"
@@ -881,6 +863,7 @@
 			"connect_failed": "Failed to get connection link",
 			"connecting": "Connecting...",
 			"description": "Connect and manage your external accounts.",
+			"disconnect_button_label": "Disconnect account",
 			"disconnect_confirm": "Disconnect",
 			"disconnect_description": "Are you sure you want to disconnect {name} ({type})? This cannot be undone.",
 			"disconnect_failed": "Failed to disconnect account",
@@ -953,29 +936,6 @@
 			"passkey_name_label": "Passkey name",
 			"title": "Security",
 			"your_passkeys_title": "Your Passkeys"
-		},
-		"connections": {
-			"connect_button": "Connect Account",
-			"connect_failed": "Failed to get connection link",
-			"connecting": "Connecting...",
-			"description": "Connect and manage your external accounts.",
-			"disconnect_button_label": "Disconnect account",
-			"disconnect_confirm": "Disconnect",
-			"disconnect_description": "Are you sure you want to disconnect {name} ({type})? This cannot be undone.",
-			"disconnect_failed": "Failed to disconnect account",
-			"disconnect_title": "Disconnect Account",
-			"disconnected": "Account disconnected",
-			"error_title": "Error",
-			"info_description": "Connect your messaging and email accounts to enable unified communication features.",
-			"info_title": "Connected Accounts",
-			"load_failed": "Failed to load accounts",
-			"loading": "Loading accounts...",
-			"no_accounts": "No accounts connected yet.",
-			"status_connecting": "Connecting",
-			"status_error": "Error",
-			"status_ok": "Connected",
-			"title": "Connections",
-			"your_accounts_title": "Your Accounts"
 		},
 		"tabs": {
 			"account": "Account",
@@ -1077,6 +1037,38 @@
 		},
 		"section_label": "Team",
 		"title": "Our dream team"
+	},
+	"todo_demo": {
+		"add_card": "Add a card",
+		"add_placeholder": "Add a task...",
+		"aria": {
+			"delete_task": "Delete task",
+			"drag_handle": "Drag to reorder",
+			"toggle_task": "Toggle task completion"
+		},
+		"column": {
+			"done": "Done",
+			"in-progress": "In Progress",
+			"todo": "To Do"
+		},
+		"cta": "Get Started Free",
+		"drag_hint": "Drag and drop to reorder tasks",
+		"heading": "Task Management Made Simple",
+		"priority": {
+			"high": "High",
+			"low": "Low",
+			"medium": "Medium"
+		},
+		"sample": {
+			"task_1": "Design landing page",
+			"task_2": "Set up CI/CD pipeline",
+			"task_3": "Build API endpoints",
+			"task_4": "Write documentation",
+			"task_5": "Create database schema",
+			"task_6": "Configure auth system"
+		},
+		"save_failed": "Failed to save board changes. Please try again.",
+		"subheading": "Organize your work with drag-and-drop simplicity. Move tasks between columns, set priorities, and track progress in real time."
 	},
 	"validation": {
 		"confirm_password": {

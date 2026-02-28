@@ -5,20 +5,27 @@
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import XIcon from '@lucide/svelte/icons/x';
 
-	let { onAdd }: { onAdd: (title: string) => void } = $props();
+	let { onAdd }: { onAdd: (title: string) => void | Promise<void> } = $props();
 
 	const { t } = getTranslate();
 
 	let title = $state('');
 	let editing = $state(false);
 
-	function handleSubmit(e: SubmitEvent) {
+	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
 		const trimmed = title.trim();
 		if (!trimmed) return;
-		onAdd(trimmed);
+		// Optimistically close the input immediately for snappier UX.
 		title = '';
 		editing = false;
+		try {
+			await onAdd(trimmed);
+		} catch {
+			// Restore input only if caller throws unexpectedly.
+			title = trimmed;
+			editing = true;
+		}
 	}
 
 	function cancel() {

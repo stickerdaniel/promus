@@ -11,6 +11,23 @@ export default defineSchema({
 		body: v.string()
 	}).index('by_user', ['userId']),
 
+	// User todo board for app dashboard Kanban
+	todoBoards: defineTable({
+		userId: v.string(), // Better Auth user ID (string, not document ID)
+		tasks: v.array(
+			v.object({
+				id: v.string(),
+				title: v.string(),
+				columnId: v.union(v.literal('todo'), v.literal('in-progress'), v.literal('done')),
+				order: v.number(),
+				createdAt: v.number(),
+				updatedAt: v.number()
+			})
+		),
+		createdAt: v.number(),
+		updatedAt: v.number()
+	}).index('by_user', ['userId']),
+
 	// Email event tracking - stores webhook events from Resend
 	emailEvents: defineTable({
 		emailId: v.string(), // Resend email ID

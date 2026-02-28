@@ -8,7 +8,7 @@
 		isOverlay?: boolean;
 		overlayTilted?: boolean;
 		children: Snippet;
-		onAdd: (title: string) => void;
+		onAdd: (title: string) => void | Promise<void>;
 	}
 </script>
 
@@ -57,7 +57,7 @@
 					<GripVerticalIcon class="size-4" />
 				</button>
 			</div>
-			<div class="grid min-h-[80px] gap-2">
+			<div class="grid min-h-0 gap-2">
 				{@render children()}
 			</div>
 			<TodoAddForm {onAdd} />

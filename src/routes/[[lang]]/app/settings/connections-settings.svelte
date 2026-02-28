@@ -45,10 +45,14 @@
 		}
 	);
 
-	function findDuplicates(items: Account[]): { keep: Account[]; duplicates: Account[] } {
+	function deduplicateAccounts(items: Account[]): {
+		keep: Account[];
+		duplicates: Account[];
+	} {
 		const grouped: Record<string, Account[]> = {};
 		for (const account of items) {
-			const key = `${account.name}::${account.type}`;
+			// Only dedup accounts that have a name — skip unnamed ones
+			const key = account.name ? `${account.name}::${account.type}` : account.id;
 			const group = grouped[key] ?? [];
 			group.push(account);
 			grouped[key] = group;
@@ -57,7 +61,7 @@
 		const keep: Account[] = [];
 		const duplicates: Account[] = [];
 		for (const group of Object.values(grouped)) {
-			// Sort by created_at descending — newest first
+			// Sort by created_at descending — keep the newest
 			group.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
 			keep.push(group[0]);
 			for (let i = 1; i < group.length; i++) {
@@ -67,37 +71,16 @@
 		return { keep, duplicates };
 	}
 
-	function promptDuplicateCleanup(duplicates: Account[], keep: Account[]) {
-		confirmDelete({
-			title: $t('settings.connections.duplicates_title'),
-			description: $t('settings.connections.duplicates_description', {
-				count: duplicates.length
-			}),
-			confirm: { text: $t('settings.connections.duplicates_confirm') },
-			onConfirm: async () => {
-				try {
-					await Promise.all(
-						duplicates.map((d) => client.action(api.unipile.deleteAccount, { accountId: d.id }))
-					);
-					accounts = keep;
-					toast.success($t('settings.connections.duplicates_removed'));
-				} catch (err) {
-					toast.error($t('settings.connections.disconnect_failed'));
-					throw err;
-				}
-			}
-		});
-	}
-
 	async function loadAccounts() {
 		isLoading = true;
 		error = '';
 		try {
 			const result = await client.action(api.unipile.listAccounts, {});
-			const { keep, duplicates } = findDuplicates(result.items);
-			accounts = result.items;
-			if (duplicates.length > 0) {
-				promptDuplicateCleanup(duplicates, keep);
+			const { keep, duplicates } = deduplicateAccounts(result.items);
+			accounts = keep;
+			// Clean up duplicates in the background
+			for (const dup of duplicates) {
+				client.action(api.unipile.deleteAccount, { accountId: dup.id }).catch(() => {});
 			}
 		} catch {
 			error = 'settings.connections.load_failed';

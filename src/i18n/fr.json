@@ -256,6 +256,7 @@
 			"dashboard": "Tableau de bord",
 			"docs": "Documentation",
 			"home": "Accueil",
+			"my_tasks": "Mes tâches",
 			"sandbox": "Sandbox"
 		},
 		"user_menu": {
@@ -679,7 +680,7 @@
 				"title": "Tableau de bord"
 			},
 			"home": {
-				"description": "Redirection vers le tableau de bord de ton espace de travail.",
+				"description": "Redirection vers votre espace de travail.",
 				"title": "Accueil App"
 			},
 			"sandbox": {
@@ -726,6 +727,12 @@
 		"shadcn_demo": {
 			"description": "Prévisualise les composants UI utilisés dans ce projet.",
 			"title": "Démo Shadcn"
+		}
+	},
+	"my_tasks": {
+		"connections": {
+			"connect": "Connecter",
+			"no_accounts": "Aucun compte connecté"
 		}
 	},
 	"nav": {

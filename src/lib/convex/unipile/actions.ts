@@ -102,8 +102,8 @@ export const getHostedAuthLink = action({
 				expiresOn,
 				api_url: `https://${dsn}`,
 				providers: '*',
-				success_redirect_url: `${siteUrl}/app/dashboard`,
-				failure_redirect_url: `${siteUrl}/app/dashboard`
+				success_redirect_url: `${siteUrl}/app/my-tasks`,
+				failure_redirect_url: `${siteUrl}/app/my-tasks`
 			})
 		});
 

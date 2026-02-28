@@ -256,6 +256,7 @@
 			"dashboard": "Dashboard",
 			"docs": "Dokumentation",
 			"home": "Start",
+			"my_tasks": "Meine Aufgaben",
 			"sandbox": "Sandbox"
 		},
 		"user_menu": {
@@ -679,7 +680,7 @@
 				"title": "Dashboard"
 			},
 			"home": {
-				"description": "Weiterleitung zu deinem Workspace-Dashboard.",
+				"description": "Weiterleitung zu Ihrem Workspace.",
 				"title": "App-Start"
 			},
 			"sandbox": {
@@ -726,6 +727,12 @@
 		"shadcn_demo": {
 			"description": "Vorschau der in diesem Projekt verwendeten UI-Komponenten.",
 			"title": "Shadcn-Demo"
+		}
+	},
+	"my_tasks": {
+		"connections": {
+			"connect": "Verbinden",
+			"no_accounts": "Noch keine Konten verbunden"
 		}
 	},
 	"nav": {

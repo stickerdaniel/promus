@@ -256,6 +256,7 @@
 			"dashboard": "Dashboard",
 			"docs": "Dokumentation",
 			"home": "Start",
+			"my_tasks": "Meine Aufgaben",
 			"sandbox": "Sandbox"
 		},
 		"user_menu": {
@@ -728,6 +729,12 @@
 			"title": "Shadcn-Demo"
 		}
 	},
+	"my_tasks": {
+		"connections": {
+			"connect": "Verbinden",
+			"no_accounts": "Noch keine Konten verbunden"
+		}
+	},
 	"nav": {
 		"about": "Über uns",
 		"dashboard": "Dashboard",
@@ -1073,6 +1080,17 @@
 			"todo": "Zu erledigen"
 		},
 		"cta": "Kostenlos starten",
+		"detail": {
+			"agent_logs": "Agent-Protokolle",
+			"cancel": "Abbrechen",
+			"delete": "Löschen",
+			"description": "Aufgabendetails bearbeiten oder vom Board entfernen.",
+			"notes": "Notizen",
+			"notes_placeholder": "Notizen oder Kontext hinzufügen...",
+			"save": "Speichern",
+			"task_name": "Aufgabenname",
+			"title": "Aufgabendetails"
+		},
 		"drag_hint": "Aufgaben per Drag-and-Drop neu anordnen",
 		"heading": "Deine Todo-Liste hat gerade 8 Arme bekommen",
 		"priority": {
@@ -1087,17 +1105,6 @@
 			"task_4": "Flüge nach Berlin buchen",
 			"task_5": "Meeting mit Sarah vorbereiten",
 			"task_6": "Mit Konferenz-Speakern auf LinkedIn connecten"
-		},
-		"detail": {
-			"agent_logs": "Agent-Protokolle",
-			"cancel": "Abbrechen",
-			"delete": "Löschen",
-			"description": "Aufgabendetails bearbeiten oder vom Board entfernen.",
-			"notes": "Notizen",
-			"notes_placeholder": "Notizen oder Kontext hinzufügen...",
-			"save": "Speichern",
-			"task_name": "Aufgabenname",
-			"title": "Aufgabendetails"
 		},
 		"save_failed": "Änderungen am Board konnten nicht gespeichert werden. Bitte versuch es erneut.",
 		"subheading": "Füge eine Aufgabe hinzu. Promus recherchiert, formuliert und erledigt im Hintergrund — verbunden mit all deinen professionellen Tools."

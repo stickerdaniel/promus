@@ -256,6 +256,7 @@
 			"dashboard": "Tableau de bord",
 			"docs": "Documentation",
 			"home": "Accueil",
+			"my_tasks": "Mes tâches",
 			"sandbox": "Sandbox"
 		},
 		"user_menu": {
@@ -728,6 +729,12 @@
 			"title": "Démo Shadcn"
 		}
 	},
+	"my_tasks": {
+		"connections": {
+			"connect": "Connecter",
+			"no_accounts": "Aucun compte connecté"
+		}
+	},
 	"nav": {
 		"about": "À propos",
 		"dashboard": "Tableau de bord",
@@ -1073,6 +1080,17 @@
 			"todo": "À faire"
 		},
 		"cta": "Commencer gratuitement",
+		"detail": {
+			"agent_logs": "Journaux de l'agent",
+			"cancel": "Annuler",
+			"delete": "Supprimer",
+			"description": "Modifier les détails de la tâche ou la retirer du tableau.",
+			"notes": "Notes",
+			"notes_placeholder": "Ajouter des notes ou du contexte...",
+			"save": "Enregistrer",
+			"task_name": "Nom de la tâche",
+			"title": "Détails de la tâche"
+		},
 		"drag_hint": "Glisse et dépose pour réorganiser les tâches",
 		"heading": "Ta liste de tâches vient de pousser 8 bras",
 		"priority": {
@@ -1087,17 +1105,6 @@
 			"task_4": "Réserver des vols pour Berlin",
 			"task_5": "Préparer la réunion avec Sarah",
 			"task_6": "Se connecter avec les intervenants sur LinkedIn"
-		},
-		"detail": {
-			"agent_logs": "Journaux de l'agent",
-			"cancel": "Annuler",
-			"delete": "Supprimer",
-			"description": "Modifier les détails de la tâche ou la retirer du tableau.",
-			"notes": "Notes",
-			"notes_placeholder": "Ajouter des notes ou du contexte...",
-			"save": "Enregistrer",
-			"task_name": "Nom de la tâche",
-			"title": "Détails de la tâche"
 		},
 		"save_failed": "Impossible d'enregistrer les modifications du tableau. Réessaie.",
 		"subheading": "Ajoute une tâche. Promus recherche, rédige et exécute en arrière-plan — connecté à tous tes outils professionnels."

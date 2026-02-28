@@ -1,0 +1,127 @@
+// .vscode/tasks.json
+{
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"label": "bun run dev",
+			"type": "shell",
+			"command": "bun",
+			"args": ["run", "dev"],
+			"group": {
+				"kind": "build",
+				"isDefault": true
+			},
+			"problemMatcher": [],
+			"detail": "Run the frontend and backend development servers",
+			"presentation": {
+				"clear": true
+			}
+		},
+		{
+			"label": "bun run quality-check",
+			"type": "shell",
+			"command": "bun",
+			"args": ["run", "quality-check"],
+			"group": {
+				"kind": "test",
+				"isDefault": true
+			},
+			"problemMatcher": ["$eslint-compact", "$tsc"],
+			"detail": "Run full quality checks (same as CI)",
+			"presentation": {
+				"clear": true
+			}
+		},
+		{
+			"label": "bun run quality-check:staged",
+			"type": "shell",
+			"command": "bun",
+			"args": ["run", "quality-check:staged"],
+			"group": "test",
+			"problemMatcher": ["$eslint-compact", "$tsc"],
+			"detail": "Run pre-commit checks on staged files only",
+			"presentation": {
+				"clear": true
+			}
+		},
+		{
+			"label": "bun run i18n:pull",
+			"type": "shell",
+			"command": "bun",
+			"args": ["run", "i18n:pull"],
+			"group": "none",
+			"problemMatcher": [],
+			"detail": "Pull latest translations from Tolgee Cloud",
+			"presentation": {
+				"clear": true
+			}
+		},
+		{
+			"label": "bun run i18n:push",
+			"type": "shell",
+			"command": "bun",
+			"args": ["run", "i18n:push"],
+			"group": "none",
+			"problemMatcher": [],
+			"detail": "Push local translation files to Tolgee Cloud",
+			"presentation": {
+				"clear": true
+			}
+		},
+		{
+			"label": "bun run i18n:cleanup",
+			"type": "shell",
+			"command": "bun",
+			"args": ["run", "i18n:cleanup"],
+			"group": "none",
+			"problemMatcher": [],
+			"detail": "Find deprecated keys and tag them (review in Tolgee Cloud UI after)",
+			"presentation": {
+				"clear": true
+			}
+		},
+		{
+			"label": "bun run build:emails",
+			"type": "shell",
+			"command": "bun",
+			"args": ["run", "build:emails"],
+			"group": "none",
+			"problemMatcher": [],
+			"detail": "Build email templates from Svelte components",
+			"presentation": {
+				"clear": true
+			}
+		},
+		{
+			"label": "bun run worktree --open-editor",
+			"type": "shell",
+			"command": "bun",
+			"args": ["run", "worktree", "${input:branchName}", "--open-editor", "${input:editorChoice}"],
+			"group": "none",
+			"problemMatcher": [],
+			"detail": "Create a new git worktree with Graphite tracking and environment setup",
+			"presentation": {
+				"echo": true,
+				"reveal": "always",
+				"focus": true,
+				"panel": "shared",
+				"clear": true
+			}
+		}
+	],
+	"inputs": [
+		{
+			"id": "branchName",
+			"type": "promptString",
+			"description": "Branch name for new worktree (e.g., feature-auth)",
+			"default": "feature/"
+		},
+		{
+			"id": "editorChoice",
+			"type": "pickString",
+			"description": "Open worktree in which editor?",
+			"options": ["cursor", "code"],
+			"default": "cursor"
+		}
+	]
+}

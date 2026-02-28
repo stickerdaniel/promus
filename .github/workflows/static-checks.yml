@@ -1,0 +1,48 @@
+name: Static Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  lint-format:
+    name: Lint & Format
+    runs-on: ubicloud-standard-2
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: oven-sh/setup-bun@3d267786b128fe76c2f16a390aa2448b815359f3 # v2
+      - run: bun install
+      - run: bun run lint
+      - run: bun run format --check
+
+  typecheck:
+    name: Type Check
+    runs-on: ubicloud-standard-2
+    env:
+      PUBLIC_CONVEX_URL: https://placeholder.convex.cloud
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: oven-sh/setup-bun@3d267786b128fe76c2f16a390aa2448b815359f3 # v2
+      - run: bun install
+      - run: bun scripts/build-emails.ts
+      - run: bun run check
+
+  spell-check:
+    name: Spell Check
+    runs-on: ubicloud-standard-2
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version: 'stable'
+      - run: go install github.com/client9/misspell/cmd/misspell@latest
+      - name: Run misspell (excluding i18n)
+        run: |
+          find . -type f \
+            -not -path './node_modules/*' \
+            -not -path './.git/*' \
+            -not -path './src/i18n/*' \
+            -not -path './.svelte-kit/*' \
+            -not -path './convex/_generated/*' \
+            | xargs misspell -error

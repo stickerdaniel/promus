@@ -7,6 +7,9 @@
 		"convex": {
 			"command": "bunx",
 			"args": ["-y", "convex@latest", "mcp", "start"]
+		},
+		"unipile": {
+			"url": "https://developer.unipile.com/mcp"
 		}
 	}
 }

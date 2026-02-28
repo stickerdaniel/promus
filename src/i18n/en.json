@@ -577,11 +577,11 @@
 		"search_placeholder": "Try searching for pages..."
 	},
 	"hero": {
-		"companies_text": "made possible by",
-		"cta": "Start now",
+		"companies_text": "Trusted by professionals",
+		"cta": "Get started",
 		"cta_demo": "Request a demo",
 		"cta_sourcecode": "View sourcecode",
-		"description": "The AI agent that does your todos. Connected to all your professional tools.",
+		"description": "An AI agent that completes your todos. Connected to all your professional tools.",
 		"section_label": "Home",
 		"tagline": "Your todo list just grew 8 arms.",
 		"title": "Promus"
@@ -638,8 +638,8 @@
 				"title": "Tolgee"
 			}
 		},
-		"description": "Super fast solutions that are actually fun to build with",
-		"title": "Real {year} Developer Experience"
+		"description": "Promus works with the tools you already use",
+		"title": "Connected to your tools"
 	},
 	"meta": {
 		"about": {
@@ -711,8 +711,8 @@
 			}
 		},
 		"home": {
-			"description": "Organize your work with drag-and-drop kanban boards. Track tasks, set priorities, and collaborate in real time.",
-			"title": "Task Management Made Simple"
+			"description": "Add a task. Promus researches, drafts, and executes — connected to your email, calendar, and messages.",
+			"title": "The AI agent that does your todos"
 		},
 		"pricing": {
 			"description": "Choose a plan and test the integrated billing flow.",
@@ -734,7 +734,7 @@
 		"open_app": "Open app",
 		"pricing": "Pricing",
 		"signup": "Sign up",
-		"solution": "Solution"
+		"solution": "How it works"
 	},
 	"pricing": {
 		"buttons": {
@@ -743,8 +743,8 @@
 		},
 		"current_plan": "Current Plan",
 		"current_plan_badge": "(Current Plan)",
-		"description": "This SaaS starter template is completely free and open source. Try the payment flow using the test card number 4242 4242 4242 4242 with any future expiry date.",
-		"description_autumn": "Test the integrated payment system powered by Autumn - an open-source billing platform that handles subscriptions, usage limits, and Stripe webhooks automatically.",
+		"description": "Simple pricing for a smarter todo list. Try the AI agent free, upgrade when you need more.",
+		"description_autumn": "Simple pricing for a smarter todo list. Try the AI agent free, upgrade when you need more.",
 		"features": {
 			"enterprise": {
 				"0": "Custom message limits",
@@ -804,7 +804,7 @@
 				"price": "$10 / month"
 			}
 		},
-		"title": "Pricing that Scales with You"
+		"title": "Simple pricing"
 	},
 	"search": {
 		"command": {
@@ -1053,22 +1053,22 @@
 		},
 		"cta": "Get Started Free",
 		"drag_hint": "Drag and drop to reorder tasks",
-		"heading": "Task Management Made Simple",
+		"heading": "Your todo list just grew 8 arms",
 		"priority": {
 			"high": "High",
 			"low": "Low",
 			"medium": "Medium"
 		},
 		"sample": {
-			"task_1": "Design landing page",
-			"task_2": "Set up CI/CD pipeline",
-			"task_3": "Build API endpoints",
-			"task_4": "Write documentation",
-			"task_5": "Create database schema",
-			"task_6": "Configure auth system"
+			"task_1": "Find a restaurant for Saturday",
+			"task_2": "Follow up with Marc about the proposal",
+			"task_3": "Cancel gym membership",
+			"task_4": "Book flights to Berlin",
+			"task_5": "Prepare for meeting with Sarah",
+			"task_6": "Connect with conference speakers on LinkedIn"
 		},
 		"save_failed": "Failed to save board changes. Please try again.",
-		"subheading": "Organize your work with drag-and-drop simplicity. Move tasks between columns, set priorities, and track progress in real time."
+		"subheading": "Add a task. Promus researches, drafts, and executes in the background — connected to all your professional tools."
 	},
 	"validation": {
 		"confirm_password": {

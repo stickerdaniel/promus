@@ -15,17 +15,17 @@
 			"title": "Admin Dashboard"
 		},
 		"dialog": {
-			"ban_description": "Möchten Sie {email} wirklich sperren? Der Zugriff auf die App wird blockiert.",
+			"ban_description": "Möchtest du {email} wirklich sperren? Der Zugriff auf die App wird blockiert.",
 			"ban_reason_placeholder": "Sperrgrund (optional)",
 			"ban_title": "Benutzer sperren",
-			"impersonation_active_description": "Bitte laden Sie die Seite neu, um als der andere Benutzer angemeldet zu werden.",
+			"impersonation_active_description": "Bitte lade die Seite neu, um als der andere Benutzer angemeldet zu werden.",
 			"impersonation_active_title": "Identitätswechsel aktiv",
 			"reload_page": "Seite neu laden",
-			"revoke_description": "Möchten Sie wirklich alle Sitzungen für {email} widerrufen? Die Person wird überall abgemeldet.",
+			"revoke_description": "Möchtest du wirklich alle Sitzungen für {email} widerrufen? Die Person wird überall abgemeldet.",
 			"revoke_title": "Sitzungen widerrufen",
-			"set_role_description": "Möchten Sie die Rolle von {email} wirklich auf {role} ändern?",
+			"set_role_description": "Möchtest du die Rolle von {email} wirklich auf {role} ändern?",
 			"set_role_title": "Benutzerrolle ändern",
-			"unban_description": "Möchten Sie die Sperre für {email} wirklich aufheben? Der Zugriff wird wiederhergestellt.",
+			"unban_description": "Möchtest du die Sperre für {email} wirklich aufheben? Der Zugriff wird wiederhergestellt.",
 			"unban_title": "Sperre aufheben"
 		},
 		"metrics": {
@@ -85,7 +85,7 @@
 			"invalid_email": "Ungültige E-Mail-Adresse",
 			"no_recipients": "Keine Benachrichtigungsempfänger konfiguriert",
 			"notification_recipients": "Benachrichtigungsempfänger",
-			"notification_recipients_desc": "Konfigurieren Sie, wer Admin-Benachrichtigungen erhält. Admin-Benutzer werden automatisch einbezogen.",
+			"notification_recipients_desc": "Lege fest, wer Admin-Benachrichtigungen erhält. Admin-Benutzer werden automatisch einbezogen.",
 			"preference_disabled": "{field} deaktiviert",
 			"preference_disabling": "{field} wird deaktiviert...",
 			"preference_enabled": "{field} aktiviert",
@@ -164,8 +164,8 @@
 			"search": {
 				"placeholder": "Chats suchen..."
 			},
-			"select_chat": "Wählen Sie einen Chat, um die Unterhaltung anzuzeigen",
-			"select_chat_for_details": "Wählen Sie einen Chat, um Details anzuzeigen",
+			"select_chat": "Wähle einen Chat, um die Unterhaltung anzuzeigen",
+			"select_chat_for_details": "Wähle einen Chat, um Details anzuzeigen",
 			"status": {
 				"done": "Erledigt",
 				"in_progress": "In Bearbeitung",
@@ -252,7 +252,7 @@
 			"admin_panel": "Admin-Bereich",
 			"community_chat": "Community-Chat",
 			"connect_accounts": "Konten verbinden",
-			"connect_accounts_error": "Verbindungslink konnte nicht abgerufen werden. Bitte versuchen Sie es erneut.",
+			"connect_accounts_error": "Verbindungslink konnte nicht abgerufen werden. Bitte versuch es erneut.",
 			"dashboard": "Dashboard",
 			"docs": "Dokumentation",
 			"home": "Start"
@@ -260,7 +260,7 @@
 		"user_menu": {
 			"account": "Konto",
 			"billing": "Abrechnung",
-			"impersonating_banner": "Sie agieren als dieser Benutzer",
+			"impersonating_banner": "Du agierst als dieser Benutzer",
 			"impersonation_stop_failed": "Identitätswechsel konnte nicht beendet werden",
 			"impersonation_stopped": "Identitätswechsel beendet",
 			"logout": "Abmelden",
@@ -316,13 +316,13 @@
 	"auth": {
 		"back_to_home": "Zurück zur Startseite",
 		"errors": {
-			"confirm_password_required": "Bitte bestätigen Sie Ihr Passwort",
+			"confirm_password_required": "Bitte bestätige dein Passwort",
 			"current_password_required": "Aktuelles Passwort ist erforderlich",
 			"invalid_credentials": "Ungültige E-Mail oder Passwort",
-			"invalid_email": "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+			"invalid_email": "Bitte gib eine gültige E-Mail-Adresse ein",
 			"invalid_secret": "Ungültiges Geheimnis",
 			"name_required": "Name ist erforderlich",
-			"oauth_failed": "Soziale Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+			"oauth_failed": "Soziale Anmeldung fehlgeschlagen. Bitte versuch es erneut.",
 			"passkey_failed": "Passkey-Authentifizierung fehlgeschlagen",
 			"password_lowercase": "Passwort muss mindestens einen Kleinbuchstaben enthalten",
 			"password_min_length": "Passwort muss mindestens {minLength} Zeichen lang sein",
@@ -331,13 +331,13 @@
 			"password_uppercase": "Passwort muss mindestens einen Großbuchstaben enthalten",
 			"passwords_do_not_match": "Passwörter stimmen nicht überein",
 			"signup_failed": "Konto konnte nicht erstellt werden. E-Mail wird möglicherweise bereits verwendet.",
-			"verification_invalid": "Ungültiger oder abgelaufener Verifizierungscode. Bitte versuchen Sie es erneut."
+			"verification_invalid": "Ungültiger oder abgelaufener Verifizierungscode. Bitte versuch es erneut."
 		},
 		"forgot_password": {
 			"back_to_signin": "Zurück zur Anmeldung",
 			"button_loading": "Wird gesendet...",
 			"button_submit": "Link senden",
-			"description": "Wir senden Ihnen einen Link zum Zurücksetzen",
+			"description": "Wir senden dir einen Link zum Zurücksetzen",
 			"title": "Passwort vergessen"
 		},
 		"login": "Anmelden",
@@ -345,15 +345,15 @@
 		"messages": {
 			"auth_cancelled": "Authentifizierung abgebrochen",
 			"email_change_failed": "E-Mail konnte nicht geändert werden",
-			"email_not_verified": "Bitte bestätigen Sie Ihre E-Mail-Adresse",
+			"email_not_verified": "Bitte bestätige deine E-Mail-Adresse",
 			"email_same_as_current": "Neue E-Mail muss sich von der aktuellen E-Mail unterscheiden",
 			"email_updated": "E-Mail erfolgreich aktualisiert",
-			"email_verification_sent": "Bestätigungs-E-Mail wurde an Ihre aktuelle Adresse gesendet. Bitte prüfen Sie Ihren Posteingang, um die Änderung zu bestätigen.",
-			"generic_error": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+			"email_verification_sent": "Bestätigungs-E-Mail wurde an deine aktuelle Adresse gesendet. Bitte prüfe deinen Posteingang, um die Änderung zu bestätigen.",
+			"generic_error": "Ein Fehler ist aufgetreten. Bitte versuch es erneut.",
 			"invalid_credentials": "Ungültige E-Mail oder Passwort",
 			"invalid_token": "Ungültiger oder abgelaufener Token",
 			"missing_reset_token": "Fehlender oder ungültiger Reset-Token",
-			"oauth_failed": "Soziale Anmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+			"oauth_failed": "Soziale Anmeldung fehlgeschlagen. Bitte versuch es erneut.",
 			"passkey_add_failed": "Passkey konnte nicht hinzugefügt werden",
 			"passkey_added": "Passkey erfolgreich hinzugefügt",
 			"passkey_delete_failed": "Passkey konnte nicht gelöscht werden",
@@ -363,14 +363,14 @@
 			"password_change_failed": "Passwort konnte nicht geändert werden",
 			"password_changed": "Passwort erfolgreich geändert",
 			"password_compromised": "Dieses Passwort wurde kompromittiert",
-			"password_reset_success": "Ihr Passwort wurde erfolgreich zurückgesetzt.",
-			"rate_limited": "Zu viele Anfragen. Bitte versuchen Sie es später erneut.",
+			"password_reset_success": "Dein Passwort wurde erfolgreich zurückgesetzt.",
+			"rate_limited": "Zu viele Anfragen. Bitte versuch es später erneut.",
 			"request_reset_failed": "Passwort-Reset konnte nicht angefordert werden",
 			"reset_failed": "Passwort konnte nicht zurückgesetzt werden",
-			"reset_link_sent": "Bitte prüfen Sie Ihre E-Mail für den Reset-Link.",
+			"reset_link_sent": "Bitte prüfe deine E-Mail für den Reset-Link.",
 			"signup_disabled": "Registrierung ist deaktiviert",
 			"signup_failed": "Konto konnte nicht erstellt werden",
-			"too_many_attempts": "Zu viele Versuche. Bitte versuchen Sie es später erneut.",
+			"too_many_attempts": "Zu viele Versuche. Bitte versuch es später erneut.",
 			"user_already_exists": "Ein Konto mit dieser E-Mail existiert bereits"
 		},
 		"reset_password": {
@@ -378,10 +378,10 @@
 			"button_loading": "Wird zurückgesetzt...",
 			"button_submit": "Passwort zurücksetzen",
 			"confirm_password_label": "Neues Passwort bestätigen",
-			"description": "Geben Sie Ihr neues Passwort ein",
+			"description": "Gib dein neues Passwort ein",
 			"new_password_label": "Neues Passwort",
 			"sign_in_link": "Anmelden",
-			"success": "Ihr Passwort wurde zurückgesetzt.",
+			"success": "Dein Passwort wurde zurückgesetzt.",
 			"title": "Passwort zurücksetzen"
 		},
 		"signin": {
@@ -390,7 +390,7 @@
 			"button_signup": "Registrieren",
 			"button_signup_loading": "Konto wird erstellt...",
 			"cancel": "Abbrechen",
-			"description": "Melden Sie sich bei Ihrem Konto an oder erstellen Sie ein neues",
+			"description": "Melde dich bei deinem Konto an oder erstelle ein neues",
 			"email_label": "E-Mail",
 			"email_placeholder": "du@beispiel.de",
 			"forgot_password": "Passwort vergessen?",
@@ -411,13 +411,13 @@
 			"title": "Willkommen zurück"
 		},
 		"signup": "Registrieren",
-		"signup.description": "Geben Sie Ihre Daten ein, um loszulegen",
+		"signup.description": "Gib deine Daten ein, um loszulegen",
 		"signup.has_account": "Bereits ein Konto?",
 		"signup.link_signin": "Anmelden",
 		"signup.password_hint": "Mindestens 10 Zeichen mit Groß-, Kleinbuchstaben und Zahl",
 		"signup.title": "Konto erstellen",
 		"terms": {
-			"agreement": "Mit dem Fortfahren akzeptieren Sie unsere",
+			"agreement": "Mit dem Fortfahren akzeptierst du unsere",
 			"and": "und",
 			"privacy_policy": "Datenschutzrichtlinie",
 			"terms_of_service": "Nutzungsbedingungen"
@@ -427,28 +427,28 @@
 			"button_cancel": "Abbrechen",
 			"button_verify": "E-Mail verifizieren",
 			"button_verify_loading": "Wird verifiziert...",
-			"check_email": "Bitte überprüfen Sie Ihre E-Mail und klicken Sie auf den Verifizierungslink, um Ihre Registrierung abzuschließen.",
+			"check_email": "Bitte überprüfe deine E-Mail und klicke auf den Verifizierungslink, um deine Registrierung abzuschließen.",
 			"code_label": "Verifizierungscode",
 			"code_placeholder": "12345678",
-			"description": "Wir haben Ihnen einen Verifizierungslink gesendet",
+			"description": "Wir haben dir einen Verifizierungslink gesendet",
 			"sent_to": "Wir haben eine Verifizierungs-E-Mail an",
 			"title": "E-Mail-Verifizierung",
-			"verified_description": "Ihre E-Mail wurde verifiziert. Sie werden angemeldet...",
+			"verified_description": "Deine E-Mail wurde verifiziert. Du wirst angemeldet...",
 			"verified_title": "E-Mail verifiziert"
 		}
 	},
 	"backend": {
 		"files": {
-			"fetch_failed": "Die hochgeladene Datei konnte nicht abgerufen werden. Bitte versuchen Sie es erneut.",
+			"fetch_failed": "Die hochgeladene Datei konnte nicht abgerufen werden. Bitte versuch es erneut.",
 			"type_not_allowed": "Dateityp nicht erlaubt. Unterstützt: PNG, JPEG, WebP, GIF, PDF"
 		},
 		"support": {
 			"handoff": {
-				"response": "Natürlich! Ich verbinde Sie jetzt. Bitte geben Sie unten Ihre E-Mail-Adresse ein und wir benachrichtigen Sie, wenn unser Support-Team geantwortet hat. In der Zwischenzeit können Sie gerne weitere Details hinzufügen, die uns helfen könnten."
+				"response": "Natürlich! Ich verbinde dich jetzt. Bitte gib unten deine E-Mail-Adresse ein und wir benachrichtigen dich, wenn unser Support-Team geantwortet hat. In der Zwischenzeit kannst du gerne weitere Details hinzufügen, die uns helfen könnten."
 			},
 			"rate_limit": {
-				"global": "Ich habe gerade eine hohe Auslastung. Bitte versuchen Sie es in einem Moment erneut.",
-				"user": "Zu viele Nachrichten. Bitte warten Sie, bevor Sie eine weitere senden."
+				"global": "Ich habe gerade eine hohe Auslastung. Bitte versuch es in einem Moment erneut.",
+				"user": "Zu viele Nachrichten. Bitte warte, bevor du eine weitere sendest."
 			},
 			"summary": {
 				"default": "Neues Support-Gespräch"
@@ -464,12 +464,12 @@
 		},
 		"alerts": {
 			"limit_reached": {
-				"description": "Sie haben alle {total} kostenlosen Nachrichten für diesen Monat verbraucht.",
+				"description": "Du hast alle {total} kostenlosen Nachrichten für diesen Monat verbraucht.",
 				"title": "Nachrichtenlimit erreicht"
 			},
 			"low_messages": {
-				"description": "Sie haben noch {remaining} von {total} Nachricht für diesen Monat.",
-				"description_plural": "Sie haben noch {remaining} von {total} Nachrichten für diesen Monat.",
+				"description": "Du hast noch {remaining} von {total} Nachricht für diesen Monat.",
+				"description_plural": "Du hast noch {remaining} von {total} Nachrichten für diesen Monat.",
 				"title": "Wenig Nachrichten übrig"
 			}
 		},
@@ -490,13 +490,13 @@
 			"processing": "Wird verarbeitet...",
 			"upgrade": "Auf Pro upgraden"
 		},
-		"description": "Öffnen Sie diese App in mehreren Browser-Fenstern, um die Echtzeit-Datenbank in Aktion zu sehen",
+		"description": "Öffne diese App in mehreren Browser-Fenstern, um die Echtzeit-Datenbank in Aktion zu sehen",
 		"email": {
 			"placeholder": "Email",
-			"save_failed": "E-Mail konnte nicht gespeichert werden. Bitte versuchen Sie es erneut.",
-			"saved_success": "E-Mail gespeichert! Wir benachrichtigen Sie, wenn wir antworten.",
+			"save_failed": "E-Mail konnte nicht gespeichert werden. Bitte versuch es erneut.",
+			"saved_success": "E-Mail gespeichert! Wir benachrichtigen dich, wenn wir antworten.",
 			"subscribe_button": "Abonnieren",
-			"unsubscribe_failed": "Abmeldung fehlgeschlagen. Bitte versuchen Sie es erneut.",
+			"unsubscribe_failed": "Abmeldung fehlgeschlagen. Bitte versuch es erneut.",
 			"unsubscribe_tooltip": "Abbestellen",
 			"unsubscribed": "E-Mail-Benachrichtigungen abbestellt."
 		},
@@ -534,7 +534,7 @@
 		},
 		"suggestion": {
 			"help_label": "Hilfe erhalten",
-			"help_text": "Können Sie mir helfen mit...",
+			"help_text": "Kannst du mir helfen mit...",
 			"issue_label": "Problem melden",
 			"issue_text": "Ich habe ein Problem gefunden mit...",
 			"question_label": "Frage stellen",
@@ -561,7 +561,7 @@
 		},
 		"subject": {
 			"reset_password": "Passwort zurücksetzen",
-			"support_reply": "Neue Antwort auf Ihre Support-Anfrage",
+			"support_reply": "Neue Antwort auf deine Support-Anfrage",
 			"ticket_new": "Neues Support-Ticket von {userName}",
 			"ticket_reopened": "Support-Ticket wiedereröffnet von {userName}",
 			"verify": "E-Mail-Adresse bestätigen"
@@ -571,19 +571,19 @@
 		"back_home": "Zurück zur Startseite",
 		"generic_description": "Beim Laden dieser Seite ist ein unerwarteter Fehler aufgetreten.",
 		"generic_title": "Etwas ist schiefgelaufen",
-		"need_help": "Brauchen Sie Hilfe?",
-		"not_found_description": "Die gesuchte Seite existiert nicht. Versuchen Sie unten nach dem zu suchen, was Sie brauchen.",
+		"need_help": "Brauchst du Hilfe?",
+		"not_found_description": "Die gesuchte Seite existiert nicht. Versuch unten nach dem zu suchen, was du brauchst.",
 		"not_found_title": "404 - Seite nicht gefunden",
-		"search_placeholder": "Versuchen Sie, nach Seiten zu suchen..."
+		"search_placeholder": "Versuch nach Seiten zu suchen..."
 	},
 	"hero": {
-		"companies_text": "ermöglicht durch",
+		"companies_text": "Von Profis genutzt",
 		"cta": "Jetzt starten",
 		"cta_demo": "Demo anfordern",
 		"cta_sourcecode": "Quellcode ansehen",
-		"description": "Der KI-Agent, der deine Todos erledigt. Verbunden mit all deinen professionellen Tools.",
+		"description": "Ein KI-Agent, der deine Todos erledigt. Verbunden mit all deinen professionellen Tools.",
 		"section_label": "Start",
-		"tagline": "Deine To-do-Liste hat gerade 8 Arme bekommen.",
+		"tagline": "Deine Todo-Liste hat gerade 8 Arme bekommen.",
 		"title": "Promus"
 	},
 	"integrations": {
@@ -629,7 +629,7 @@
 			},
 			"svelte": {
 				"button": "Zu Svelte 5",
-				"description": "Das beliebteste Frontend-Framework. Eine einfache, leistungsstarke und zukunftssichere Art, Ihre Web-App zu erstellen.",
+				"description": "Das beliebteste Frontend-Framework. Eine einfache, leistungsstarke und zukunftssichere Art, deine Web-App zu erstellen.",
 				"title": "Svelte 5"
 			},
 			"tolgee": {
@@ -638,17 +638,17 @@
 				"title": "Tolgee"
 			}
 		},
-		"description": "Superschnelle Lösungen, die tatsächlich Spaß beim Entwickeln machen",
-		"title": "Echte {year} Developer Experience"
+		"description": "Promus arbeitet mit den Tools, die du bereits nutzt",
+		"title": "Verbunden mit deinen Tools"
 	},
 	"meta": {
 		"about": {
-			"description": "Lernen Sie das talentierte Team hinter unserem Produkt kennen",
-			"title": "Über uns - Lernen Sie unser Team kennen"
+			"description": "Lerne das talentierte Team hinter unserem Produkt kennen",
+			"title": "Über uns - Lerne unser Team kennen"
 		},
 		"admin": {
 			"dashboard": {
-				"description": "Überwachen Sie Plattformmetriken und externe Dienste.",
+				"description": "Überwache Plattformmetriken und externe Dienste.",
 				"title": "Admin-Dashboard"
 			},
 			"home": {
@@ -656,51 +656,51 @@
 				"title": "Admin"
 			},
 			"settings": {
-				"description": "Konfigurieren Sie Admin-Benachrichtigungen und Einstellungen.",
+				"description": "Konfiguriere Admin-Benachrichtigungen und Einstellungen.",
 				"title": "Admin-Einstellungen"
 			},
 			"support": {
-				"description": "Prüfen und beantworten Sie Support-Anfragen von Nutzern.",
+				"description": "Prüfe und beantworte Support-Anfragen von Nutzern.",
 				"title": "Support-Postfach"
 			},
 			"users": {
-				"description": "Verwalten Sie Nutzer, Rollen und Kontostatus.",
+				"description": "Verwalte Nutzer, Rollen und Kontostatus.",
 				"title": "Nutzerverwaltung"
 			}
 		},
 		"app": {
 			"community_chat": {
-				"description": "Chatten Sie in Echtzeit mit der Community.",
+				"description": "Chatte in Echtzeit mit der Community.",
 				"title": "Community-Chat"
 			},
 			"dashboard": {
-				"description": "Sehen Sie wichtige Kennzahlen und aktuelle Aktivitäten.",
+				"description": "Sieh dir wichtige Kennzahlen und aktuelle Aktivitäten an.",
 				"title": "Dashboard"
 			},
 			"home": {
-				"description": "Weiterleitung zu Ihrem Workspace-Dashboard.",
+				"description": "Weiterleitung zu deinem Workspace-Dashboard.",
 				"title": "App-Start"
 			},
 			"settings": {
-				"description": "Verwalten Sie Ihre Kontoeinstellungen und Präferenzen.",
+				"description": "Verwalte deine Kontoeinstellungen und Präferenzen.",
 				"title": "Einstellungen"
 			}
 		},
 		"auth": {
 			"email_verified": {
-				"description": "Ihre E-Mail-Adresse wurde bestätigt. Sie können nun mit Ihrem Konto fortfahren.",
+				"description": "Deine E-Mail-Adresse wurde bestätigt. Du kannst nun mit deinem Konto fortfahren.",
 				"title": "E-Mail bestätigt"
 			},
 			"forgot_password": {
-				"description": "Fordern Sie einen Link zum Zurücksetzen des Passworts an.",
+				"description": "Fordere einen Link zum Zurücksetzen des Passworts an.",
 				"title": "Passwort vergessen"
 			},
 			"reset_password": {
-				"description": "Legen Sie ein neues Passwort für Ihr Konto fest.",
+				"description": "Lege ein neues Passwort für dein Konto fest.",
 				"title": "Passwort zurücksetzen"
 			},
 			"signin": {
-				"description": "Melden Sie sich an oder erstellen Sie ein neues Konto.",
+				"description": "Melde dich an oder erstelle ein neues Konto.",
 				"title": "Anmelden"
 			}
 		},
@@ -711,11 +711,11 @@
 			}
 		},
 		"home": {
-			"description": "Organisiere deine Arbeit mit Drag-and-Drop-Kanban-Boards. Verfolge Aufgaben, setze Prioritäten und arbeite in Echtzeit zusammen.",
-			"title": "Aufgabenverwaltung leicht gemacht"
+			"description": "Füge eine Aufgabe hinzu. Promus recherchiert, formuliert und erledigt — verbunden mit deiner E-Mail, deinem Kalender und deinen Nachrichten.",
+			"title": "Der KI-Agent, der deine Todos erledigt"
 		},
 		"pricing": {
-			"description": "Wählen Sie einen Plan und testen Sie den integrierten Abrechnungsablauf.",
+			"description": "Wähle einen Plan und teste den integrierten Abrechnungsablauf.",
 			"title": "Preise"
 		},
 		"shadcn_demo": {
@@ -734,7 +734,7 @@
 		"open_app": "App öffnen",
 		"pricing": "Pläne",
 		"signup": "Registrieren",
-		"solution": "Lösung"
+		"solution": "So funktioniert's"
 	},
 	"pricing": {
 		"buttons": {
@@ -743,8 +743,8 @@
 		},
 		"current_plan": "Aktueller Plan",
 		"current_plan_badge": "(Aktueller Plan)",
-		"description": "Diese Promus ist vollständig kostenlos und Open Source. Testen Sie den Zahlungsablauf mit der Testkartennummer 4242 4242 4242 4242 und einem beliebigen zukünftigen Ablaufdatum.",
-		"description_autumn": "Testen Sie das integrierte Zahlungssystem powered by Autumn - eine Open-Source-Abrechnungsplattform, die Abonnements, Nutzungslimits und Stripe-Webhooks automatisch verwaltet.",
+		"description": "Einfache Preise für eine smartere Todo-Liste. Teste den KI-Agent kostenlos, upgrade wenn du mehr brauchst.",
+		"description_autumn": "Einfache Preise für eine smartere Todo-Liste. Teste den KI-Agent kostenlos, upgrade wenn du mehr brauchst.",
 		"features": {
 			"enterprise": {
 				"0": "Individuelle Nachrichtenlimits",
@@ -804,7 +804,7 @@
 				"price": "10€ / Monat"
 			}
 		},
-		"title": "Preise, die mit Ihnen wachsen"
+		"title": "Einfache Preise"
 	},
 	"search": {
 		"command": {
@@ -831,46 +831,46 @@
 			"avatar": {
 				"alt": "Profilvorschau",
 				"ready": "Bild bereit zum Speichern",
-				"removed": "Bild entfernt - klicken Sie auf Speichern zur Bestätigung",
-				"select_error": "Bitte wählen Sie eine Bilddatei aus",
+				"removed": "Bild entfernt - klicke auf Speichern zur Bestätigung",
+				"select_error": "Bitte wähle eine Bilddatei aus",
 				"size_error": "Bild muss kleiner als {size} sein",
 				"upload_failed": "Bild konnte nicht hochgeladen werden"
 			},
-			"description": "Aktualisieren Sie hier Ihre Kontoinformationen.",
+			"description": "Aktualisiere hier deine Kontoinformationen.",
 			"error": "Profil konnte nicht aktualisiert werden",
 			"file_helper": "PNG, JPG oder GIF bis zu 2MB.",
 			"link_from_url": "Link von URL",
 			"name": {
-				"placeholder": "Ihr Name"
+				"placeholder": "Dein Name"
 			},
-			"name_helper": "Dies ist Ihr öffentlich angezeigter Name.",
+			"name_helper": "Dies ist dein öffentlich angezeigter Name.",
 			"name_label": "Name",
 			"no_image": "Kein Bild",
 			"or": "oder",
 			"profile_picture": "Profilbild",
-			"profile_picture_helper": "Laden Sie ein Bild hoch oder fügen Sie einen Link ein. Wir empfehlen ein quadratisches Bild unter 2MB.",
+			"profile_picture_helper": "Lade ein Bild hoch oder füge einen Link ein. Wir empfehlen ein quadratisches Bild unter 2MB.",
 			"remove_button": "Entfernen",
 			"save_button": "Änderungen speichern",
 			"saving": "Speichern...",
 			"success": "Profil erfolgreich aktualisiert",
 			"title": "Kontoinformationen",
 			"upload_file": "Datei hochladen",
-			"url_helper": "Fügen Sie einen Bildlink ein, anstatt hochzuladen.",
+			"url_helper": "Füge einen Bildlink ein, anstatt hochzuladen.",
 			"url_placeholder": "https://example.com/avatar.jpg"
 		},
 		"connections": {
 			"connect_button": "Konto verbinden",
 			"connect_failed": "Verbindungslink konnte nicht abgerufen werden",
 			"connecting": "Verbindung wird hergestellt...",
-			"description": "Verbinden und verwalten Sie Ihre externen Konten.",
+			"description": "Verbinde und verwalte deine externen Konten.",
 			"disconnect_button_label": "Konto trennen",
 			"disconnect_confirm": "Trennen",
-			"disconnect_description": "Möchten Sie {name} ({type}) wirklich trennen? Dies kann nicht rückgängig gemacht werden.",
+			"disconnect_description": "Möchtest du {name} ({type}) wirklich trennen? Dies kann nicht rückgängig gemacht werden.",
 			"disconnect_failed": "Konto konnte nicht getrennt werden",
 			"disconnect_title": "Konto trennen",
 			"disconnected": "Konto getrennt",
 			"error_title": "Fehler",
-			"info_description": "Verbinden Sie Ihre Messaging- und E-Mail-Konten, um einheitliche Kommunikationsfunktionen zu ermöglichen.",
+			"info_description": "Verbinde deine Messaging- und E-Mail-Konten, um einheitliche Kommunikationsfunktionen zu ermöglichen.",
 			"info_title": "Verbundene Konten",
 			"load_failed": "Konten konnten nicht geladen werden",
 			"loading": "Konten werden geladen...",
@@ -879,29 +879,29 @@
 			"status_error": "Fehler",
 			"status_ok": "Verbunden",
 			"title": "Verbindungen",
-			"your_accounts_title": "Ihre Konten"
+			"your_accounts_title": "Deine Konten"
 		},
-		"description": "Verwalten Sie Ihre Kontoeinstellungen und Präferenzen.",
+		"description": "Verwalte deine Kontoeinstellungen und Präferenzen.",
 		"email": {
 			"current_email_label": "Aktuelle E-Mail",
-			"description": "Aktualisieren Sie Ihre E-Mail-Adresse für Kontobenachrichtigungen und Anmeldung.",
+			"description": "Aktualisiere deine E-Mail-Adresse für Kontobenachrichtigungen und Anmeldung.",
 			"error_title": "Fehler",
 			"new_email_label": "Neue E-Mail-Adresse",
-			"not_verified_description": "Ihre aktuelle E-Mail ist nicht verifiziert. Die neue E-Mail wird sofort ohne Verifizierung aktualisiert.",
+			"not_verified_description": "Deine aktuelle E-Mail ist nicht verifiziert. Die neue E-Mail wird sofort ohne Verifizierung aktualisiert.",
 			"not_verified_title": "E-Mail nicht verifiziert",
 			"placeholder": "Neue E-Mail-Adresse eingeben",
 			"title": "E-Mail-Adresse",
 			"unverified_badge": "Nicht verifiziert",
 			"update_button": "E-Mail aktualisieren",
 			"updating": "Aktualisieren...",
-			"verification_required_description": "Eine Bestätigungs-E-Mail wird an Ihre aktuelle E-Mail-Adresse gesendet. Sie müssen die Änderung genehmigen, bevor Ihre neue E-Mail aktiv wird.",
+			"verification_required_description": "Eine Bestätigungs-E-Mail wird an deine aktuelle E-Mail-Adresse gesendet. Du musst die Änderung genehmigen, bevor deine neue E-Mail aktiv wird.",
 			"verification_required_title": "Verifizierung erforderlich",
 			"verified_badge": "Verifiziert"
 		},
 		"password": {
 			"confirm_password_label": "Neues Passwort bestätigen",
 			"current_password_label": "Aktuelles Passwort",
-			"description": "Aktualisieren Sie Ihr Passwort, um Ihr Konto sicher zu halten.",
+			"description": "Aktualisiere dein Passwort, um dein Konto sicher zu halten.",
 			"error_title": "Fehler",
 			"new_password_label": "Neues Passwort",
 			"password_helper": "Muss mindestens 8 Zeichen lang sein.",
@@ -911,7 +911,7 @@
 				"new": "Neues Passwort eingeben"
 			},
 			"revoke_sessions_label": "Von allen anderen Geräten abmelden",
-			"security_notice_description": "Wenn aktiviert, werden Sie durch das Ändern Ihres Passworts auf allen anderen Geräten abgemeldet.",
+			"security_notice_description": "Wenn aktiviert, wirst du durch das Ändern deines Passworts auf allen anderen Geräten abgemeldet.",
 			"security_notice_title": "Sicherheitshinweis",
 			"title": "Passwort ändern",
 			"update_button": "Passwort aktualisieren",
@@ -919,23 +919,23 @@
 		},
 		"security": {
 			"add_button": "Passkey hinzufügen",
-			"add_passkey_helper": "Geben Sie Ihrem Passkey einen Namen, um zu identifizieren, auf welchem Gerät er registriert ist.",
+			"add_passkey_helper": "Gib deinem Passkey einen Namen, um zu identifizieren, auf welchem Gerät er registriert ist.",
 			"add_passkey_title": "Passkey hinzufügen",
 			"adding": "Wird hinzugefügt...",
 			"created_at": "Erstellt am ",
-			"description": "Verwalten Sie Ihre Passkeys und Sicherheitseinstellungen.",
+			"description": "Verwalte deine Passkeys und Sicherheitseinstellungen.",
 			"error_title": "Fehler",
 			"loading": "Passkeys werden geladen...",
-			"no_passkeys": "Sie haben noch keine Passkeys registriert.",
+			"no_passkeys": "Du hast noch keine Passkeys registriert.",
 			"passkey": {
 				"placeholder": "Passkey-Name",
 				"unnamed": "Unbenannter Passkey"
 			},
-			"passkey_info_description": "Passkeys sind eine sichere, passwortlose Anmeldemethode. Sie verwenden Biometrie oder Geräte-PIN und werden sicher auf Ihren Geräten gespeichert.",
+			"passkey_info_description": "Passkeys sind eine sichere, passwortlose Anmeldemethode. Sie verwenden Biometrie oder Geräte-PIN und werden sicher auf deinen Geräten gespeichert.",
 			"passkey_info_title": "Was sind Passkeys?",
 			"passkey_name_label": "Passkey-Name",
 			"title": "Sicherheit",
-			"your_passkeys_title": "Ihre Passkeys"
+			"your_passkeys_title": "Deine Passkeys"
 		},
 		"tabs": {
 			"account": "Konto",
@@ -958,7 +958,7 @@
 		},
 		"greeting": {
 			"hi": "Hey",
-			"how_can_we_help": "Wie können wir Ihnen heute helfen?"
+			"how_can_we_help": "Wie können wir dir heute helfen?"
 		},
 		"header": {
 			"support_team": "Support-Team"
@@ -966,7 +966,7 @@
 		"message": {
 			"role_kai": "Kai",
 			"role_support": "Support",
-			"role_you": "Sie"
+			"role_you": "Du"
 		},
 		"screenshot": {
 			"action": {
@@ -975,7 +975,7 @@
 				"undo": "Rückgängig (Strg+Z)"
 			},
 			"aria_label": "Screenshot-Editor",
-			"capture_failed": "Screenshot fehlgeschlagen. Überprüfen Sie die Konsole für Details.",
+			"capture_failed": "Screenshot fehlgeschlagen. Überprüfe die Konsole für Details.",
 			"capturing": "Wird aufgenommen...",
 			"next": "Bug Markiert",
 			"tool": {
@@ -992,7 +992,7 @@
 			"feature_request_label": "Feature anfragen",
 			"feature_request_text": "Ich würde mir wünschen",
 			"help_label": "Hilfe bei...",
-			"help_text": "Helfen Sie mir bei der Einrichtung.",
+			"help_text": "Hilf mir bei der Einrichtung.",
 			"question_label": "Frage stellen",
 			"question_text": "Warum Promus?"
 		},
@@ -1011,13 +1011,13 @@
 		},
 		"widget": {
 			"error": {
-				"rate_limit": "Langsamer! Bitte warten Sie {seconds}s, bevor Sie eine weitere Nachricht senden.",
-				"send_failed": "Nachricht konnte nicht gesendet werden. Bitte versuchen Sie es erneut."
+				"rate_limit": "Langsamer! Bitte warte {seconds}s, bevor du eine weitere Nachricht sendest.",
+				"send_failed": "Nachricht konnte nicht gesendet werden. Bitte versuch es erneut."
 			},
 			"header": {
 				"bot_response": "Unser Bot antwortet sofort",
 				"messages": "Nachrichten",
-				"with_team": "Ihre Anfrage ist bei unserem Team"
+				"with_team": "Deine Anfrage ist bei unserem Team"
 			},
 			"input": {
 				"placeholder": "Nachricht eingeben oder Vorschlag anklicken..."
@@ -1053,40 +1053,40 @@
 		},
 		"cta": "Kostenlos starten",
 		"drag_hint": "Aufgaben per Drag-and-Drop neu anordnen",
-		"heading": "Aufgabenverwaltung leicht gemacht",
+		"heading": "Deine Todo-Liste hat gerade 8 Arme bekommen",
 		"priority": {
 			"high": "Hoch",
 			"low": "Niedrig",
 			"medium": "Mittel"
 		},
 		"sample": {
-			"task_1": "Landingpage gestalten",
-			"task_2": "CI/CD-Pipeline einrichten",
-			"task_3": "API-Endpunkte erstellen",
-			"task_4": "Dokumentation schreiben",
-			"task_5": "Datenbankschema erstellen",
-			"task_6": "Auth-System konfigurieren"
+			"task_1": "Restaurant für Samstag finden",
+			"task_2": "Bei Marc wegen dem Angebot nachfassen",
+			"task_3": "Fitnessstudio-Abo kündigen",
+			"task_4": "Flüge nach Berlin buchen",
+			"task_5": "Meeting mit Sarah vorbereiten",
+			"task_6": "Mit Konferenz-Speakern auf LinkedIn connecten"
 		},
-		"save_failed": "Änderungen am Board konnten nicht gespeichert werden. Bitte versuchen Sie es erneut.",
-		"subheading": "Organisiere deine Arbeit mit Drag-and-Drop. Verschiebe Aufgaben zwischen Spalten, setze Prioritäten und verfolge den Fortschritt in Echtzeit."
+		"save_failed": "Änderungen am Board konnten nicht gespeichert werden. Bitte versuch es erneut.",
+		"subheading": "Füge eine Aufgabe hinzu. Promus recherchiert, formuliert und erledigt im Hintergrund — verbunden mit all deinen professionellen Tools."
 	},
 	"validation": {
 		"confirm_password": {
 			"mismatch": "Passwörter stimmen nicht überein.",
-			"required": "Bitte bestätigen Sie Ihr Passwort."
+			"required": "Bitte bestätige dein Passwort."
 		},
 		"email": {
-			"invalid": "Bitte geben Sie eine gültige E-Mail-Adresse ein.",
-			"required": "Bitte geben Sie Ihre E-Mail-Adresse ein."
+			"invalid": "Bitte gib eine gültige E-Mail-Adresse ein.",
+			"required": "Bitte gib deine E-Mail-Adresse ein."
 		},
 		"name": {
-			"required": "Bitte geben Sie Ihren Namen ein."
+			"required": "Bitte gib deinen Namen ein."
 		},
 		"password": {
 			"lowercase": "Passwort muss mindestens einen Kleinbuchstaben enthalten.",
 			"min_length": "Passwort muss mindestens {count, number} Zeichen lang sein.",
 			"number": "Passwort muss mindestens eine Zahl enthalten.",
-			"required": "Bitte geben Sie Ihr Passwort ein.",
+			"required": "Bitte gib dein Passwort ein.",
 			"uppercase": "Passwort muss mindestens einen Großbuchstaben enthalten."
 		}
 	}

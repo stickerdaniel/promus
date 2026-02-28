@@ -577,14 +577,14 @@
 		"search_placeholder": "Prueba a buscar páginas..."
 	},
 	"hero": {
-		"companies_text": "hecho posible por",
-		"cta": "Comenzar ahora",
+		"companies_text": "Usado por profesionales",
+		"cta": "Empezar",
 		"cta_demo": "Solicitar una demo",
 		"cta_sourcecode": "Ver código fuente",
-		"description": "El agente de IA que hace tus tareas. Conectado a todas tus herramientas profesionales.",
+		"description": "Un agente de IA que completa tus tareas. Conectado a todas tus herramientas profesionales.",
 		"section_label": "Inicio",
 		"tagline": "Tu lista de tareas acaba de crecer 8 brazos.",
-		"title": "Plantilla Promus"
+		"title": "Promus"
 	},
 	"integrations": {
 		"cards": {
@@ -638,8 +638,8 @@
 				"title": "Tolgee"
 			}
 		},
-		"description": "Soluciones súper rápidas con las que realmente es divertido construir",
-		"title": "Experiencia de Desarrollo Real {year}"
+		"description": "Promus trabaja con las herramientas que ya usas",
+		"title": "Conectado a tus herramientas"
 	},
 	"meta": {
 		"about": {
@@ -711,8 +711,8 @@
 			}
 		},
 		"home": {
-			"description": "Organiza tu trabajo con tableros kanban de arrastrar y soltar. Rastrea tareas, establece prioridades y colabora en tiempo real.",
-			"title": "Gestión de tareas simplificada"
+			"description": "Añade una tarea. Promus investiga, redacta y ejecuta — conectado a tu email, calendario y mensajes.",
+			"title": "El agente de IA que hace tus tareas"
 		},
 		"pricing": {
 			"description": "Elige un plan y prueba el flujo de facturación integrado.",
@@ -734,7 +734,7 @@
 		"open_app": "Abrir app",
 		"pricing": "Precios",
 		"signup": "Registrarse",
-		"solution": "Solución"
+		"solution": "Cómo funciona"
 	},
 	"pricing": {
 		"buttons": {
@@ -743,8 +743,8 @@
 		},
 		"current_plan": "Plan Actual",
 		"current_plan_badge": "(Plan Actual)",
-		"description": "Esta plantilla SaaS starter es completamente gratuita y de código abierto. Prueba el flujo de pago usando el número de tarjeta de prueba 4242 4242 4242 4242 con cualquier fecha de vencimiento futura.",
-		"description_autumn": "Prueba el sistema de pago integrado powered by Autumn - una plataforma de facturación de código abierto que gestiona suscripciones, límites de uso y webhooks de Stripe automáticamente.",
+		"description": "Precios simples para una lista de tareas más inteligente. Prueba el agente IA gratis, mejora cuando necesites más.",
+		"description_autumn": "Precios simples para una lista de tareas más inteligente. Prueba el agente IA gratis, mejora cuando necesites más.",
 		"features": {
 			"enterprise": {
 				"0": "Límites de mensajes personalizados",
@@ -804,7 +804,7 @@
 				"price": "$10 / mes"
 			}
 		},
-		"title": "Precios que Escalan Contigo"
+		"title": "Precios simples"
 	},
 	"search": {
 		"command": {
@@ -1053,22 +1053,22 @@
 		},
 		"cta": "Empezar gratis",
 		"drag_hint": "Arrastra y suelta para reordenar tareas",
-		"heading": "Gestión de tareas simplificada",
+		"heading": "Tu lista de tareas acaba de crecer 8 brazos",
 		"priority": {
 			"high": "Alta",
 			"low": "Baja",
 			"medium": "Media"
 		},
 		"sample": {
-			"task_1": "Diseñar página de inicio",
-			"task_2": "Configurar pipeline CI/CD",
-			"task_3": "Crear endpoints de API",
-			"task_4": "Escribir documentación",
-			"task_5": "Crear esquema de base de datos",
-			"task_6": "Configurar sistema de auth"
+			"task_1": "Encontrar restaurante para el sábado",
+			"task_2": "Dar seguimiento a Marc sobre la propuesta",
+			"task_3": "Cancelar membresía del gym",
+			"task_4": "Reservar vuelos a Berlín",
+			"task_5": "Preparar reunión con Sarah",
+			"task_6": "Conectar con ponentes en LinkedIn"
 		},
 		"save_failed": "No se pudieron guardar los cambios del tablero. Por favor, inténtalo de nuevo.",
-		"subheading": "Organiza tu trabajo con la simplicidad de arrastrar y soltar. Mueve tareas entre columnas, establece prioridades y sigue el progreso en tiempo real."
+		"subheading": "Añade una tarea. Promus investiga, redacta y ejecuta en segundo plano — conectado a todas tus herramientas profesionales."
 	},
 	"validation": {
 		"confirm_password": {

@@ -44,6 +44,17 @@
 	});
 	let activeTab = $derived(searchParams.tab);
 
+	// Reset to default tab if connections tab is active but Unipile is disabled
+	$effect(() => {
+		if (
+			searchParams.tab === 'connections' &&
+			isUnipileEnabled.data &&
+			!isUnipileEnabled.data.enabled
+		) {
+			searchParams.tab = DEFAULT_SETTINGS_TAB;
+		}
+	});
+
 	function updateTab(value: string) {
 		if (!isSettingsTab(value) || value === searchParams.tab) return;
 		searchParams.tab = value;

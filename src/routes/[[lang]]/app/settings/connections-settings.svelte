@@ -45,38 +45,12 @@
 		}
 	);
 
-	function deduplicateAccounts(items: Account[]): Account[] {
-		const grouped: Record<string, Account[]> = {};
-		for (const account of items) {
-			const key = `${account.name}::${account.type}`;
-			const group = grouped[key] ?? [];
-			group.push(account);
-			grouped[key] = group;
-		}
-
-		const keep: Account[] = [];
-		for (const group of Object.values(grouped)) {
-			if (group.length <= 1) {
-				keep.push(group[0]);
-				continue;
-			}
-			// Sort by created_at descending — keep the newest
-			group.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
-			keep.push(group[0]);
-			// Fire-and-forget delete for older duplicates
-			for (let i = 1; i < group.length; i++) {
-				client.action(api.unipile.deleteAccount, { accountId: group[i].id });
-			}
-		}
-		return keep;
-	}
-
 	async function loadAccounts() {
 		isLoading = true;
 		error = '';
 		try {
 			const result = await client.action(api.unipile.listAccounts, {});
-			accounts = deduplicateAccounts(result.items);
+			accounts = result.items;
 		} catch {
 			error = 'settings.connections.load_failed';
 		} finally {
@@ -225,6 +199,9 @@
 									class="text-destructive hover:text-destructive"
 								>
 									<Trash2Icon class="h-4 w-4" />
+									<span class="sr-only"
+										><T keyName="settings.connections.disconnect_button_label" /></span
+									>
 								</Button>
 							</Item.Actions>
 						</Item.Root>

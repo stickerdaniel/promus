@@ -916,6 +916,7 @@
 			"connect_failed": "No se pudo obtener el enlace de conexión",
 			"connecting": "Conectando...",
 			"description": "Conecta y administra tus cuentas externas.",
+			"disconnect_button_label": "Desconectar cuenta",
 			"disconnect_confirm": "Desconectar",
 			"disconnect_description": "¿Estás seguro de que deseas desconectar {name} ({type})? Esta acción no se puede deshacer.",
 			"disconnect_failed": "No se pudo desconectar la cuenta",

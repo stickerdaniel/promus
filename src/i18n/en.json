@@ -916,6 +916,7 @@
 			"connect_failed": "Failed to get connection link",
 			"connecting": "Connecting...",
 			"description": "Connect and manage your external accounts.",
+			"disconnect_button_label": "Disconnect account",
 			"disconnect_confirm": "Disconnect",
 			"disconnect_description": "Are you sure you want to disconnect {name} ({type})? This cannot be undone.",
 			"disconnect_failed": "Failed to disconnect account",

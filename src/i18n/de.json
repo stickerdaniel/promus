@@ -916,6 +916,7 @@
 			"connect_failed": "Verbindungslink konnte nicht abgerufen werden",
 			"connecting": "Verbindung wird hergestellt...",
 			"description": "Verbinden und verwalten Sie Ihre externen Konten.",
+			"disconnect_button_label": "Konto trennen",
 			"disconnect_confirm": "Trennen",
 			"disconnect_description": "Möchten Sie {name} ({type}) wirklich trennen? Dies kann nicht rückgängig gemacht werden.",
 			"disconnect_failed": "Konto konnte nicht getrennt werden",

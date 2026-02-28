@@ -1088,6 +1088,17 @@
 			"task_5": "Préparer la réunion avec Sarah",
 			"task_6": "Se connecter avec les intervenants sur LinkedIn"
 		},
+		"detail": {
+			"agent_logs": "Journaux de l'agent",
+			"cancel": "Annuler",
+			"delete": "Supprimer",
+			"description": "Modifier les détails de la tâche ou la retirer du tableau.",
+			"notes": "Notes",
+			"notes_placeholder": "Ajouter des notes ou du contexte...",
+			"save": "Enregistrer",
+			"task_name": "Nom de la tâche",
+			"title": "Détails de la tâche"
+		},
 		"save_failed": "Impossible d'enregistrer les modifications du tableau. Réessaie.",
 		"subheading": "Ajoute une tâche. Promus recherche, rédige et exécute en arrière-plan — connecté à tous tes outils professionnels."
 	},

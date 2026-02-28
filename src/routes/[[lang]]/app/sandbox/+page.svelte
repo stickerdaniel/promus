@@ -5,7 +5,7 @@
 	import SandboxStatus from '$lib/components/sandbox/sandbox-status.svelte';
 	import ChatRoot from '$lib/chat/ui/ChatRoot.svelte';
 	import ChatMessages from '$lib/chat/ui/ChatMessages.svelte';
-	import ChatInput from '$lib/chat/ui/ChatInput.svelte';
+	import SandboxChatInput from '$lib/components/sandbox/sandbox-chat-input.svelte';
 	import { useQuery } from 'convex-svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import PlayIcon from '@lucide/svelte/icons/play';
@@ -151,12 +151,7 @@
 				<div class="flex h-full flex-col">
 					<ChatMessages class="flex-1" />
 					<div class="border-t p-4">
-						<ChatInput
-							placeholder={$t('sandbox.input_placeholder')}
-							showFileButton={false}
-							showHandoffButton={false}
-							showCameraButton={false}
-						/>
+						<SandboxChatInput />
 					</div>
 				</div>
 			</ChatRoot>

@@ -28,10 +28,12 @@
 		"i18n:pull": "dotenv -e .env.local -- tolgee pull",
 		"i18n:push": "dotenv -e .env.local -- tolgee push",
 		"i18n:cleanup": "dotenv -e .env.local -- tolgee tag --filter-not-extracted --filter-tag production --tag deprecated --untag production",
+		"snapshot:vibe": "dotenv -e .env.local -- bun scripts/build-vibe-snapshot.ts",
 		"worktree": "bun scripts/create-worktree.ts",
 		"worktree:setup": "bun scripts/create-worktree.ts --setup-only"
 	},
 	"dependencies": {
+		"@aws-sdk/client-bedrock-runtime": "^3.1000.0",
 		"@better-auth/passkey": "^1.4.10",
 		"@convex-dev/agent": "^0.3.0",
 		"@convex-dev/better-auth": "^0.10.0",
@@ -89,7 +91,7 @@
 		"@eslint/compat": "^2.0.1",
 		"@eslint/js": "^9.39.2",
 		"@internationalized/date": "3.10.1",
-		"@lucide/svelte": "0.563.1",
+		"@lucide/svelte": "^0.561.0",
 		"@playwright/test": "1.58.0",
 		"@sveltejs/adapter-auto": "7.0.0",
 		"@sveltejs/kit": "2.50.1",

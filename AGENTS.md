@@ -108,6 +108,7 @@ These commands use `dotenv` to load the local TOLGEE_API_KEY from `.env.local`:
 - `src/hooks.server.ts` - Server hooks for auth and language middleware
 - `docs/references/unipile-node-sdk/` - Local copy of the Unipile Node SDK source. Consult this before implementing any Unipile integration.
 - `docs/references/daytona-sdk/` - Daytona TS/Python SDK source. Consult `packages/typescript/src/` (Daytona.ts, Sandbox.ts, Process.ts, FileSystem.ts) for API types before implementing sandbox features.
+- `docs/references/mistral-vibe/` - Mistral Vibe CLI source (v2.3.0). Consult `vibe/core/config.py` for config format, `vibe/core/llm/backend/` for supported backends (mistral, generic), `vibe/core/programmatic.py` for programmatic/headless mode, and `vibe/cli/entrypoint.py` for CLI args.
 
 **Using translations in components:**
 

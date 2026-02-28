@@ -2,12 +2,24 @@ import { env } from '$env/dynamic/private';
 import type { Sandbox } from '@daytonaio/sdk';
 import { getDaytona } from './daytona';
 import { VIBE_SERVER_SCRIPT } from './vibe-server-script';
-import { getVibeConfigToml } from './config-builder';
+import { getVibeConfigToml, type VibeLLMProvider } from './config-builder';
 import type { SandboxCreateResult } from './types';
 
 const VIBE_SERVER_PORT = 3000;
 const HEALTH_POLL_INTERVAL_MS = 2000;
 const HEALTH_POLL_MAX_RETRIES = 30;
+
+function getProvider(): VibeLLMProvider {
+	const p = env.VIBE_LLM_PROVIDER || 'bedrock';
+	if (p !== 'bedrock' && p !== 'openrouter' && p !== 'mistral') {
+		throw new Error(`Invalid VIBE_LLM_PROVIDER: ${p}. Must be bedrock, openrouter, or mistral`);
+	}
+	return p;
+}
+
+function getProxyUrl(): string {
+	return env.VIBE_LLM_PROXY_URL || 'http://localhost:5173';
+}
 
 function truncateText(value: string | undefined, max = 240): string {
 	if (!value) return '';
@@ -16,54 +28,63 @@ function truncateText(value: string | undefined, max = 240): string {
 }
 
 /**
+ * Build sandbox env vars based on chosen LLM provider.
+ * For bedrock: no AWS creds — only the proxy token. Creds stay server-side.
+ */
+function buildEnvVars(provider: VibeLLMProvider): Record<string, string> {
+	const vars: Record<string, string> = {};
+
+	if (provider === 'bedrock') {
+		if (env.VIBE_LLM_PROXY_TOKEN) vars.LLM_PROXY_TOKEN = env.VIBE_LLM_PROXY_TOKEN;
+	} else if (provider === 'openrouter') {
+		if (!env.OPENROUTER_API_KEY) throw new Error('OPENROUTER_API_KEY is required');
+		vars.OPENROUTER_API_KEY = env.OPENROUTER_API_KEY;
+	} else if (provider === 'mistral') {
+		if (!env.MISTRAL_API_KEY) throw new Error('MISTRAL_API_KEY is required');
+		vars.MISTRAL_API_KEY = env.MISTRAL_API_KEY;
+	}
+
+	if (env.UNIPILE_API_KEY) vars.UNIPILE_API_KEY = env.UNIPILE_API_KEY;
+	if (env.UNIPILE_DSN) vars.UNIPILE_DSN = env.UNIPILE_DSN;
+
+	return vars;
+}
+
+/**
  * Create a new Daytona sandbox with vibe CLI and HTTP server pre-installed.
  */
 export async function createSandbox(userId: string): Promise<SandboxCreateResult> {
+	const provider = getProvider();
+	const proxyUrl = getProxyUrl();
 	const daytona = getDaytona();
-	console.warn(`[sandbox.manager] createSandbox start userId=${userId}`);
+	console.warn(
+		`[sandbox.manager] createSandbox start userId=${userId} provider=${provider} proxyUrl=${proxyUrl}`
+	);
 
-	const mistralKey = env.MISTRAL_API_KEY;
-	if (!mistralKey) throw new Error('MISTRAL_API_KEY is required');
+	const envVars = buildEnvVars(provider);
 
-	const envVars: Record<string, string> = {
-		MISTRAL_API_KEY: mistralKey
-	};
-	if (env.UNIPILE_API_KEY) envVars.UNIPILE_API_KEY = env.UNIPILE_API_KEY;
-	if (env.UNIPILE_DSN) envVars.UNIPILE_DSN = env.UNIPILE_DSN;
-
-	// 1. Create sandbox
+	// 1. Create sandbox from pre-built snapshot (deps already installed)
 	const sandbox = await daytona.create({
-		image: 'python:3.12-slim',
+		snapshot: 'promus-vibe',
 		envVars,
 		public: true,
 		autoStopInterval: 5,
 		labels: { userId, app: 'promus-vibe' }
 	});
-	console.warn(
-		`[sandbox.manager] sandbox created sandboxId=${sandbox.id} hasUnipile=${Boolean(env.UNIPILE_API_KEY && env.UNIPILE_DSN)}`
-	);
+	console.warn(`[sandbox.manager] sandbox created sandboxId=${sandbox.id} provider=${provider}`);
 
-	// 2. Install dependencies
-	const installResult = await sandbox.process.executeCommand(
-		'apt-get update && apt-get install -y --no-install-recommends git curl ripgrep && pip install uv && uv pip install --system mistral-vibe starlette uvicorn sse-starlette',
-		undefined,
-		undefined,
-		300
-	);
-	console.warn(
-		`[sandbox.manager] dependencies installed sandboxId=${sandbox.id} exitCode=${installResult.exitCode} outputPreview=${JSON.stringify(truncateText((installResult as { result?: string; output?: string }).result ?? (installResult as { output?: string }).output))}`
-	);
-
-	// 3. Upload vibe server script
+	// 2. Upload vibe server script
 	await sandbox.fs.uploadFile(Buffer.from(VIBE_SERVER_SCRIPT), '/home/daytona/vibe-server.py');
-	console.warn(`[sandbox.manager] uploaded vibe-server.py sandboxId=${sandbox.id}`);
 
-	// 4. Upload vibe config
+	// 3. Upload vibe config
 	await sandbox.process.executeCommand('mkdir -p /home/daytona/.vibe');
-	await sandbox.fs.uploadFile(Buffer.from(getVibeConfigToml()), '/home/daytona/.vibe/config.toml');
-	console.warn(`[sandbox.manager] uploaded vibe config sandboxId=${sandbox.id}`);
+	await sandbox.fs.uploadFile(
+		Buffer.from(getVibeConfigToml(provider, { proxyUrl })),
+		'/home/daytona/.vibe/config.toml'
+	);
+	console.warn(`[sandbox.manager] uploaded config sandboxId=${sandbox.id}`);
 
-	// 5. Start vibe server as background session
+	// 4. Start vibe server as background session
 	await sandbox.process.createSession('vibe-server');
 	const vibeSessionCommand = await sandbox.process.executeSessionCommand('vibe-server', {
 		command: 'python /home/daytona/vibe-server.py',
@@ -73,10 +94,10 @@ export async function createSandbox(userId: string): Promise<SandboxCreateResult
 		`[sandbox.manager] vibe server session started sandboxId=${sandbox.id} cmdId=${vibeSessionCommand.cmdId ?? 'unknown'}`
 	);
 
-	// 6. Health poll
+	// 5. Health poll vibe server
 	await pollHealth(sandbox, vibeSessionCommand.cmdId);
 
-	// 7. Get preview link
+	// 6. Get preview link
 	const preview = await sandbox.getPreviewLink(VIBE_SERVER_PORT);
 	console.warn(
 		`[sandbox.manager] preview link ready sandboxId=${sandbox.id} previewUrl=${preview.url}`
@@ -181,7 +202,6 @@ async function pollHealth(sandbox: Sandbox, commandId?: string): Promise<void> {
 				`[sandbox.manager] healthcheck non-zero sandboxId=${sandbox.id} attempt=${i + 1}/${HEALTH_POLL_MAX_RETRIES} exitCode=${result.exitCode}`
 			);
 		} catch {
-			// Retry
 			console.warn(
 				`[sandbox.manager] healthcheck failed sandboxId=${sandbox.id} attempt=${i + 1}/${HEALTH_POLL_MAX_RETRIES}`
 			);

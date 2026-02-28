@@ -7,11 +7,6 @@ import { paginationOptsValidator } from 'convex/server';
 import { listUIMessages, syncStreams } from '@convex-dev/agent';
 import { vStreamArgs } from '@convex-dev/agent/validators';
 
-function preview(text: string, max = 220): string {
-	if (text.length <= max) return text;
-	return `${text.slice(0, max)}...`;
-}
-
 // ── Session management ──────────────────────────────────────────────────────
 
 export const getSession = authedQuery({
@@ -149,10 +144,11 @@ export const listMessages = authedQuery({
 // ── Internal actions ────────────────────────────────────────────────────────
 
 /**
- * Internal action to fetch vibe response from sandbox
+ * Internal action to fetch vibe response from sandbox with real-time streaming.
  *
- * Looks up the user's sandbox session, calls the sandbox's /chat/stream
- * endpoint, accumulates the SSE response, and saves as assistant message.
+ * Uses the agent component's streaming API to push text deltas as they arrive
+ * from the vibe CLI SSE stream. The frontend picks them up via syncStreams
+ * for real-time display.
  */
 export const createVibeResponse = internalAction({
 	args: {
@@ -162,54 +158,36 @@ export const createVibeResponse = internalAction({
 	},
 	handler: async (ctx, args) => {
 		const traceId = args.messageId.slice(-8);
-		console.info(
-			`[createVibeResponse:${traceId}] start threadId=${args.threadId} userId=${args.userId} messageId=${args.messageId}`
-		);
+		console.info(`[createVibeResponse:${traceId}] start`);
+
 		const [triggerMessage] = await ctx.runQuery(components.agent.messages.getMessagesByIds, {
 			messageIds: [args.messageId]
 		});
 		if (!triggerMessage || triggerMessage.threadId !== args.threadId) {
-			console.error(
-				`[createVibeResponse:${traceId}] trigger message not found or mismatched thread`
-			);
+			console.error(`[createVibeResponse:${traceId}] trigger message not found`);
 			return;
 		}
 
 		const msg = triggerMessage.message;
 		let prompt = '';
-		if (!msg) {
-			console.error(`[createVibeResponse:${traceId}] trigger message has no content`);
-			return;
-		}
-		if (typeof msg === 'string') {
-			prompt = msg;
-		} else if (typeof msg.content === 'string') {
-			prompt = msg.content;
-		} else if (Array.isArray(msg.content)) {
+		if (typeof msg === 'string') prompt = msg;
+		else if (msg && typeof msg.content === 'string') prompt = msg.content;
+		else if (msg && Array.isArray(msg.content)) {
 			const textPart = msg.content.find(
 				(p): p is { type: 'text'; text: string } =>
 					p.type === 'text' && 'text' in p && typeof p.text === 'string'
 			);
 			prompt = textPart?.text || '';
 		}
-
 		if (!prompt) {
-			console.error(
-				`[createVibeResponse:${traceId}] could not extract prompt from trigger message`
-			);
+			console.error(`[createVibeResponse:${traceId}] empty prompt`);
 			return;
 		}
-		console.info(
-			`[createVibeResponse:${traceId}] prompt extracted length=${prompt.length} preview=${JSON.stringify(preview(prompt))}`
-		);
 
-		// Look up user's sandbox session
 		const session = await ctx.runQuery(components.sandbox.sessions.getUserSession, {
 			userId: args.userId
 		});
-
 		if (!session || !session.previewUrl) {
-			console.error(`[createVibeResponse:${traceId}] session missing or previewUrl unavailable`);
 			await vibeAgent.saveMessage(ctx, {
 				threadId: args.threadId,
 				message: { role: 'assistant', content: 'Error: Sandbox session not found or not ready.' },
@@ -219,17 +197,41 @@ export const createVibeResponse = internalAction({
 		}
 
 		const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-		if (session.previewToken) {
-			headers['Authorization'] = `Bearer ${session.previewToken}`;
-		}
-		headers['X-Sandbox-Trace-Id'] = traceId;
+		if (session.previewToken) headers['Authorization'] = `Bearer ${session.previewToken}`;
+
+		// Create a streaming message so frontend shows real-time updates
+		const order = triggerMessage.order + 1;
+		const streamId = await ctx.runMutation(components.agent.streams.create, {
+			threadId: args.threadId,
+			order,
+			stepOrder: 0,
+			format: 'TextStreamPart',
+			agentName: 'Vibe',
+			model: 'devstral-2',
+			provider: 'bedrock'
+		});
+		console.info(`[createVibeResponse:${traceId}] stream created streamId=${streamId}`);
+
+		let deltaCursor = 0;
+		let assistantContent = '';
+		let dataEventCount = 0;
+
+		const pushDelta = async (text: string) => {
+			if (!text) return;
+			assistantContent += text;
+			const end = deltaCursor + 1;
+			await ctx.runMutation(components.agent.streams.addDelta, {
+				streamId,
+				start: deltaCursor,
+				end,
+				parts: [{ type: 'text-delta', textDelta: text }]
+			});
+			deltaCursor = end;
+		};
 
 		try {
-			console.info(
-				`[createVibeResponse:${traceId}] requesting sandbox endpoint=${session.previewUrl}/chat/stream`
-			);
 			const abortController = new AbortController();
-			const timeoutMs = 120000;
+			const timeoutMs = 600000; // 10 min for long vibe runs
 			const timeout = setTimeout(() => abortController.abort(), timeoutMs);
 			let response: Response;
 			try {
@@ -242,54 +244,33 @@ export const createVibeResponse = internalAction({
 			} finally {
 				clearTimeout(timeout);
 			}
-			console.info(
-				`[createVibeResponse:${traceId}] sandbox response status=${response.status} contentType=${response.headers.get('content-type') ?? 'unknown'} hasBody=${Boolean(response.body)}`
-			);
 
 			if (!response.ok || !response.body) {
 				const errorText = await response.text().catch(() => '');
-				console.error(
-					`[createVibeResponse:${traceId}] sandbox HTTP failure status=${response.status} bodyPreview=${JSON.stringify(preview(errorText || ''))}`
-				);
-				await ctx.runMutation(components.sandbox.sessions.updateSessionStatus, {
-					sessionId: session._id,
-					status: 'error',
-					errorMessage: `Sandbox returned ${response.status}`
-				});
-				await vibeAgent.saveMessage(ctx, {
-					threadId: args.threadId,
-					message: {
-						role: 'assistant',
-						content: `Error: Failed to connect to sandbox (${response.status})`
-					},
-					skipEmbeddings: true
-				});
+				await pushDelta(`Error: Sandbox returned ${response.status}\n${errorText.slice(0, 220)}`);
+				await ctx.runMutation(components.agent.streams.abort, { streamId, reason: 'error' });
 				return;
 			}
 
-			// Read SSE stream and accumulate content (buffered for chunk-safe line parsing)
-			let assistantContent = '';
+			// Stream SSE chunks and push text deltas in real-time
 			const reader = response.body.getReader();
 			const decoder = new TextDecoder();
 			let buffer = '';
 			let chunkCount = 0;
-			let dataEventCount = 0;
-			const appendData = (data: string) => {
+
+			const processDataLine = async (data: string) => {
 				dataEventCount += 1;
 				try {
 					const parsed = JSON.parse(data);
 					if (parsed.type === 'done') return;
 					if (parsed.type === 'error') {
-						console.error(
-							`[createVibeResponse:${traceId}] sandbox emitted error event payload=${JSON.stringify(preview(data))}`
-						);
-						if (typeof parsed.message === 'string') assistantContent += parsed.message;
+						await pushDelta(parsed.message || data);
 						return;
 					}
-					if (parsed.content) assistantContent += parsed.content;
-					else assistantContent += data;
+					if (parsed.content) await pushDelta(parsed.content + '\n');
+					else await pushDelta(data + '\n');
 				} catch {
-					assistantContent += data;
+					await pushDelta(data + '\n');
 				}
 			};
 
@@ -297,11 +278,6 @@ export const createVibeResponse = internalAction({
 				const { done, value } = await reader.read();
 				if (done) break;
 				chunkCount += 1;
-				if (chunkCount <= 5 || chunkCount % 25 === 0) {
-					console.info(
-						`[createVibeResponse:${traceId}] stream chunk#${chunkCount} bytes=${value?.byteLength ?? 0}`
-					);
-				}
 
 				buffer += decoder.decode(value, { stream: true });
 				let newlineIndex = buffer.indexOf('\n');
@@ -310,46 +286,48 @@ export const createVibeResponse = internalAction({
 					buffer = buffer.slice(newlineIndex + 1);
 					const line = rawLine.endsWith('\r') ? rawLine.slice(0, -1) : rawLine;
 					if (line.startsWith('data:')) {
-						appendData(line.slice(5).trimStart());
+						await processDataLine(line.slice(5).trimStart());
 					}
 					newlineIndex = buffer.indexOf('\n');
 				}
 			}
 
-			// Flush remaining bytes from decoder and process final partial line
+			// Flush remaining
 			buffer += decoder.decode();
 			const finalLine = buffer.endsWith('\r') ? buffer.slice(0, -1) : buffer;
 			if (finalLine.startsWith('data:')) {
-				appendData(finalLine.slice(5).trimStart());
+				await processDataLine(finalLine.slice(5).trimStart());
 			}
+
 			console.info(
-				`[createVibeResponse:${traceId}] stream complete chunks=${chunkCount} dataEvents=${dataEventCount} outputLength=${assistantContent.length}`
+				`[createVibeResponse:${traceId}] complete chunks=${chunkCount} deltas=${deltaCursor} contentLen=${assistantContent.length}`
 			);
 
-			const content = assistantContent.trim() || 'No response received from sandbox.';
+			// Finalize: save truncated message for persistence and finish the stream
+			const MAX_MSG = 800_000; // ~800KB, safely under 1MiB Convex limit
+			const finalContent = assistantContent.trim() || 'No response received from sandbox.';
+			const truncated =
+				finalContent.length > MAX_MSG
+					? finalContent.slice(0, MAX_MSG) + '\n\n[Output truncated]'
+					: finalContent;
 			await vibeAgent.saveMessage(ctx, {
 				threadId: args.threadId,
-				message: { role: 'assistant', content },
+				message: { role: 'assistant', content: truncated },
 				skipEmbeddings: true
 			});
-			console.info(
-				`[createVibeResponse:${traceId}] assistant message saved threadId=${args.threadId} contentLength=${content.length}`
-			);
+			await ctx.runMutation(components.agent.streams.finish, { streamId });
 		} catch (error) {
 			console.error(
-				`[createVibeResponse:${traceId}] failed to fetch from sandbox error=${error instanceof Error ? error.message : String(error)}`
+				`[createVibeResponse:${traceId}] error: ${error instanceof Error ? error.message : String(error)}`
 			);
-			await ctx.runMutation(components.sandbox.sessions.updateSessionStatus, {
-				sessionId: session._id,
-				status: 'error',
-				errorMessage: error instanceof Error ? error.message : 'Connection failed'
-			});
+			await pushDelta(`\nError: ${error instanceof Error ? error.message : 'Connection failed'}`);
+			await ctx.runMutation(components.agent.streams.abort, { streamId, reason: 'error' });
+			const errContent =
+				assistantContent ||
+				`Error: ${error instanceof Error ? error.message : 'Connection failed'}`;
 			await vibeAgent.saveMessage(ctx, {
 				threadId: args.threadId,
-				message: {
-					role: 'assistant',
-					content: `Error: ${error instanceof Error ? error.message : 'Connection failed'}`
-				},
+				message: { role: 'assistant', content: errContent.slice(0, 800_000) },
 				skipEmbeddings: true
 			});
 		}

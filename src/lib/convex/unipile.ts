@@ -60,34 +60,62 @@ export const listAccounts = action({
 			apiKey: unipileConfig.apiKey
 		});
 
+		// Get only this user's registered account IDs
+		const userAccountIds = await ctx.runQuery(components.unipile.queries.getUserAccountIds, {
+			userId: user._id
+		});
+		const userIds = new Set(userAccountIds);
+
+		// Return only this user's accounts — no auto-claiming
+		return {
+			items: allAccounts.items.filter((a) => userIds.has(a.id))
+		};
+	}
+});
+
+export const registerNewAccount = action({
+	args: {},
+	returns: v.null(),
+	handler: async (ctx) => {
+		const user = await authComponent.getAuthUser(ctx);
+		if (!user) throw new Error('Not authenticated');
+
+		if (!unipileConfig.enabled || !unipileConfig.dsn || !unipileConfig.apiKey) {
+			throw new Error('Unipile is not configured');
+		}
+
+		// Fetch all Unipile accounts from the API
+		const allAccounts = await ctx.runAction(components.unipile.actions.listAccounts, {
+			dsn: unipileConfig.dsn,
+			apiKey: unipileConfig.apiKey
+		});
+
 		// Get this user's registered account IDs
 		const userAccountIds = await ctx.runQuery(components.unipile.queries.getUserAccountIds, {
 			userId: user._id
 		});
 		const userIds = new Set(userAccountIds);
 
-		// Get ALL registered account IDs to find unclaimed ones
+		// Get ALL registered account IDs to prevent claiming another user's account
 		const allRegisteredIds = await ctx.runQuery(
 			components.unipile.queries.getAllRegisteredAccountIds,
 			{}
 		);
 		const claimedIds = new Set(allRegisteredIds);
 
-		// Auto-claim unclaimed accounts for the current user
-		const unclaimed = allAccounts.items.filter((a) => !claimedIds.has(a.id));
-		for (const account of unclaimed) {
+		// Register accounts that exist in Unipile but aren't claimed by anyone
+		const newAccounts = allAccounts.items.filter(
+			(a) => !userIds.has(a.id) && !claimedIds.has(a.id)
+		);
+		for (const account of newAccounts) {
 			await ctx.runMutation(components.unipile.mutations.registerAccount, {
 				userId: user._id,
 				unipileAccountId: account.id,
 				provider: account.type
 			});
-			userIds.add(account.id);
 		}
 
-		// Return only this user's accounts
-		return {
-			items: allAccounts.items.filter((a) => userIds.has(a.id))
-		};
+		return null;
 	}
 });
 

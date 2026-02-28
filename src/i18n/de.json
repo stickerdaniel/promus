@@ -1088,6 +1088,17 @@
 			"task_5": "Meeting mit Sarah vorbereiten",
 			"task_6": "Mit Konferenz-Speakern auf LinkedIn connecten"
 		},
+		"detail": {
+			"agent_logs": "Agent-Protokolle",
+			"cancel": "Abbrechen",
+			"delete": "Löschen",
+			"description": "Aufgabendetails bearbeiten oder vom Board entfernen.",
+			"notes": "Notizen",
+			"notes_placeholder": "Notizen oder Kontext hinzufügen...",
+			"save": "Speichern",
+			"task_name": "Aufgabenname",
+			"title": "Aufgabendetails"
+		},
 		"save_failed": "Änderungen am Board konnten nicht gespeichert werden. Bitte versuch es erneut.",
 		"subheading": "Füge eine Aufgabe hinzu. Promus recherchiert, formuliert und erledigt im Hintergrund — verbunden mit all deinen professionellen Tools."
 	},

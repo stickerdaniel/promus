@@ -11,9 +11,10 @@
 	import { toast } from 'svelte-sonner';
 	import { getTranslate } from '@tolgee/svelte';
 	import { api } from '$lib/convex/_generated/api';
-	import type { KanbanData, ColumnId } from './types.js';
+	import type { KanbanData, ColumnId, TodoItem } from './types.js';
 	import KanbanColumn from './kanban-column.svelte';
 	import KanbanItem from './kanban-item.svelte';
+	import TodoDetailDialog from './todo-detail-dialog.svelte';
 
 	const { t } = getTranslate();
 	const convexClient = useConvexClient();
@@ -31,6 +32,8 @@
 	let isDragging = $state(false);
 	let pendingSaveCount = $state(0);
 	let dragStartSnapshot = $state<KanbanData | null>(null);
+	let selectedTask = $state<TodoItem | null>(null);
+	let dialogOpen = $state(false);
 
 	type SyncEvent = {
 		operation: { source?: { type?: unknown } | null; target?: unknown | null };
@@ -42,9 +45,9 @@
 
 	function cloneBoard(board: KanbanData): KanbanData {
 		return {
-			todo: board.todo.map((task) => ({ ...task })),
-			'in-progress': board['in-progress'].map((task) => ({ ...task })),
-			done: board.done.map((task) => ({ ...task }))
+			todo: board.todo.map((t) => ({ ...t })),
+			'in-progress': board['in-progress'].map((t) => ({ ...t })),
+			done: board.done.map((t) => ({ ...t }))
 		};
 	}
 
@@ -123,6 +126,35 @@
 		await persistBoard(nextBoard, rollbackBoard);
 	}
 
+	function handleTaskClick(task: TodoItem) {
+		selectedTask = { ...task };
+		dialogOpen = true;
+	}
+
+	async function handleTaskSave(id: string, updates: { title: string; notes?: string }) {
+		const rollbackBoard = cloneBoard(items);
+		const nextBoard = cloneBoard(items);
+		for (const colId of columnIds) {
+			const idx = nextBoard[colId].findIndex((t) => t.id === id);
+			if (idx !== -1) {
+				nextBoard[colId][idx] = { ...nextBoard[colId][idx], ...updates };
+				break;
+			}
+		}
+		items = nextBoard;
+		await persistBoard(nextBoard, rollbackBoard);
+	}
+
+	async function handleTaskDelete(id: string) {
+		const rollbackBoard = cloneBoard(items);
+		const nextBoard = cloneBoard(items);
+		for (const colId of columnIds) {
+			nextBoard[colId] = nextBoard[colId].filter((t) => t.id !== id);
+		}
+		items = nextBoard;
+		await persistBoard(nextBoard, rollbackBoard);
+	}
+
 	async function handleDragEnd(event: EndEvent): Promise<void> {
 		syncItemOrder(event);
 		overlayTilted = false;
@@ -165,7 +197,13 @@
 				onAdd={(title) => addTodo(columnId, title)}
 			>
 				{#each items[columnId] as task, taskIdx (task.id)}
-					<KanbanItem {task} index={taskIdx} group={columnId} data={{ group: columnId }} />
+					<KanbanItem
+						{task}
+						index={taskIdx}
+						group={columnId}
+						data={{ group: columnId }}
+						onclick={handleTaskClick}
+					/>
 				{/each}
 			</KanbanColumn>
 		{/each}
@@ -196,3 +234,12 @@
 		{/snippet}
 	</DragOverlay>
 </DragDropProvider>
+
+{#if selectedTask}
+	<TodoDetailDialog
+		task={selectedTask}
+		bind:open={dialogOpen}
+		onSave={handleTaskSave}
+		onDelete={handleTaskDelete}
+	/>
+{/if}

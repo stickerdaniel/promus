@@ -18,7 +18,7 @@
 				src="__BASEURL__/logo.png"
 				width="28"
 				height="28"
-				alt="Promus Logo"
+				alt="Coda"
 				class="my-0 mr-2 inline-block align-middle"
 			/>
 			<Text class="my-0 inline-block align-middle text-[20px] font-bold text-black">

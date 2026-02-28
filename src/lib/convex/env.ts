@@ -102,3 +102,10 @@ export const githubOAuth = {
 	clientId: process.env.AUTH_GITHUB_ID,
 	clientSecret: process.env.AUTH_GITHUB_SECRET
 };
+
+/** Unipile API DSN (base URL) */
+export const unipileConfig = {
+	enabled: !!(process.env.UNIPILE_DSN && process.env.UNIPILE_API_KEY),
+	dsn: process.env.UNIPILE_DSN,
+	apiKey: process.env.UNIPILE_API_KEY
+};

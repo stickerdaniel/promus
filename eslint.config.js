@@ -14,7 +14,7 @@ export default defineConfig(
 	includeIgnoreFile(gitignorePath),
 	// Ignore auto-generated Convex files
 	{
-		ignores: ['**/_generated/**']
+		ignores: ['**/_generated/**', 'docs/references/**']
 	},
 	js.configs.recommended,
 	...ts.configs.recommended,

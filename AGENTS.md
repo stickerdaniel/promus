@@ -106,6 +106,7 @@ These commands use `dotenv` to load the local TOLGEE_API_KEY from `.env.local`:
 - `src/lib/i18n/` - Internationalization configuration
 - `src/routes/[[lang]]/` - SvelteKit routes with language parameter
 - `src/hooks.server.ts` - Server hooks for auth and language middleware
+- `docs/references/unipile-node-sdk/` - Local copy of the Unipile Node SDK source. Consult this before implementing any Unipile integration.
 
 **Using translations in components:**
 

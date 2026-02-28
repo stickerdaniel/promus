@@ -13,7 +13,14 @@ import { parseArgs } from 'util';
 // Configuration (matches CI static-checks.yml exclusions)
 const CONFIG = {
 	misspell: {
-		ignore: ['src/i18n/', 'convex/_generated/', 'node_modules/', '.git/', '.svelte-kit/']
+		ignore: [
+			'src/i18n/',
+			'convex/_generated/',
+			'node_modules/',
+			'.git/',
+			'.svelte-kit/',
+			'docs/references/'
+		]
 	}
 };
 
@@ -228,10 +235,10 @@ function main(): void {
 	}
 	console.log('\n');
 
-	// Re-stage files if they were modified during --staged checks
-	if (mode === 'staged') {
+	// Re-stage only files that tools could have modified (prettier/eslint)
+	if (mode === 'staged' && formattableFiles.length > 0) {
 		console.log('Re-staging modified files...');
-		runCommand('git', ['add', ...allFiles]);
+		runCommand('git', ['add', ...formattableFiles]);
 		console.log('');
 	}
 

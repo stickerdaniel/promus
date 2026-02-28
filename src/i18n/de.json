@@ -640,6 +640,27 @@
 		"description": "Superschnelle Lösungen, die tatsächlich Spaß beim Entwickeln machen",
 		"title": "Echte {year} Developer Experience"
 	},
+	"todo_demo": {
+		"heading": "Aufgabenverwaltung leicht gemacht",
+		"subheading": "Organisiere deine Arbeit mit Drag-and-Drop. Verschiebe Aufgaben zwischen Spalten, setze Prioritäten und verfolge den Fortschritt in Echtzeit.",
+		"cta": "Kostenlos starten",
+		"column": {
+			"todo": "Zu erledigen",
+			"in-progress": "In Bearbeitung",
+			"done": "Erledigt"
+		},
+		"add_placeholder": "Aufgabe hinzufügen...",
+		"add_card": "Karte hinzufügen",
+		"drag_hint": "Aufgaben per Drag-and-Drop neu anordnen",
+		"sample": {
+			"task_1": "Landingpage gestalten",
+			"task_2": "CI/CD-Pipeline einrichten",
+			"task_3": "API-Endpunkte erstellen",
+			"task_4": "Dokumentation schreiben",
+			"task_5": "Datenbankschema erstellen",
+			"task_6": "Auth-System konfigurieren"
+		}
+	},
 	"meta": {
 		"about": {
 			"description": "Lernen Sie das talentierte Team hinter unserem Produkt kennen",
@@ -710,8 +731,8 @@
 			}
 		},
 		"home": {
-			"description": "Die ultimative Promus mit SvelteKit, Convex und modernen Web-Technologien. Erstellen Sie Ihre Marke in Minuten, nicht in Wochen. Fokussieren Sie sich auf Ihr Produkt und veröffentlichen Sie schneller.",
-			"title": "Schneller entwickeln und veröffentlichen"
+			"description": "Organisiere deine Arbeit mit Drag-and-Drop-Kanban-Boards. Verfolge Aufgaben, setze Prioritäten und arbeite in Echtzeit zusammen.",
+			"title": "Aufgabenverwaltung leicht gemacht"
 		},
 		"pricing": {
 			"description": "Wählen Sie einen Plan und testen Sie den integrierten Abrechnungsablauf.",

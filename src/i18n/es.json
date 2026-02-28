@@ -640,6 +640,27 @@
 		"description": "Soluciones súper rápidas con las que realmente es divertido construir",
 		"title": "Experiencia de Desarrollo Real {year}"
 	},
+	"todo_demo": {
+		"heading": "Gestión de tareas simplificada",
+		"subheading": "Organiza tu trabajo con la simplicidad de arrastrar y soltar. Mueve tareas entre columnas, establece prioridades y sigue el progreso en tiempo real.",
+		"cta": "Empezar gratis",
+		"column": {
+			"todo": "Por hacer",
+			"in-progress": "En progreso",
+			"done": "Hecho"
+		},
+		"add_placeholder": "Agregar tarea...",
+		"add_card": "Agregar una tarjeta",
+		"drag_hint": "Arrastra y suelta para reordenar tareas",
+		"sample": {
+			"task_1": "Diseñar página de inicio",
+			"task_2": "Configurar pipeline CI/CD",
+			"task_3": "Crear endpoints de API",
+			"task_4": "Escribir documentación",
+			"task_5": "Crear esquema de base de datos",
+			"task_6": "Configurar sistema de auth"
+		}
+	},
 	"meta": {
 		"about": {
 			"description": "Conoce al talentoso equipo detrás de nuestro producto",
@@ -710,8 +731,8 @@
 			}
 		},
 		"home": {
-			"description": "La plantilla SaaS definitiva con SvelteKit, Convex y tecnologías web modernas. Construye tu marca en minutos, no en semanas. Enfócate en tu producto y lanza más rápido.",
-			"title": "Construye y lanza tu producto más rápido"
+			"description": "Organiza tu trabajo con tableros kanban de arrastrar y soltar. Rastrea tareas, establece prioridades y colabora en tiempo real.",
+			"title": "Gestión de tareas simplificada"
 		},
 		"pricing": {
 			"description": "Elige un plan y prueba el flujo de facturación integrado.",

@@ -640,6 +640,27 @@
 		"description": "Des solutions ultra-rapides avec lesquelles il est vraiment amusant de construire",
 		"title": "Véritable Expérience Développeur {year}"
 	},
+	"todo_demo": {
+		"heading": "Gestion des tâches simplifiée",
+		"subheading": "Organisez votre travail avec la simplicité du glisser-déposer. Déplacez les tâches entre les colonnes, définissez les priorités et suivez la progression en temps réel.",
+		"cta": "Commencer gratuitement",
+		"column": {
+			"todo": "À faire",
+			"in-progress": "En cours",
+			"done": "Terminé"
+		},
+		"add_placeholder": "Ajouter une tâche...",
+		"add_card": "Ajouter une carte",
+		"drag_hint": "Glissez et déposez pour réorganiser les tâches",
+		"sample": {
+			"task_1": "Concevoir la page d'accueil",
+			"task_2": "Configurer le pipeline CI/CD",
+			"task_3": "Créer les endpoints API",
+			"task_4": "Rédiger la documentation",
+			"task_5": "Créer le schéma de base de données",
+			"task_6": "Configurer le système d'auth"
+		}
+	},
 	"meta": {
 		"about": {
 			"description": "Rencontrez l'équipe talentueuse derrière notre produit",
@@ -710,8 +731,8 @@
 			}
 		},
 		"home": {
-			"description": "Le modèle SaaS ultime avec SvelteKit, Convex et les technologies web modernes. Construisez votre marque en minutes, pas en semaines. Concentrez-vous sur votre produit et lancez plus rapidement.",
-			"title": "Construisez et lancez votre produit plus rapidement"
+			"description": "Organisez votre travail avec des tableaux kanban en glisser-déposer. Suivez les tâches, définissez les priorités et collaborez en temps réel.",
+			"title": "Gestion des tâches simplifiée"
 		},
 		"pricing": {
 			"description": "Choisissez une offre et testez le flux de facturation intégré.",

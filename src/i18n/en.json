@@ -1090,6 +1090,7 @@
 		},
 		"column": {
 			"done": "Done",
+			"in-progress": "In Progress",
 			"prepared": "Prepared",
 			"todo": "To Do",
 			"working-on": "Working On"

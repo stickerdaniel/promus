@@ -585,7 +585,7 @@
 		"search_placeholder": "Prueba a buscar páginas..."
 	},
 	"hero": {
-		"companies_text": "Hecho posible por",
+		"companies_text": "Usado por profesionales",
 		"cta": "Empezar",
 		"cta_demo": "Solicitar una demo",
 		"cta_sourcecode": "Ver código fuente",
@@ -1090,6 +1090,7 @@
 		},
 		"column": {
 			"done": "Hecho",
+			"in-progress": "En progreso",
 			"prepared": "Preparado",
 			"todo": "Por hacer",
 			"working-on": "En progreso"

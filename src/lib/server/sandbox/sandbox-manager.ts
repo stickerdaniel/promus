@@ -27,7 +27,7 @@ export async function createSandbox(userId: string): Promise<SandboxCreateResult
 		snapshot: 'promus-vibe',
 		envVars,
 		public: true,
-		autoStopInterval: 5,
+		autoStopInterval: 30,
 		labels: { userId, app: 'promus-vibe' }
 	});
 	console.warn(`[sandbox.manager] sandbox created sandboxId=${sandbox.id}`);

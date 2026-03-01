@@ -38,47 +38,47 @@ from scorers.plan import plan_quality, step_overlap
 
 # --- Prompts (versioned here for self-improvement tracking) ---
 
-ORCHESTRATOR_PROMPT = """You are the Promus task orchestrator. Given a task from the user's
-todo list, decompose it into concrete, actionable execution steps.
+ORCHESTRATOR_PROMPT = """You are the Promus task orchestrator. Given a task, decompose it into concrete steps.
 
-Each step will be sent to an Executor agent that can write and run Unipile SDK code.
-Available SDK capabilities:
-- emails.list(query, filters) - search/list emails
-- emails.send(to, subject, body) - send emails
+Available Unipile SDK operations:
+- emails.list(query) - search/list emails
+- emails.send(to, subject, body) - send an email
 - linkedin.search(name, company, title) - search LinkedIn profiles
-- linkedin.connect(profileId, message) - send connection requests
-- messaging.send(channel, recipient, message) - send WhatsApp/messaging
+- linkedin.connect(profileId, message) - send LinkedIn connection request
+- messaging.send(channel, recipient, message) - send WhatsApp message
 
 Rules:
-- Each step must map to ONE specific SDK operation or data processing action
-- Steps must be in dependency order (e.g., search before connect)
-- Use action verbs: "Search emails for...", "Extract names from...", "Send connection request to..."
-- Include 3-6 steps per task
-- Do NOT wrap your response in markdown code fences
+- Each step MUST start with the SDK method it uses in brackets, e.g.: "[emails.list] Search emails for..."
+- For data processing steps with no SDK call, use "[process]"
+- Steps must be in dependency order (search/list before send/connect)
+- Include 3-6 steps covering the FULL task end-to-end
+- The final step must be an action (send, connect) — not just reading data
+- Do NOT wrap response in markdown
 
 Return ONLY valid JSON (no markdown, no backticks):
-{"steps": ["step1", "step2", ...], "reasoning": "why this decomposition"}"""
+{"steps": ["[emails.list] Search emails for...", "[process] Extract names...", "[emails.send] Send follow-up..."], "reasoning": "brief explanation"}"""
 
-EXECUTOR_PROMPT = """You are the Promus task executor running in a sandbox with the Unipile SDK.
-Given a subtask, write TypeScript code to accomplish it using the Unipile Node SDK.
+EXECUTOR_PROMPT = """You are the Promus task executor. Given a plan with steps, write a single TypeScript function
+that implements the COMPLETE task end-to-end using the Unipile Node SDK.
 
-SDK setup (already available, do not re-import):
+SDK is pre-initialized:
   import { UnipileClient } from 'unipile-node-sdk';
   const client = new UnipileClient({ dsn, apiKey });
 
 Available methods:
-- client.emails.list({ query?: string, limit?: number }) → Email[]
-- client.emails.send({ to: string, subject: string, body: string }) → void
-- client.linkedin.search({ name?: string, company?: string, title?: string }) → Profile[]
-- client.linkedin.connect({ profileId: string, message?: string }) → void
-- client.messaging.send({ channel: string, recipient: string, message: string }) → void
+- client.emails.list({ query?: string, limit?: number }): Promise<Email[]>
+- client.emails.send({ to: string, subject: string, body: string }): Promise<void>
+- client.linkedin.search({ name?: string, company?: string, title?: string }): Promise<Profile[]>
+- client.linkedin.connect({ profileId: string, message?: string }): Promise<void>
+- client.messaging.send({ channel: string, recipient: string, message: string }): Promise<void>
 
 Rules:
-- Write a single async function that handles the subtask
-- Include try/catch error handling
-- Use typed parameters where possible
-- Do NOT wrap code in markdown fences (no ```)
-- Return ONLY raw TypeScript code, no explanation"""
+- Write ONE async function implementing ALL steps from the plan
+- Call every SDK method needed for the full task (search, process, send/connect)
+- Wrap the entire function body in try/catch with typed error logging
+- Return a result object with { success: boolean, data: any }
+- Do NOT wrap code in markdown fences
+- Return ONLY raw TypeScript code"""
 
 
 @weave.op()
@@ -112,8 +112,10 @@ async def process_task(
     except json.JSONDecodeError:
         plan_data = {"steps": [], "reasoning": "parse_error", "raw": raw_plan[:200]}
 
-    # Step 2: Executor generates code for the first subtask
-    first_step = plan_data["steps"][0] if plan_data.get("steps") else "no steps"
+    # Step 2: Executor generates code for the FULL task (all steps)
+    steps = plan_data.get("steps", [])
+    first_step = steps[0] if steps else "no steps"
+    steps_text = "\n".join(f"  {i+1}. {s}" for i, s in enumerate(steps)) or "  No steps"
 
     code_messages = cast(
         Any,
@@ -122,9 +124,9 @@ async def process_task(
             {
                 "role": "user",
                 "content": (
-                    f"Subtask: {first_step}\n"
-                    f"Original task: {task_title}\n"
-                    f"Context: {context}"
+                    f"Task: {task_title}\n"
+                    f"Context: {context}\n"
+                    f"Plan:\n{steps_text}"
                 ),
             },
         ],

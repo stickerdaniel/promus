@@ -16,10 +16,10 @@ def _strip_fences(text: str) -> str:
 
 CODE_JUDGE_PROMPT = """You are evaluating generated Unipile SDK TypeScript code for a task agent.
 
-Given the original task, the subtask being executed, the expected SDK calls, and the generated code, score each 1-5:
-- sdk_correctness: Does the code use the correct Unipile SDK methods (emails.list, emails.send, linkedin.search, linkedin.connect, messaging.send)? 1=wrong methods, 5=all correct
-- completeness: Does the code handle the full subtask end-to-end? 1=incomplete, 5=complete
-- error_handling: Does the code include try/catch and edge case handling? 1=none, 5=comprehensive
+Given the task, its plan steps, expected SDK calls, and the generated code, score each 1-5:
+- sdk_correctness: Does the code call ALL expected SDK methods (emails.list, emails.send, linkedin.search, linkedin.connect, messaging.send)? 1=missing most, 5=all present and correct
+- completeness: Does the code implement the FULL task end-to-end (not just one step)? 1=only one step, 5=complete pipeline
+- error_handling: Does the code include try/catch, null checks, and graceful error logging? 1=none, 5=comprehensive
 
 Do NOT wrap your response in markdown. Return ONLY valid JSON:
 {"sdk_correctness": N, "completeness": N, "error_handling": N, "reasoning": "brief explanation"}"""
@@ -30,10 +30,16 @@ def sdk_call_accuracy(model_output: dict, expected_sdk_calls: list[str]) -> dict
     """Check if generated code references the expected SDK methods."""
     code = model_output.get("code", "")
     code_lower = code.lower()
+    # Also check plan steps for SDK method references
+    steps = model_output.get("steps", [])
+    steps_text = " ".join(s.lower() for s in steps)
+    full_text = code_lower + " " + steps_text
 
     matched = 0
     for call in expected_sdk_calls:
-        if call.lower().replace(".", " ").split()[-1] in code_lower:
+        # Check for full method name (e.g. "emails.list") in code or plan
+        call_lower = call.lower()
+        if call_lower in full_text:
             matched += 1
 
     coverage = matched / len(expected_sdk_calls) if expected_sdk_calls else 0
@@ -53,7 +59,8 @@ async def code_quality(
     if not code:
         return {"sdk_correctness": 0, "completeness": 0, "error_handling": 0, "average": 0}
 
-    first_step = model_output.get("first_step", "unknown")
+    steps = model_output.get("steps", [])
+    steps_text = "\n".join(f"  {i+1}. {s}" for i, s in enumerate(steps)) or "  No steps"
     messages = cast(
         Any,
         [
@@ -61,8 +68,8 @@ async def code_quality(
             {
                 "role": "user",
                 "content": (
-                    f"Original task: {task_title}\n"
-                    f"Subtask being executed: {first_step}\n"
+                    f"Task: {task_title}\n"
+                    f"Plan steps:\n{steps_text}\n"
                     f"Expected SDK calls: {json.dumps(expected_sdk_calls)}\n"
                     f"Generated code:\n{code}"
                 ),

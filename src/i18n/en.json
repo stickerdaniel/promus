@@ -460,6 +460,12 @@
 			}
 		}
 	},
+	"call": {
+		"call_me": "Call me",
+		"error": "Failed to initiate call",
+		"in_progress": "Call in progress...",
+		"initiated": "Calling you now!"
+	},
 	"chat": {
 		"action": {
 			"talk_to_human": "Talk to a human"
@@ -579,7 +585,7 @@
 		"search_placeholder": "Try searching for pages..."
 	},
 	"hero": {
-		"companies_text": "Trusted by professionals",
+		"companies_text": "Made possible by",
 		"cta": "Get started",
 		"cta_demo": "Request a demo",
 		"cta_sourcecode": "View sourcecode",
@@ -875,6 +881,9 @@
 			"name_label": "Name",
 			"no_image": "No image",
 			"or": "or",
+			"phone_helper": "For task briefing calls. Include country code.",
+			"phone_label": "Phone Number",
+			"phone_placeholder": "+1 (555) 123-4567",
 			"profile_picture": "Profile picture",
 			"profile_picture_helper": "Upload an image or paste a link. We recommend a square image under 2MB.",
 			"remove_button": "Remove",
@@ -1074,6 +1083,11 @@
 			"drag_handle": "Drag to reorder",
 			"toggle_task": "Toggle task completion"
 		},
+		"chat": {
+			"empty_state": "Ask me anything about this task",
+			"placeholder": "Ask about this task...",
+			"title": "Task AI"
+		},
 		"column": {
 			"done": "Done",
 			"in-progress": "In Progress",
@@ -1081,7 +1095,15 @@
 		},
 		"cta": "Get Started Free",
 		"detail": {
+			"agent_draft_title": "Agent Draft",
+			"agent_feedback_placeholder": "Tell the agent what to change...",
 			"agent_logs": "Agent logs",
+			"agent_reject": "Reject",
+			"agent_send": "Send",
+			"agent_status_awaiting": "Awaiting your approval",
+			"agent_status_done": "Agent completed",
+			"agent_status_working": "Agent is working...",
+			"agent_submit_feedback": "Submit Feedback",
 			"cancel": "Cancel",
 			"delete": "Delete",
 			"description": "Edit task details or remove it from the board.",
@@ -1105,11 +1127,6 @@
 			"task_4": "Book flights to Berlin",
 			"task_5": "Prepare for meeting with Sarah",
 			"task_6": "Connect with conference speakers on LinkedIn"
-		},
-		"chat": {
-			"empty_state": "Ask me anything about this task",
-			"placeholder": "Ask about this task...",
-			"title": "Task AI"
 		},
 		"save_failed": "Failed to save board changes. Please try again.",
 		"subheading": "Add a task. Promus researches, drafts, and executes in the background — connected to all your professional tools."

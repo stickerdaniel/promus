@@ -460,6 +460,12 @@
 			}
 		}
 	},
+	"call": {
+		"call_me": "Llámame",
+		"error": "Error al iniciar llamada",
+		"in_progress": "Llamada en curso...",
+		"initiated": "¡Te estamos llamando!"
+	},
 	"chat": {
 		"action": {
 			"talk_to_human": "Hablar con una persona"
@@ -579,7 +585,7 @@
 		"search_placeholder": "Prueba a buscar páginas..."
 	},
 	"hero": {
-		"companies_text": "Usado por profesionales",
+		"companies_text": "Hecho posible por",
 		"cta": "Empezar",
 		"cta_demo": "Solicitar una demo",
 		"cta_sourcecode": "Ver código fuente",
@@ -875,6 +881,9 @@
 			"name_label": "Nombre",
 			"no_image": "Sin imagen",
 			"or": "o",
+			"phone_helper": "Para llamadas de resumen. Incluir código de país.",
+			"phone_label": "Número de teléfono",
+			"phone_placeholder": "+34 612 345 678",
 			"profile_picture": "Foto de perfil",
 			"profile_picture_helper": "Sube una imagen o pega un enlace. Recomendamos una imagen cuadrada de menos de 2MB.",
 			"remove_button": "Eliminar",
@@ -1074,6 +1083,11 @@
 			"drag_handle": "Arrastrar para reordenar",
 			"toggle_task": "Marcar tarea como completada"
 		},
+		"chat": {
+			"empty_state": "Pregúntame lo que sea sobre esta tarea",
+			"placeholder": "Pregunta sobre esta tarea...",
+			"title": "IA de tareas"
+		},
 		"column": {
 			"done": "Hecho",
 			"in-progress": "En progreso",
@@ -1081,7 +1095,15 @@
 		},
 		"cta": "Empezar gratis",
 		"detail": {
+			"agent_draft_title": "Borrador del agente",
+			"agent_feedback_placeholder": "Dile al agente qué cambiar...",
 			"agent_logs": "Registros del agente",
+			"agent_reject": "Rechazar",
+			"agent_send": "Enviar",
+			"agent_status_awaiting": "Esperando tu aprobación",
+			"agent_status_done": "Agente completado",
+			"agent_status_working": "El agente está trabajando...",
+			"agent_submit_feedback": "Enviar comentarios",
 			"cancel": "Cancelar",
 			"delete": "Eliminar",
 			"description": "Edita los detalles de la tarea o elimínala del tablero.",
@@ -1105,11 +1127,6 @@
 			"task_4": "Reservar vuelos a Berlín",
 			"task_5": "Preparar reunión con Sarah",
 			"task_6": "Conectar con ponentes en LinkedIn"
-		},
-		"chat": {
-			"empty_state": "Pregúntame lo que sea sobre esta tarea",
-			"placeholder": "Pregunta sobre esta tarea...",
-			"title": "IA de tareas"
 		},
 		"save_failed": "No se pudieron guardar los cambios del tablero. Por favor, inténtalo de nuevo.",
 		"subheading": "Añade una tarea. Promus investiga, redacta y ejecuta en segundo plano — conectado a todas tus herramientas profesionales."

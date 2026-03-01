@@ -460,6 +460,12 @@
 			}
 		}
 	},
+	"call": {
+		"call_me": "Ruf mich an",
+		"error": "Anruf fehlgeschlagen",
+		"in_progress": "Anruf läuft...",
+		"initiated": "Du wirst jetzt angerufen!"
+	},
 	"chat": {
 		"action": {
 			"talk_to_human": "Mit Experte sprechen"
@@ -579,7 +585,7 @@
 		"search_placeholder": "Versuch nach Seiten zu suchen..."
 	},
 	"hero": {
-		"companies_text": "Von Profis genutzt",
+		"companies_text": "Ermöglicht durch",
 		"cta": "Jetzt starten",
 		"cta_demo": "Demo anfordern",
 		"cta_sourcecode": "Quellcode ansehen",
@@ -875,6 +881,9 @@
 			"name_label": "Name",
 			"no_image": "Kein Bild",
 			"or": "oder",
+			"phone_helper": "Für Briefing-Anrufe. Mit Ländervorwahl.",
+			"phone_label": "Telefonnummer",
+			"phone_placeholder": "+49 123 456789",
 			"profile_picture": "Profilbild",
 			"profile_picture_helper": "Lade ein Bild hoch oder füge einen Link ein. Wir empfehlen ein quadratisches Bild unter 2MB.",
 			"remove_button": "Entfernen",
@@ -1074,6 +1083,11 @@
 			"drag_handle": "Ziehen zum Neuordnen",
 			"toggle_task": "Aufgabe als erledigt markieren"
 		},
+		"chat": {
+			"empty_state": "Frag mich alles über diese Aufgabe",
+			"placeholder": "Frag etwas zu dieser Aufgabe...",
+			"title": "Aufgaben-KI"
+		},
 		"column": {
 			"done": "Erledigt",
 			"in-progress": "In Bearbeitung",
@@ -1081,7 +1095,15 @@
 		},
 		"cta": "Kostenlos starten",
 		"detail": {
+			"agent_draft_title": "Agent-Entwurf",
+			"agent_feedback_placeholder": "Sag dem Agent, was er ändern soll...",
 			"agent_logs": "Agent-Protokolle",
+			"agent_reject": "Ablehnen",
+			"agent_send": "Senden",
+			"agent_status_awaiting": "Wartet auf deine Freigabe",
+			"agent_status_done": "Agent abgeschlossen",
+			"agent_status_working": "Agent arbeitet...",
+			"agent_submit_feedback": "Feedback senden",
 			"cancel": "Abbrechen",
 			"delete": "Löschen",
 			"description": "Aufgabendetails bearbeiten oder vom Board entfernen.",
@@ -1105,11 +1127,6 @@
 			"task_4": "Flüge nach Berlin buchen",
 			"task_5": "Meeting mit Sarah vorbereiten",
 			"task_6": "Mit Konferenz-Speakern auf LinkedIn connecten"
-		},
-		"chat": {
-			"empty_state": "Frag mich alles über diese Aufgabe",
-			"placeholder": "Frag etwas zu dieser Aufgabe...",
-			"title": "Aufgaben-KI"
 		},
 		"save_failed": "Änderungen am Board konnten nicht gespeichert werden. Bitte versuch es erneut.",
 		"subheading": "Füge eine Aufgabe hinzu. Promus recherchiert, formuliert und erledigt im Hintergrund — verbunden mit all deinen professionellen Tools."

@@ -10,7 +10,7 @@
 	import { toast } from 'svelte-sonner';
 	import { T, getTranslate } from '@tolgee/svelte';
 	import { useEventListener } from 'runed';
-	import LinkIcon from '@lucide/svelte/icons/link';
+	import ProviderIcon from '$lib/components/icons/provider-icon.svelte';
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 
@@ -176,7 +176,7 @@
 		<!-- Info -->
 		<Item.Root variant="muted">
 			<Item.Media variant="icon">
-				<LinkIcon />
+				<ProviderIcon type="LINKEDIN" />
 			</Item.Media>
 			<Item.Content>
 				<Item.Title><T keyName="settings.connections.info_title" /></Item.Title>
@@ -218,7 +218,7 @@
 						{@const status = getAccountStatus(account)}
 						<Item.Root variant="outline">
 							<Item.Media variant="icon">
-								<LinkIcon />
+								<ProviderIcon type={account.type} />
 							</Item.Media>
 							<Item.Content>
 								<Item.Title>

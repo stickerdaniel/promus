@@ -123,13 +123,9 @@
 				<span class="text-sm text-muted-foreground">Agent is working...</span>
 			</div>
 		{:else if task.agentStatus === 'done' && task.agentSummary}
-			<div class="grid gap-2">
-				<Separator />
-				<div class="flex items-center gap-2">
-					<Logo class="size-4 text-primary agent-done" />
-					<span class="text-sm font-medium">Agent complete</span>
-				</div>
-				<p class="text-sm text-muted-foreground">{task.agentSummary}</p>
+			<div class="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">
+				<Logo class="size-4 text-primary agent-done" />
+				<span class="text-sm text-muted-foreground">{task.agentSummary}</span>
 			</div>
 		{:else if task.agentStatus === 'awaiting_approval'}
 			<div class="grid gap-3">

@@ -2,7 +2,6 @@
 
 import { v } from 'convex/values';
 import { internalAction } from './_generated/server';
-import { Daytona } from '@daytonaio/sdk';
 import { transform } from 'esbuild';
 import vm from 'node:vm';
 import { UnipileClient } from 'unipile-node-sdk';
@@ -10,6 +9,84 @@ import { UnipileClient } from 'unipile-node-sdk';
 const TASK_FILE = '/root/task.ts';
 const VIBE_TIMEOUT = 60;
 const SCRIPT_TIMEOUT_MS = 15_000;
+
+// ── Daytona REST API client (replaces SDK that hangs in serverless) ──────────
+
+const DAYTONA_API_BASE = 'https://app.daytona.io/api';
+
+function daytonaHeaders(apiKey: string) {
+	return {
+		Authorization: `Bearer ${apiKey}`,
+		'Content-Type': 'application/json'
+	};
+}
+
+async function daytonaGet(apiKey: string, path: string) {
+	const res = await fetch(`${DAYTONA_API_BASE}${path}`, {
+		headers: daytonaHeaders(apiKey)
+	});
+	if (!res.ok) throw new Error(`Daytona GET ${path}: ${res.status} ${await res.text()}`);
+	return res.json();
+}
+
+async function daytonaPost(apiKey: string, path: string, body?: unknown) {
+	const res = await fetch(`${DAYTONA_API_BASE}${path}`, {
+		method: 'POST',
+		headers: daytonaHeaders(apiKey),
+		...(body !== undefined ? { body: JSON.stringify(body) } : {})
+	});
+	if (!res.ok) throw new Error(`Daytona POST ${path}: ${res.status} ${await res.text()}`);
+	const text = await res.text();
+	return text ? JSON.parse(text) : undefined;
+}
+
+async function getSandboxState(apiKey: string, sandboxId: string): Promise<string> {
+	const data = await daytonaGet(apiKey, `/sandbox/${sandboxId}`);
+	return data.state;
+}
+
+async function startSandbox(apiKey: string, sandboxId: string) {
+	await daytonaPost(apiKey, `/sandbox/${sandboxId}/start`);
+}
+
+async function uploadFile(apiKey: string, sandboxId: string, filePath: string, content: Buffer) {
+	const formData = new FormData();
+	formData.append('file', new Blob([new Uint8Array(content)]), filePath.split('/').pop() ?? 'file');
+	const res = await fetch(
+		`${DAYTONA_API_BASE}/sandbox/${sandboxId}/toolbox/files/upload?path=${encodeURIComponent(filePath)}`,
+		{
+			method: 'POST',
+			headers: { Authorization: `Bearer ${apiKey}` },
+			body: formData
+		}
+	);
+	if (!res.ok) throw new Error(`Daytona upload ${filePath}: ${res.status} ${await res.text()}`);
+}
+
+async function executeCommand(
+	apiKey: string,
+	sandboxId: string,
+	command: string,
+	timeout: number
+): Promise<{ exitCode: number; result: string }> {
+	const data = await daytonaPost(apiKey, `/sandbox/${sandboxId}/toolbox/process/execute`, {
+		command,
+		timeout
+	});
+	return { exitCode: data?.exitCode ?? -1, result: data?.result ?? '' };
+}
+
+async function downloadFile(apiKey: string, sandboxId: string, filePath: string): Promise<Buffer> {
+	const res = await fetch(
+		`${DAYTONA_API_BASE}/sandbox/${sandboxId}/toolbox/files/download?path=${encodeURIComponent(filePath)}`,
+		{
+			headers: { Authorization: `Bearer ${apiKey}` }
+		}
+	);
+	if (!res.ok) throw new Error(`Daytona download ${filePath}: ${res.status} ${await res.text()}`);
+	const arrayBuf = await res.arrayBuffer();
+	return Buffer.from(arrayBuf);
+}
 
 // ── Vibe prompt builder (inlined from server/sandbox) ───────────────────────
 
@@ -197,25 +274,20 @@ export const runVibeTask = internalAction({
 		const apiKey = process.env.DAYTONA_API_KEY;
 		if (!apiKey) return { success: false, error: 'DAYTONA_API_KEY not configured' };
 
-		// 1. Connect to sandbox, restart if stopped
-		const daytona = new Daytona({
-			apiKey,
-			apiUrl: process.env.DAYTONA_API_URL || undefined
-		});
-		const sandbox = await daytona.get(sandboxId);
-		await sandbox.refreshData();
-		console.info(`[runVibeTask] sandbox state=${sandbox.state} ${Date.now() - t0}ms`);
+		// 1. Check sandbox state, restart if stopped
+		const state = await getSandboxState(apiKey, sandboxId);
+		console.info(`[runVibeTask] sandbox state=${state} ${Date.now() - t0}ms`);
 
-		if (sandbox.state === 'stopped') {
+		if (state === 'stopped') {
 			console.info(`[runVibeTask] restarting sandbox`);
-			await sandbox.start(60);
+			await startSandbox(apiKey, sandboxId);
 			console.info(`[runVibeTask] restarted ${Date.now() - t0}ms`);
 		}
 
 		// 2. Upload prompt and run vibe
 		const augmentedPrompt = buildVibePrompt(prompt);
 		const PROMPT_FILE = '/tmp/vibe-prompt.txt';
-		await sandbox.fs.uploadFile(Buffer.from(augmentedPrompt), PROMPT_FILE);
+		await uploadFile(apiKey, sandboxId, PROMPT_FILE, Buffer.from(augmentedPrompt));
 		console.info(`[runVibeTask] prompt uploaded ${Date.now() - t0}ms`);
 
 		const cmd = `. /root/.vibe-env && VIBE_PROMPT=$(cat ${PROMPT_FILE}) && vibe -p "$VIBE_PROMPT" --output json --max-turns ${maxTurns} 2>&1`;
@@ -224,8 +296,8 @@ export const runVibeTask = internalAction({
 		let exitCode: number;
 
 		try {
-			const result = await sandbox.process.executeCommand(cmd, undefined, undefined, VIBE_TIMEOUT);
-			vibeOutput = (result as any).result ?? (result as any).output ?? '';
+			const result = await executeCommand(apiKey, sandboxId, cmd, VIBE_TIMEOUT);
+			vibeOutput = result.result;
 			exitCode = result.exitCode;
 			console.info(`[runVibeTask] vibe done exit=${exitCode} ${Date.now() - t0}ms`);
 		} catch (e) {
@@ -243,7 +315,7 @@ export const runVibeTask = internalAction({
 
 		if (unipileDsn && unipileApiKey) {
 			try {
-				const taskBuffer = await sandbox.fs.downloadFile(TASK_FILE);
+				const taskBuffer = await downloadFile(apiKey, sandboxId, TASK_FILE);
 				const tsSource = taskBuffer.toString('utf-8');
 				console.info(`[runVibeTask] found task.ts (${tsSource.length} bytes) ${Date.now() - t0}ms`);
 
@@ -259,7 +331,7 @@ export const runVibeTask = internalAction({
 
 			// Cleanup
 			try {
-				await sandbox.process.executeCommand(`rm -f ${TASK_FILE}`, undefined, undefined, 5);
+				await executeCommand(apiKey, sandboxId, `rm -f ${TASK_FILE}`, 5);
 			} catch {
 				/* ignore */
 			}

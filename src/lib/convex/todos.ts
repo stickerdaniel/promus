@@ -232,9 +232,12 @@ export const saveBoard = authedMutation({
 			} else {
 				const oldTask = existingTasksById.get(task.id)!;
 
+				const columnChanged = task.columnId !== oldTask.columnId;
+				const notesChanged = (task.notes ?? '') !== (oldTask.notes ?? '');
+
 				if (!oldTask.threadId) {
-					// No thread yet — only trigger for move to working-on
-					if (task.columnId === 'working-on' && oldTask.columnId !== 'working-on') {
+					// No thread yet — create one on any meaningful change
+					if (columnChanged || notesChanged) {
 						await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNewTask, {
 							userId: ctx.user._id,
 							taskId: task.id,
@@ -245,9 +248,6 @@ export const saveBoard = authedMutation({
 					}
 				} else {
 					// Has thread — notify agent of user-initiated changes
-					const columnChanged = task.columnId !== oldTask.columnId;
-					const notesChanged = (task.notes ?? '') !== (oldTask.notes ?? '');
-
 					if (columnChanged) {
 						await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForTaskUpdate, {
 							userId: ctx.user._id,

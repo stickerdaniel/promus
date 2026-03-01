@@ -125,7 +125,7 @@ export const triggerAgentForNewTask = internalAction({
 		for (const [col, tasks] of Object.entries(board)) {
 			for (const t of tasks as { id: string; title: string }[]) {
 				if (t.id !== args.taskId) {
-					otherTasks.push(`  - [${col}] ${t.title}`);
+					otherTasks.push(`  - [${col}] ${t.title} (id: ${t.id})`);
 				}
 			}
 		}
@@ -210,7 +210,7 @@ export const triggerAgentForTaskUpdate = internalAction({
 		for (const [col, tasks] of Object.entries(board)) {
 			for (const t of tasks as { id: string; title: string }[]) {
 				if (t.id !== args.taskId) {
-					otherTasks.push(`  - [${col}] ${t.title}`);
+					otherTasks.push(`  - [${col}] ${t.title} (id: ${t.id})`);
 				}
 			}
 		}

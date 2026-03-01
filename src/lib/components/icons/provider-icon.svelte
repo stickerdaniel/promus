@@ -19,10 +19,12 @@
 		MESSENGER: ProviderMessenger,
 		TELEGRAM: ProviderTelegram,
 		TWITTER: ProviderTwitter,
+		GOOGLE_OAUTH: ProviderGoogle,
 		GOOGLE: ProviderGoogle,
-		GMAIL: ProviderGoogle,
+		GOOGLE_CALENDAR: ProviderGoogle,
 		MAIL: ProviderMail,
 		IMAP: ProviderMail,
+		EXCHANGE: ProviderOutlook,
 		OUTLOOK: ProviderOutlook
 	};
 

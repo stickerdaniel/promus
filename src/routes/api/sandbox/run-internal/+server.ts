@@ -40,10 +40,16 @@ export const POST: RequestHandler = async ({ request }: RequestEvent) => {
 	const daytona = getDaytona();
 	const sandbox = await daytona.get(sandboxId);
 
-	// Execute vibe with augmented prompt
+	// Upload prompt to file to avoid shell escaping issues (backticks, $, parens in prompt)
+	// Variable assignment from cat is safe — shell doesn't re-interpret variable values
 	const augmentedPrompt = buildVibePrompt(prompt);
-	const cmd = `. /root/.vibe-env && vibe -p ${JSON.stringify(augmentedPrompt)} --output json --max-turns ${maxTurns} 2>&1`;
-	console.warn(`[sandbox.run-internal] executing sandboxId=${sandboxId} cmd_len=${cmd.length}`);
+	const PROMPT_FILE = '/tmp/vibe-prompt.txt';
+	await sandbox.fs.uploadFile(Buffer.from(augmentedPrompt), PROMPT_FILE);
+
+	const cmd = `. /root/.vibe-env && VIBE_PROMPT=$(cat ${PROMPT_FILE}) && vibe -p "$VIBE_PROMPT" --output json --max-turns ${maxTurns} 2>&1`;
+	console.warn(
+		`[sandbox.run-internal] executing sandboxId=${sandboxId} prompt_len=${augmentedPrompt.length}`
+	);
 
 	let vibeOutput: string;
 	let exitCode: number;

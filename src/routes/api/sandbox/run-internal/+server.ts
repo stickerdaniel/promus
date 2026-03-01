@@ -33,27 +33,28 @@ export const POST: RequestHandler = async ({ request }: RequestEvent) => {
 		error(400, 'sandboxId and prompt are required');
 	}
 
+	const t0 = Date.now();
 	const daytona = getDaytona();
 	const sandbox = await daytona.get(sandboxId);
+	console.warn(`[sandbox.run-internal] got sandbox ${Date.now() - t0}ms`);
 
-	// Restart sandbox if it auto-stopped (lightweight — usually takes seconds)
+	// Restart sandbox if it auto-stopped
 	await sandbox.refreshData();
 	if (sandbox.state === 'stopped') {
-		console.warn(`[sandbox.run-internal] sandbox stopped, restarting sandboxId=${sandboxId}`);
-		await sandbox.start(60);
-		console.warn(`[sandbox.run-internal] sandbox restarted sandboxId=${sandboxId}`);
+		console.warn(`[sandbox.run-internal] restarting stopped sandbox sandboxId=${sandboxId}`);
+		await sandbox.start(30);
+		console.warn(`[sandbox.run-internal] restarted ${Date.now() - t0}ms`);
+	} else {
+		console.warn(`[sandbox.run-internal] sandbox state=${sandbox.state} ${Date.now() - t0}ms`);
 	}
 
-	// Upload prompt to file to avoid shell escaping issues (backticks, $, parens in prompt)
-	// Variable assignment from cat is safe — shell doesn't re-interpret variable values
+	// Upload prompt to file to avoid shell escaping issues
 	const augmentedPrompt = buildVibePrompt(prompt);
 	const PROMPT_FILE = '/tmp/vibe-prompt.txt';
 	await sandbox.fs.uploadFile(Buffer.from(augmentedPrompt), PROMPT_FILE);
+	console.warn(`[sandbox.run-internal] prompt uploaded ${Date.now() - t0}ms`);
 
 	const cmd = `. /root/.vibe-env && VIBE_PROMPT=$(cat ${PROMPT_FILE}) && vibe -p "$VIBE_PROMPT" --output json --max-turns ${maxTurns} 2>&1`;
-	console.warn(
-		`[sandbox.run-internal] executing sandboxId=${sandboxId} prompt_len=${augmentedPrompt.length}`
-	);
 
 	let vibeOutput: string;
 	let exitCode: number;

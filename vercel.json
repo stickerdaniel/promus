@@ -1,4 +1,12 @@
 {
 	"buildCommand": "bun scripts/vercel-deploy.ts",
-	"framework": "sveltekit"
+	"framework": "sveltekit",
+	"functions": {
+		"api/sandbox/run-internal.func/**": {
+			"maxDuration": 120
+		},
+		"api/sandbox/run.func/**": {
+			"maxDuration": 120
+		}
+	}
 }

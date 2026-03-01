@@ -34,7 +34,11 @@ export const executeVibeTask = createTool({
 		});
 
 		if (session && session.status === 'stopped') {
-			return { success: false, error: 'Sandbox is stopped. Please restart it from the Sandbox page or reload the Kanban board.' };
+			return {
+				success: false,
+				error:
+					'Sandbox is stopped. Please restart it from the Sandbox page or reload the Kanban board.'
+			};
 		}
 
 		if (!session || session.status === 'creating') {
@@ -49,7 +53,10 @@ export const executeVibeTask = createTool({
 		}
 
 		if (!session || session.status !== 'ready') {
-			return { success: false, error: 'Sandbox is still starting up. Please try again in a moment.' };
+			return {
+				success: false,
+				error: 'Sandbox is still starting up. Please try again in a moment.'
+			};
 		}
 
 		try {

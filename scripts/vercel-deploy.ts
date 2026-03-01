@@ -15,6 +15,7 @@ import fs from 'fs';
 // Environment variables from Vercel
 const VERCEL_ENV = process.env.VERCEL_ENV;
 const VERCEL_URL = process.env.VERCEL_URL;
+const VERCEL_PROJECT_PRODUCTION_URL = process.env.VERCEL_PROJECT_PRODUCTION_URL;
 const VERCEL_GIT_COMMIT_REF = process.env.VERCEL_GIT_COMMIT_REF;
 const CONVEX_DEPLOY_KEY = process.env.CONVEX_DEPLOY_KEY;
 
@@ -340,6 +341,41 @@ async function main(): Promise<void> {
 		}
 	}
 
+	// =============================================================================
+	// Post-deploy: Set SITE_URL for production (uses VERCEL_PROJECT_PRODUCTION_URL)
+	// =============================================================================
+	if (VERCEL_ENV === 'production') {
+		const productionUrl = VERCEL_PROJECT_PRODUCTION_URL
+			? `https://${VERCEL_PROJECT_PRODUCTION_URL}`
+			: null;
+
+		if (productionUrl) {
+			console.log(`Setting SITE_URL for production: ${productionUrl}`);
+			const setResult = await runCommandWithRetry(
+				'bunx',
+				['convex', 'env', 'set', '--prod', 'SITE_URL', productionUrl],
+				{
+					maxRetries: 3,
+					delayMs: 5000,
+					description: 'convex env set SITE_URL (production)'
+				}
+			);
+
+			if (!setResult.success) {
+				console.warn(
+					`${colors.yellow}Warning: Failed to set SITE_URL for production${colors.reset}`
+				);
+				if (setResult.stderr) console.warn(`  stderr: ${setResult.stderr}`);
+			} else {
+				console.log(`${colors.green}Production SITE_URL set successfully${colors.reset}`);
+			}
+		} else {
+			console.warn(
+				`${colors.yellow}Warning: VERCEL_PROJECT_PRODUCTION_URL not set, skipping SITE_URL update${colors.reset}`
+			);
+		}
+	}
+
 	// Build environment for SvelteKit with correct Convex URLs
 	const buildEnv: Record<string, string | undefined> = { ...process.env };
 
@@ -374,10 +410,12 @@ async function main(): Promise<void> {
 		);
 	}
 
-	// For preview deployments, derive SITE_URL from VERCEL_URL for SvelteKit build
-	// (Convex env var is set earlier in the validation step)
+	// Derive SITE_URL for SvelteKit build (Convex env var is set earlier)
 	if (VERCEL_ENV === 'preview' && VERCEL_URL) {
 		buildEnv.SITE_URL = `https://${VERCEL_URL}`;
+		console.log(`SITE_URL (for SvelteKit build): ${buildEnv.SITE_URL}`);
+	} else if (VERCEL_ENV === 'production' && VERCEL_PROJECT_PRODUCTION_URL) {
+		buildEnv.SITE_URL = `https://${VERCEL_PROJECT_PRODUCTION_URL}`;
 		console.log(`SITE_URL (for SvelteKit build): ${buildEnv.SITE_URL}`);
 	}
 

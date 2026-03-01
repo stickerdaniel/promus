@@ -1,431 +1,174 @@
 # Promus
 
-A full-stack SaaS starter template built with SvelteKit, Convex, and modern web technologies.
+The task takes 2 minutes. The prep takes 3 days.
 
-## Features
+Follow up with speakers — _3 days ago_. Send LinkedIn intros — _5 days ago_. Draft partnership email — _1 week ago_. We all have that list. The tasks aren't hard, they just need digging through emails, finding the right people, writing the right words. So they sit there.
 
-- 🔐 **Authentication** - Complete auth system with OAuth (Google) and email/password
-- 📧 **Email System** - Production-ready email delivery with Resend (queuing, durability, tracking)
-- 💬 **Real-time Chat** - Demo chat application with live messaging
-- 🎨 **Modern UI** - Tailwind CSS + Skeleton UI components
-- ⚡ **Fast Backend** - Convex for real-time data and serverless functions
-- 🧪 **Testing** - E2E testing with Playwright and unit tests with Vitest
-- 📱 **Responsive** - Mobile-first design
-- 🔧 **Developer Experience** - TypeScript, ESLint, Prettier, Husky
+Promus does the prep. You write a task, it searches your emails, finds LinkedIn profiles, drafts the messages, and hands everything back for your approval. Nothing gets sent without your sign-off.
 
-## Tech Stack
+Built by **Fadi Al Eliwi** and **Daniel Sticker** at the [Mistral Worldwide Hackathon](https://mistral.ai/).
 
-- **Frontend**: SvelteKit, Svelte 5, Tailwind CSS, Skeleton UI
-- **Backend**: Convex (real-time database + serverless functions)
-- **Authentication**: Convex Auth with OAuth providers
-- **Testing**: Playwright (E2E), Vitest (unit)
-- **Development**: TypeScript, ESLint, Prettier, Husky
+## Two agents, one board
 
-## Quick Start
+The Kanban board is the whole interface. Four columns: **Todo → Working On → Prepared → Done**. You drop a task into Todo. From there:
 
-### 1. Clone and Install
+An **Orchestrator** (Claude Opus on AWS Bedrock) reads your task, breaks it into steps, and delegates work. It lives server-side in Convex and never touches external APIs directly — it just plans and coordinates.
 
-```bash
-git clone <your-repo-url>
-cd promus
-bun install
+An **Executor** (Daytona sandbox + Mistral Vibe CLI, powered by Devstral) does the actual work. It gets a focused prompt like _"list emails containing speaker contact info"_, writes the Unipile SDK code from scratch, runs it in an isolated cloud sandbox, and sends results back. No hardcoded wrappers — the LLM generates whatever API call the task needs.
+
+Why split it? The Executor gets a tiny context (just the subtask + SDK docs), so it's fast and cheap. If a subtask fails, only that step retries. And we can hit any Unipile endpoint without writing a wrapper for each one.
+
+### Example: "Connect with hackathon attendees on LinkedIn"
+
+1. Orchestrator plans: search emails → extract names → LinkedIn search → send requests
+2. Executor writes `emails.list` code, runs it → 100 emails about the hackathon
+3. Orchestrator pulls attendee names from the email bodies
+4. Executor writes `linkedin.search` code → 62 matching profiles
+5. Executor writes `linkedin.connect` code → queues connection requests
+6. Task moves to **Prepared** — you review 47 drafts before they go out
+7. You approve → **Done**
+
+### It learns from you
+
+Give feedback on a draft — too formal, wrong tone, missing context — and the agent adapts. Your corrections feed back into the next run. Your standards become its standards.
+
+## Beyond the board
+
+We built a full platform around the task agent:
+
+- **Real-time everything** — Convex reactive queries, no polling. Open two tabs and watch them sync.
+- **Auth** — email/password, Google OAuth, passkeys. Better Auth with admin roles.
+- **Community chat** — real-time messaging with usage-based billing (Autumn + Stripe).
+- **AI support** — customer support agent that handles questions and hands off to humans when needed.
+- **Admin panel** — user management, audit logs, metrics dashboard, support tickets.
+- **Vibe Sandbox** — separate interactive AI coding environment running on Daytona.
+- **Emails** — transactional delivery via Resend with bounce/open/click tracking.
+- **4 languages** — EN, DE, ES, FR via Tolgee with in-context editing.
+- **Analytics** — PostHog with optional Cloudflare proxy.
+
+## Tech stack
+
+|                |                                                         |
+| -------------- | ------------------------------------------------------- |
+| Frontend       | SvelteKit, Svelte 5 (runes), Tailwind v4, shadcn-svelte |
+| Backend        | Convex (real-time DB + serverless)                      |
+| Orchestrator   | Convex Agent SDK + Claude Opus 4.6 (AWS Bedrock)        |
+| Executor       | Daytona sandbox + Mistral Vibe CLI (Devstral)           |
+| Communication  | Unipile (unified email, LinkedIn, messaging API)        |
+| Auth           | Better Auth (sessions, OAuth, passkeys)                 |
+| Email delivery | Resend                                                  |
+| Billing        | Autumn + Stripe                                         |
+| i18n           | Tolgee                                                  |
+| Testing        | Playwright + Vitest                                     |
+| Hosting        | Vercel + Convex Cloud                                   |
+
+## Architecture
+
+```
+┌──────────────────────────────────────────────┐
+│              SvelteKit Frontend               │
+│   Kanban · Chat · Sandbox · Admin · Settings  │
+└──────────────────┬───────────────────────────┘
+                   │ real-time subscriptions
+┌──────────────────▼───────────────────────────┐
+│               Convex Backend                  │
+│                                               │
+│  ┌─────────────┐      ┌───────────────────┐  │
+│  │ Orchestrator │      │ Support Agent     │  │
+│  │ (Claude Opus)│      │ (auto + handoff)  │  │
+│  └──────┬──────┘      └───────────────────┘  │
+│         │ delegates                           │
+│  ┌──────▼──────┐                              │
+│  │  Executor   │───► Daytona Sandbox          │
+│  │ (Vibe CLI)  │     └► Unipile SDK calls     │
+│  └─────────────┘                              │
+└───────────────────────────────────────────────┘
+        │                       │
+   ┌────▼────┐           ┌─────▼──────┐
+   │ Resend  │           │ Unipile    │
+   │ (email  │           │ (email,    │
+   │ delivery│           │  LinkedIn, │
+   └─────────┘           │  messaging)│
+                         └────────────┘
 ```
 
-### 2. Set up Convex
+## Project structure
 
-```bash
-# Initialize Convex project
-bunx convex dev
+```
+src/lib/convex/
+├── todo/               # task agent — orchestrator + tools
+├── support/            # support agent + LLM config
+├── emails/             # Resend email system
+├── admin/              # admin panel backend
+├── sandboxExecute.ts   # Daytona sandbox runner
+├── todos.ts            # task mutations
+└── schema.ts           # database schema
+
+src/routes/[[lang]]/
+├── app/my-tasks/       # the kanban board
+├── app/community-chat/ # real-time messaging
+├── app/sandbox/        # vibe sandbox
+├── app/settings/       # user settings
+├── admin/              # admin panel
+└── (auth)/             # sign in/up
 ```
 
-### 3. Environment Variables
+## Running locally
+
+You need [Bun](https://bun.sh/), a [Convex](https://convex.dev/) account, and a [Resend](https://resend.com/) key.
+
+```bash
+git clone https://github.com/stickerdaniel/promus.git
+cd promus && bun install
+```
 
 Create `.env.local`:
 
-```bash
-CONVEX_DEPLOYMENT=your-deployment-name
-PUBLIC_CONVEX_URL=https://your-deployment-name.convex.cloud
+```
+CONVEX_DEPLOYMENT=your-deployment
+PUBLIC_CONVEX_URL=https://your-deployment.convex.cloud
 ```
 
-### 4. OAuth Providers (Optional)
-
-#### Google OAuth Setup
-
-1. Create a Google OAuth app in the [Google Cloud Console](https://console.cloud.google.com/)
-2. Set callback URL: `https://[your-deployment-name].convex.site/api/auth/callback/google`
-3. Set environment variables:
+Set up the backend:
 
 ```bash
-bunx convex env set AUTH_GOOGLE_ID your_google_client_id
-bunx convex env set AUTH_GOOGLE_SECRET your_google_client_secret
+bunx convex dev
+
+# auth
+bun convex env set RESEND_API_KEY re_xxxxxxxxxxxx
+bun convex env set AUTH_EMAIL "noreply@yourdomain.com"
+
+# task agent
+bun convex env set AWS_REGION us-west-2
+bun convex env set AWS_ACCESS_KEY_ID your_key
+bun convex env set AWS_SECRET_ACCESS_KEY your_secret
+bun convex env set DAYTONA_API_KEY your_daytona_key
+bun convex env set UNIPILE_API_KEY your_unipile_key
 ```
-
-### 5. Email Configuration (Required for Auth)
-
-This project uses [Resend](https://resend.com/) for production-ready email delivery.
-
-#### Setup Resend
-
-1. **Create a Resend account** at [resend.com](https://resend.com/)
-2. **Get your API key** from the Resend dashboard
-3. **Verify your domain** (or use `onboarding@resend.dev` for testing)
-
-#### Configure Environment Variables
-
-```bash
-# Set your Resend API key
-bunx convex env set RESEND_API_KEY re_xxxxxxxxxxxx
-
-# Set your sender email address
-bunx convex env set AUTH_EMAIL "noreply@yourdomain.com"
-```
-
-**For testing:** You can use `onboarding@resend.dev` as your sender while in development.
-
-#### Email Features
-
-- ✅ **Automatic Queuing** - Reliably handles email delivery
-- ✅ **Durable Execution** - Survives server restarts
-- ✅ **Idempotency** - Prevents duplicate sends
-- ✅ **Event Tracking** - Track deliveries, bounces, spam complaints
-- ✅ **Test Mode** - Safe development with delivery restrictions
-
-#### Webhook Setup (Optional)
-
-For email event tracking (delivery confirmations, bounces, etc.):
-
-1. Go to your Resend dashboard → Webhooks
-2. Add a new webhook endpoint:
-   ```
-   https://your-deployment-name.convex.site/resend-webhook
-   ```
-3. Select events to track (delivered, bounced, complained, etc.)
-4. Copy the webhook signing secret
-5. Set the secret in Convex:
-   ```bash
-   bunx convex env set RESEND_WEBHOOK_SECRET whsec_xxxxxxxxxxxx
-   ```
-
-### 6. Run Development Server
 
 ```bash
 bun run dev
+# → http://localhost:5173
 ```
 
-Visit `http://localhost:5173` to see your app!
-
-### 7. Set Up First Admin (Required for Admin Panel)
-
-The admin panel requires at least one admin user. To promote your first admin:
-
-1. **Sign up** with the email you want to be admin
-2. **Run the seed command:**
-
-   ```bash
-   bunx convex run admin/mutations:seedFirstAdmin '{"email":"your-email@example.com"}'
-   ```
-
-This is a one-time setup. The command will:
-
-- Verify the user exists
-- Check that no admins exist yet (prevents accidental re-runs)
-- Promote the user to admin role
-- Enable notification preferences for admin alerts
-
-**Note:** After the first admin is set up, additional admins can be promoted via the Admin Panel → Users page.
-
-### 8. Sync Existing Admins (Migration)
-
-If you had admin users before the notification preferences feature was added, run this one-time migration to sync them:
+First admin — sign up, then:
 
 ```bash
-bunx convex run admin/notificationPreferences/mutations:syncAllAdminPreferences
+bun convex run admin/mutations:seedFirstAdmin '{"email":"you@example.com"}'
 ```
 
-This ensures all existing admins appear in the Admin Settings → Notification Recipients page. Safe to run multiple times.
+## Deploy
 
-## Available Scripts
+Vercel — set `PUBLIC_CONVEX_URL` and `CONVEX_DEPLOY_KEY`, override build command to `bunx convex deploy --cmd 'bun run build'`, then `vercel --prod`.
 
-- `bun run dev` - Start development server
-- `bun run build` - Build for production
-- `bun run preview` - Preview production build
-- `bun run test` - Run all tests (E2E + unit)
-- `bun run test:e2e` - Run E2E tests only
-- `bun run test:unit` - Run unit tests only
-- `bun run lint` - Lint code
-- `bun run format` - Format code
+## Eval
 
-## Project Structure
+Plan quality scored via Weights & Biases Weave — LLM-as-judge on task decomposition and generated SDK code. No sandbox in evals, too slow and flaky.
 
-```
-src/
-├── lib/
-│   ├── convex/          # Convex backend functions and schema
-│   ├── demo/            # Demo chat application components
-│   ├── svelte/          # Svelte auth components
-│   └── sveltekit/       # SvelteKit auth utilities
-├── routes/
-│   ├── +layout.svelte   # Root layout with auth setup
-│   ├── +page.svelte     # Home page
-│   ├── product/         # Protected product page
-│   └── signin/          # Sign-in page
-└── app.html             # HTML template
-```
+## Sponsors
 
-## Authentication
-
-This starter includes a complete authentication system:
-
-- **OAuth Providers**: Google (easily extendable to others)
-- **Email/Password**: Traditional email authentication
-- **Route Protection**: Protect pages or entire app sections
-- **Server-side Auth**: Full SSR support with auth state
-
-See [SvelteKit Auth Documentation](src/lib/sveltekit/README.md) for detailed setup and usage.
-
-## Database & Backend
-
-Powered by [Convex](https://convex.dev/):
-
-- **Real-time**: Automatic live updates
-- **Serverless**: No server management needed
-- **TypeScript**: End-to-end type safety
-- **Queries & Mutations**: Reactive data layer
-
-See [Convex Documentation](src/lib/convex/README.md) for schema and functions.
-
-## Testing
-
-### E2E Testing
-
-#### Setup
-
-1. **Configure test environment variables:**
-
-   ```bash
-   # Copy the example file
-   cp .env.test.example .env.test
-
-   # Edit .env.test and ensure it contains:
-   # AUTH_E2E_TEST_SECRET=test-secret
-   # PUBLIC_E2E_TEST=true
-   ```
-
-2. **Configure Convex backend:**
-
-   ```bash
-   # Set the test secret in your Convex deployment
-   bunx convex env set AUTH_E2E_TEST_SECRET test-secret
-
-   # Initialize test data
-   bunx convex run tests:init
-   ```
-
-3. **For GitHub Actions (CI/CD):**
-   - Go to your repository Settings → Secrets and variables → Actions
-   - Add the following repository secrets:
-     - `AUTH_E2E_TEST_SECRET`: Set to `test-secret`
-     - `TEST_CONVEX_URL`: Your development Convex URL (for running tests)
-     - `PUBLIC_CONVEX_URL`: Your production Convex URL (for deployment)
-   - Tests run against the development environment to keep production clean
-   - This is already configured in `.github/workflows/quality-checks.yml`
-
-4. **Install Playwright and run tests:**
-
-   ```bash
-   # Install Playwright
-   bunx playwright install
-
-   # Run tests
-   bun run test:e2e
-   ```
-
-**Important:** The `AUTH_E2E_TEST_SECRET` must be configured in three places:
-
-- Local `.env.test` file (for local development)
-- Convex development backend (for test authentication) - NOT in production
-- GitHub Secrets (for CI/CD)
-
-**Note:** CI/CD tests run against the development Convex deployment to keep production data clean. The `TEST_CONVEX_URL` secret points to your development environment while `PUBLIC_CONVEX_URL` is used for production deployments.
-
-### Unit Testing
-
-```bash
-bun run test:unit
-```
-
-## Deployment
-
-### Deploy to Vercel
-
-#### Setup
-
-1. **Get your Convex deployment URL and deploy key:**
-   - Your Convex URL: Check `.env.local` for `PUBLIC_CONVEX_URL` (e.g., `https://intent-snake-818.convex.cloud`)
-   - Generate deploy key: Go to [Convex Dashboard](https://dashboard.convex.dev) → Settings → Deploy Keys → Generate Production Deploy Key
-
-2. **Set environment variables in Vercel:**
-
-   <details>
-   <summary><strong>Free Tier Setup</strong> (using development Convex for previews)</summary>
-
-   Without Convex Pro, preview deployments should use your **development** Convex deployment while production uses your **production** deployment.
-
-   **Using Vercel CLI:**
-
-   ```bash
-   # Production environment (uses production Convex)
-   echo "https://your-prod-deployment.convex.cloud" | vercel env add PUBLIC_CONVEX_URL production
-   echo "prod:your-prod-deployment|your-prod-key" | vercel env add CONVEX_DEPLOY_KEY production
-
-   # Preview environment (uses development Convex)
-   echo "https://your-dev-deployment.convex.cloud" | vercel env add PUBLIC_CONVEX_URL preview
-   echo "dev:your-dev-deployment|your-dev-key" | vercel env add CONVEX_DEPLOY_KEY preview
-   ```
-
-   **Or via Vercel Dashboard:**
-   - Go to your project → Settings → Environment Variables
-
-   For **Production**:
-   - Add `PUBLIC_CONVEX_URL`: Your production Convex URL
-     - Environment: **Production only**
-   - Add `CONVEX_DEPLOY_KEY`: Your production deploy key (`prod:...`)
-     - Environment: **Production only**
-
-   For **Preview** (PR deployments):
-   - Add `PUBLIC_CONVEX_URL`: Your development Convex URL
-     - Environment: **Preview only**
-   - Add `CONVEX_DEPLOY_KEY`: Your development deploy key (`dev:...`)
-     - Environment: **Preview only**
-
-   **Why this setup?**
-   - Free tier doesn't support separate preview Convex deployments
-   - Preview/PR deployments use your development database (safe for testing)
-   - Production deployments use your production database (real data)
-
-   </details>
-
-   <details>
-   <summary><strong>Convex Pro Setup</strong> (dedicated preview deployments)</summary>
-
-   With Convex Pro, you can create separate preview deployments for each PR.
-
-   **Using Vercel CLI:**
-
-   ```bash
-   # Set production Convex for both environments
-   echo "https://your-deployment.convex.cloud" | vercel env add PUBLIC_CONVEX_URL production preview
-   echo "prod:your-deployment|your-key" | vercel env add CONVEX_DEPLOY_KEY production preview
-   ```
-
-   **Or via Vercel Dashboard:**
-   - Go to your project → Settings → Environment Variables
-   - Add `PUBLIC_CONVEX_URL`: Your production Convex URL
-     - Select **both "Production" and "Preview"** environments
-   - Add `CONVEX_DEPLOY_KEY`: Your production deploy key
-     - Select **both "Production" and "Preview"** environments
-
-   See [Convex Preview Deployments](https://docs.convex.dev/production/hosting/preview-deployments) for more details.
-
-   </details>
-
-3. **Configure Build Command:**
-
-   <details>
-   <summary><strong>⚠️ Important: Override the build command</strong> (click to expand)</summary>
-
-   Vercel needs to deploy your Convex functions before building SvelteKit to generate the required `_generated` files.
-
-   **Via Vercel Dashboard (Recommended):**
-   1. Go to your project → Settings → General
-   2. Scroll to "Framework Settings" → "Build & Development Settings"
-   3. Find "Build Command" under **Project Settings** section
-   4. Enable the "Override" toggle
-   5. Enter: `bunx convex deploy --cmd 'bun run build'`
-   6. Click "Save"
-
-   **Why this is needed:**
-   - The `_generated` directory is gitignored (as it should be)
-   - `bunx convex deploy` deploys your Convex functions and generates these files
-   - Then it runs `bun run build` to build your SvelteKit app
-   - Without this, your build will fail with `ENOENT: no such file or directory` errors
-
-   **Note:** Use the **Project Settings** section (not Production Overrides) so both production and preview deployments work correctly.
-
-   </details>
-
-4. **Deploy:**
-   ```bash
-   vercel --prod
-   ```
-
-#### Development Workflow
-
-With `CONVEX_DEPLOY_KEY` set, your workflow is simple:
-
-```bash
-bunx convex dev         # Updates dev deployment locally
-# Make changes
-git push                # Automatically deploys BOTH frontend + Convex functions to production
-```
-
-#### What Each Environment Variable Does
-
-- **PUBLIC_CONVEX_URL**: Enables frontend to connect to your Convex backend (required)
-- **CONVEX_DEPLOY_KEY**: Enables automatic Convex function deployment with each Vercel build (required for full functionality)
-
-### Set Production Environment Variables
-
-```bash
-# Set production OAuth credentials
-bunx convex env set AUTH_GOOGLE_ID your_google_client_id --prod
-bunx convex env set AUTH_GOOGLE_SECRET your_google_client_secret --prod
-
-# Set production email configuration
-bunx convex env set RESEND_API_KEY your_resend_api_key --prod
-bunx convex env set AUTH_EMAIL "noreply@yourdomain.com" --prod
-bunx convex env set RESEND_WEBHOOK_SECRET your_webhook_secret --prod
-```
-
-### Set Up Production Admin
-
-After deploying to production, set up your first admin:
-
-1. **Sign up** on your production site with your admin email
-2. **Run the seed command** against production:
-
-   ```bash
-   bunx convex run admin/mutations:seedFirstAdmin '{"email":"admin@yourdomain.com"}' --prod
-   ```
-
-This enables access to the Admin Panel at `/admin`.
-
-## Customization
-
-### Adding New Auth Providers
-
-1. Follow [Convex Auth documentation](https://docs.convex.dev/auth) to add providers
-2. Update `src/lib/convex/auth.config.ts`
-3. Add sign-in buttons to your UI
-
-### Styling
-
-- Modify `src/app.css` for global styles
-- Customize Tailwind configuration in `tailwind.config.js`
-
-### Database Schema
-
-- Edit `src/lib/convex/schema.ts` to add your data models
-- Create new functions in `src/lib/convex/` for your business logic
-
-## Contributing
-
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+NVIDIA · AWS · ElevenLabs · Mistral · Hugging Face · Weights & Biases · Supercell
 
 ## License
 
-MIT License - see the [LICENSE](LICENSE) file for details.
+MIT

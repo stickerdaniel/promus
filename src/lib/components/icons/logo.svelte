@@ -8,7 +8,7 @@
 
 <span
 	class={cn(
-		'inline-block bg-[var(--logo-color,currentColor)] [mask-image:url(/coda.svg)] [mask-size:contain] [mask-position:center] [mask-repeat:no-repeat]',
+		'inline-block bg-[var(--logo-color,currentColor)] [mask-image:url(/logo.svg)] [mask-size:contain] [mask-position:center] [mask-repeat:no-repeat]',
 		className
 	)}
 ></span>

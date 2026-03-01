@@ -7,19 +7,27 @@
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import PencilIcon from '@lucide/svelte/icons/pencil';
 	import EyeIcon from '@lucide/svelte/icons/eye';
+	import CheckIcon from '@lucide/svelte/icons/check';
+	import XIcon from '@lucide/svelte/icons/x';
 	import Markdown from '$lib/components/prompt-kit/markdown/Markdown.svelte';
+	import Logo from '$lib/components/icons/logo.svelte';
+	import { Separator } from '$lib/components/ui/separator/index.js';
 	import type { TodoItem } from './types.js';
 
 	let {
 		task,
 		open = $bindable(false),
 		onSave,
-		onDelete
+		onDelete,
+		onApprove,
+		onReject
 	}: {
 		task: TodoItem;
 		open: boolean;
 		onSave: (id: string, updates: { title: string; notes?: string }) => void;
 		onDelete: (id: string) => void;
+		onApprove?: (id: string) => void;
+		onReject?: (id: string, feedback: string) => void;
 	} = $props();
 
 	const { t } = getTranslate();
@@ -27,12 +35,14 @@
 	let editTitle = $state('');
 	let editNotes = $state('');
 	let editingNotes = $state(false);
+	let rejectFeedback = $state('');
 
 	$effect(() => {
 		if (open) {
 			editTitle = task.title;
 			editNotes = task.notes ?? '';
 			editingNotes = false;
+			rejectFeedback = '';
 		}
 	});
 
@@ -106,6 +116,56 @@
 				{/if}
 			</div>
 		</div>
+
+		{#if task.agentStatus === 'working'}
+			<div class="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">
+				<Logo class="size-4 text-primary agent-working" />
+				<span class="text-sm text-muted-foreground">Agent is working...</span>
+			</div>
+		{:else if task.agentStatus === 'done' && task.agentSummary}
+			<div class="grid gap-2">
+				<Separator />
+				<div class="flex items-center gap-2">
+					<Logo class="size-4 text-primary agent-done" />
+					<span class="text-sm font-medium">Agent complete</span>
+				</div>
+				<p class="text-sm text-muted-foreground">{task.agentSummary}</p>
+			</div>
+		{:else if task.agentStatus === 'awaiting_approval'}
+			<div class="grid gap-3">
+				<Separator />
+				<div class="flex items-center gap-2">
+					<Logo class="size-4 text-primary agent-done" />
+					<span class="text-sm font-medium">Agent needs approval</span>
+				</div>
+				{#if task.agentDraft}
+					<div class="max-h-40 overflow-y-auto rounded-md border bg-muted/30 p-3 text-sm">
+						<Markdown content={task.agentDraft} class="prose-sm" />
+					</div>
+				{/if}
+				<Textarea
+					bind:value={rejectFeedback}
+					placeholder="Feedback (required to reject)"
+					rows={2}
+				/>
+				<div class="flex gap-2">
+					<Button variant="default" size="sm" onclick={() => onApprove?.(task.id)}>
+						<CheckIcon class="mr-1.5 size-3.5" />
+						Approve
+					</Button>
+					<Button
+						variant="outline"
+						size="sm"
+						disabled={!rejectFeedback.trim()}
+						onclick={() => onReject?.(task.id, rejectFeedback.trim())}
+					>
+						<XIcon class="mr-1.5 size-3.5" />
+						Reject
+					</Button>
+				</div>
+			</div>
+		{/if}
+
 		<Dialog.Footer class="flex items-center justify-between sm:justify-between">
 			<Button variant="destructive" size="sm" onclick={handleDelete}>
 				<Trash2Icon class="mr-1.5 size-3.5" />

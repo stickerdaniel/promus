@@ -369,6 +369,27 @@
 			opacity: 1;
 		}
 	}
+
+	@keyframes agent-spin {
+		from {
+			transform: rotate(0deg);
+		}
+
+		to {
+			transform: rotate(360deg);
+		}
+	}
+
+	@keyframes agent-bounce {
+		0%,
+		100% {
+			transform: scale(1);
+		}
+
+		50% {
+			transform: scale(1.15);
+		}
+	}
 }
 
 /* View Transitions - Respect reduced motion preference */
@@ -434,6 +455,21 @@
 @utility drag-tilt-column {
 	transform: rotate(2deg) scale(1.02);
 	transform-origin: center top;
+}
+
+@utility agent-working {
+	animation: agent-spin 1.2s linear infinite;
+}
+
+@utility agent-done {
+	animation: agent-bounce 2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.agent-working,
+	.agent-done {
+		animation: none !important;
+	}
 }
 
 @layer components {

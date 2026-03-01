@@ -96,6 +96,13 @@ export const triggerAgentForNewTask = internalAction({
 		taskColumn: v.string()
 	},
 	handler: async (ctx, args) => {
+		// 0. Mark task as working
+		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
+			userId: args.userId,
+			taskId: args.taskId,
+			agentStatus: 'working'
+		});
+
 		// 1. Create a thread for this task
 		const { threadId } = await todoAgent.createThread(ctx, {
 			userId: args.userId,
@@ -169,6 +176,14 @@ export const triggerAgentForNewTask = internalAction({
 			userId: args.userId,
 			taskId: args.taskId,
 			agentLogs: summary.slice(0, 2000)
+		});
+
+		// 8. Mark task as done with summary
+		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
+			userId: args.userId,
+			taskId: args.taskId,
+			agentStatus: 'done',
+			agentSummary: summary.slice(0, 200)
 		});
 	}
 });

@@ -9,28 +9,7 @@
 	import { useEventListener } from 'runed';
 	import { toast } from 'svelte-sonner';
 	import PlusIcon from '@lucide/svelte/icons/plus';
-	import MonitorIcon from '@lucide/svelte/icons/monitor';
 	import KanbanBoard from '$lib/components/todo-demo/kanban-board.svelte';
-
-	const sandboxSession = useQuery(api.sandboxApi.getSession, {});
-
-	const sandboxStatus = $derived.by(() => {
-		const s = sandboxSession.data;
-		if (s === undefined && !sandboxSession.error) return { label: '...', color: 'bg-yellow-500' };
-		if (!s) return { label: 'Off', color: 'bg-zinc-400' };
-		switch (s.status) {
-			case 'ready':
-				return { label: 'Ready', color: 'bg-green-500' };
-			case 'creating':
-				return { label: 'Starting', color: 'bg-yellow-500' };
-			case 'stopped':
-				return { label: 'Stopped', color: 'bg-zinc-400' };
-			case 'error':
-				return { label: 'Error', color: 'bg-red-500' };
-			default:
-				return { label: s.status, color: 'bg-zinc-400' };
-		}
-	});
 
 	const { t } = getTranslate();
 	const client = useConvexClient();
@@ -156,11 +135,6 @@
 				<T keyName="my_tasks.connections.connect" />
 			</Button>
 		{/if}
-		<Badge variant="outline" class="ml-auto gap-1.5 py-1">
-			<span class="inline-block h-2 w-2 rounded-full {sandboxStatus.color}"></span>
-			<MonitorIcon class="h-3 w-3" />
-			Sandbox: {sandboxStatus.label}
-		</Badge>
 	</div>
 
 	<div>

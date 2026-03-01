@@ -5,23 +5,45 @@ import { authedMutation, authedQuery } from './functions';
 
 const COLUMN_IDS = ['todo', 'working-on', 'prepared', 'done'] as const;
 
+const agentStatusValidator = v.optional(
+	v.union(
+		v.literal('idle'),
+		v.literal('working'),
+		v.literal('done'),
+		v.literal('awaiting_approval')
+	)
+);
+const agentDraftTypeValidator = v.optional(
+	v.union(v.literal('message'), v.literal('email'), v.literal('research'))
+);
+
 const taskValidator = v.object({
 	id: v.string(),
 	title: v.string(),
 	notes: v.optional(v.string()),
 	agentLogs: v.optional(v.string()),
-	threadId: v.optional(v.string())
+	threadId: v.optional(v.string()),
+	agentStatus: agentStatusValidator,
+	agentSummary: v.optional(v.string()),
+	agentDraft: v.optional(v.string()),
+	agentDraftType: agentDraftTypeValidator
 });
 
 const boardValidator = v.record(v.string(), v.array(taskValidator));
 
 type ColumnId = (typeof COLUMN_IDS)[number];
+type AgentStatus = 'idle' | 'working' | 'done' | 'awaiting_approval';
+type AgentDraftType = 'message' | 'email' | 'research';
 type BoardTask = {
 	id: string;
 	title: string;
 	notes?: string;
 	agentLogs?: string;
 	threadId?: string;
+	agentStatus?: AgentStatus;
+	agentSummary?: string;
+	agentDraft?: string;
+	agentDraftType?: AgentDraftType;
 };
 type Board = Record<ColumnId, BoardTask[]>;
 type StoredTask = {
@@ -30,6 +52,10 @@ type StoredTask = {
 	notes?: string;
 	agentLogs?: string;
 	threadId?: string;
+	agentStatus?: AgentStatus;
+	agentSummary?: string;
+	agentDraft?: string;
+	agentDraftType?: AgentDraftType;
 	columnId: ColumnId;
 	order: number;
 	createdAt: number;
@@ -80,7 +106,11 @@ function toBoard(tasks: StoredTask[]): Board {
 				title: task.title,
 				...(task.notes ? { notes: task.notes } : {}),
 				...(task.agentLogs ? { agentLogs: task.agentLogs } : {}),
-				...(task.threadId ? { threadId: task.threadId } : {})
+				...(task.threadId ? { threadId: task.threadId } : {}),
+				...(task.agentStatus ? { agentStatus: task.agentStatus } : {}),
+				...(task.agentSummary ? { agentSummary: task.agentSummary } : {}),
+				...(task.agentDraft ? { agentDraft: task.agentDraft } : {}),
+				...(task.agentDraftType ? { agentDraftType: task.agentDraftType } : {})
 			}));
 	}
 
@@ -114,12 +144,20 @@ function sanitizeAndFlattenBoard(
 			const notes = rawTask.notes?.trim() || undefined;
 			const agentLogs = rawTask.agentLogs?.trim() || existing?.agentLogs || undefined;
 			const threadId = rawTask.threadId || existing?.threadId || undefined;
+			const agentStatus = rawTask.agentStatus || existing?.agentStatus || undefined;
+			const agentSummary = rawTask.agentSummary?.trim() || existing?.agentSummary || undefined;
+			const agentDraft = rawTask.agentDraft?.trim() || existing?.agentDraft || undefined;
+			const agentDraftType = rawTask.agentDraftType || existing?.agentDraftType || undefined;
 			tasks.push({
 				id,
 				title,
 				...(notes ? { notes } : {}),
 				...(agentLogs ? { agentLogs } : {}),
 				...(threadId ? { threadId } : {}),
+				...(agentStatus ? { agentStatus } : {}),
+				...(agentSummary ? { agentSummary } : {}),
+				...(agentDraft ? { agentDraft } : {}),
+				...(agentDraftType ? { agentDraftType } : {}),
 				columnId,
 				order: index,
 				createdAt: existing?.createdAt ?? now,
@@ -355,5 +393,30 @@ export const getBoardInternal = internalQuery({
 
 		if (!board) return emptyBoard();
 		return toBoard(board.tasks as StoredTask[]);
+	}
+});
+
+export const updateTaskAgentStatusInternal = internalMutation({
+	args: {
+		userId: v.string(),
+		taskId: v.string(),
+		agentStatus: v.union(
+			v.literal('idle'),
+			v.literal('working'),
+			v.literal('done'),
+			v.literal('awaiting_approval')
+		),
+		agentSummary: v.optional(v.string()),
+		agentDraft: v.optional(v.string()),
+		agentDraftType: v.optional(
+			v.union(v.literal('message'), v.literal('email'), v.literal('research'))
+		)
+	},
+	handler: async (ctx, args) => {
+		const patch: Partial<StoredTask> = { agentStatus: args.agentStatus };
+		if (args.agentSummary !== undefined) patch.agentSummary = args.agentSummary;
+		if (args.agentDraft !== undefined) patch.agentDraft = args.agentDraft;
+		if (args.agentDraftType !== undefined) patch.agentDraftType = args.agentDraftType;
+		await patchTask(ctx, args, patch);
 	}
 });

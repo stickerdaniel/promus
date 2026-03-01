@@ -15,6 +15,7 @@
 <script lang="ts">
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import StickyNoteIcon from '@lucide/svelte/icons/sticky-note';
+	import Logo from '$lib/components/icons/logo.svelte';
 
 	let {
 		task,
@@ -71,10 +72,18 @@
 		onpointerdown={handlePointerDown}
 		onpointerup={handlePointerUp}
 	>
-		<span>{task.title}</span>
-		{#if task.notes}
-			<StickyNoteIcon class="mt-1.5 size-3.5 text-muted-foreground" />
-		{/if}
+		<div class="flex items-center justify-between gap-2">
+			<span class="min-w-0">{task.title}</span>
+			{#if task.agentStatus === 'working' || task.agentStatus === 'done' || task.agentStatus === 'awaiting_approval'}
+				<Logo
+					class="size-4 shrink-0 text-muted-foreground {task.agentStatus === 'working'
+						? 'agent-working'
+						: 'agent-done'}"
+				/>
+			{:else if task.notes}
+				<StickyNoteIcon class="size-4 shrink-0 text-muted-foreground" />
+			{/if}
+		</div>
 	</div>
 
 	{#if !isOverlay && (isDragging.current || isDropping.current)}

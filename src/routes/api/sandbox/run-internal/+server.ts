@@ -36,6 +36,14 @@ export const POST: RequestHandler = async ({ request }: RequestEvent) => {
 	const daytona = getDaytona();
 	const sandbox = await daytona.get(sandboxId);
 
+	// Restart sandbox if it auto-stopped (lightweight — usually takes seconds)
+	await sandbox.refreshData();
+	if (sandbox.state === 'stopped') {
+		console.warn(`[sandbox.run-internal] sandbox stopped, restarting sandboxId=${sandboxId}`);
+		await sandbox.start(60);
+		console.warn(`[sandbox.run-internal] sandbox restarted sandboxId=${sandboxId}`);
+	}
+
 	// Upload prompt to file to avoid shell escaping issues (backticks, $, parens in prompt)
 	// Variable assignment from cat is safe — shell doesn't re-interpret variable values
 	const augmentedPrompt = buildVibePrompt(prompt);

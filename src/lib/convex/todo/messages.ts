@@ -187,3 +187,74 @@ export const triggerAgentForNewTask = internalAction({
 		});
 	}
 });
+
+/**
+ * Triggered when a user updates an existing task (moves it or edits notes).
+ * Sends a follow-up message to the task's existing thread.
+ */
+export const triggerAgentForTaskUpdate = internalAction({
+	args: {
+		userId: v.string(),
+		threadId: v.string(),
+		taskId: v.string(),
+		taskTitle: v.string(),
+		prompt: v.string()
+	},
+	handler: async (ctx, args) => {
+		// 1. Fetch board for context
+		const board = await ctx.runQuery(internal.todos.getBoardInternal, {
+			userId: args.userId
+		});
+
+		const otherTasks: string[] = [];
+		for (const [col, tasks] of Object.entries(board)) {
+			for (const t of tasks as { id: string; title: string }[]) {
+				if (t.id !== args.taskId) {
+					otherTasks.push(`  - [${col}] ${t.title}`);
+				}
+			}
+		}
+
+		const fullPrompt = [
+			args.prompt,
+			'',
+			otherTasks.length > 0 ? `Other tasks on the board:\n${otherTasks.join('\n')}` : null
+		]
+			.filter(Boolean)
+			.join('\n');
+
+		// 2. Save user message to existing thread
+		const { messageId } = await todoAgent.saveMessage(ctx, {
+			threadId: args.threadId,
+			prompt: fullPrompt,
+			skipEmbeddings: true
+		});
+
+		// 3. Run agent
+		const result = await todoAgent.streamText(
+			ctx,
+			{ threadId: args.threadId, userId: args.userId },
+			{ promptMessageId: messageId },
+			{
+				saveStreamDeltas: {
+					chunking: 'line',
+					throttleMs: 100
+				}
+			}
+		);
+
+		const response = await result.consumeStream();
+
+		// 4. Update agent logs
+		const summary =
+			typeof response === 'object' && response !== null && 'text' in response
+				? String((response as { text: string }).text)
+				: 'Agent processed update.';
+
+		await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
+			userId: args.userId,
+			taskId: args.taskId,
+			agentLogs: summary.slice(0, 2000)
+		});
+	}
+});

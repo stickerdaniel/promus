@@ -218,10 +218,10 @@ export const saveBoard = authedMutation({
 			});
 		}
 
-		// Detect new tasks and tasks moved to working-on, trigger agent for each
+		// Detect changes and trigger agent
 		for (const task of sanitizedTasks) {
 			if (!existingTasksById.has(task.id)) {
-				// New task — always trigger agent
+				// New task — create thread and trigger agent
 				await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNewTask, {
 					userId: ctx.user._id,
 					taskId: task.id,
@@ -230,20 +230,41 @@ export const saveBoard = authedMutation({
 					taskColumn: task.columnId
 				});
 			} else {
-				// Existing task moved to working-on that hasn't been researched yet
 				const oldTask = existingTasksById.get(task.id)!;
-				if (
-					task.columnId === 'working-on' &&
-					oldTask.columnId !== 'working-on' &&
-					!oldTask.threadId
-				) {
-					await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNewTask, {
-						userId: ctx.user._id,
-						taskId: task.id,
-						taskTitle: task.title,
-						taskNotes: task.notes,
-						taskColumn: task.columnId
-					});
+
+				if (!oldTask.threadId) {
+					// No thread yet — only trigger for move to working-on
+					if (task.columnId === 'working-on' && oldTask.columnId !== 'working-on') {
+						await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNewTask, {
+							userId: ctx.user._id,
+							taskId: task.id,
+							taskTitle: task.title,
+							taskNotes: task.notes,
+							taskColumn: task.columnId
+						});
+					}
+				} else {
+					// Has thread — notify agent of user-initiated changes
+					const columnChanged = task.columnId !== oldTask.columnId;
+					const notesChanged = (task.notes ?? '') !== (oldTask.notes ?? '');
+
+					if (columnChanged) {
+						await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForTaskUpdate, {
+							userId: ctx.user._id,
+							threadId: oldTask.threadId,
+							taskId: task.id,
+							taskTitle: task.title,
+							prompt: `User moved task "${task.title}" from "${oldTask.columnId}" to "${task.columnId}". Task ID: ${task.id}. React accordingly — update notes if needed.`
+						});
+					} else if (notesChanged) {
+						await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForTaskUpdate, {
+							userId: ctx.user._id,
+							threadId: oldTask.threadId,
+							taskId: task.id,
+							taskTitle: task.title,
+							prompt: `User updated notes on task "${task.title}". Task ID: ${task.id}. New notes: ${task.notes ?? '(cleared)'}. Acknowledge and adjust your plan if needed.`
+						});
+					}
 				}
 			}
 		}

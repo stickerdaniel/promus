@@ -3,7 +3,6 @@
 	import { api } from '$lib/convex/_generated/api';
 	import { useAuth } from '@mmailaender/convex-better-auth-svelte/svelte';
 	import { page } from '$app/state';
-	import AIChatbar from '$lib/components/customer-support/ai-chatbar.svelte';
 	import FeedbackButton from '$lib/components/customer-support/feedback-button.svelte';
 	import { SupportThreadContext, supportThreadContext } from './support-thread-context.svelte';
 	import { ChatUIContext, type UploadConfig } from '$lib/chat';
@@ -18,9 +17,6 @@
 	const isFeedbackOpen = $derived(urlState.support === 'open');
 
 	let isScreenshotMode = $state(false);
-
-	// Hide AI chatbar when screenshot mode is active or feedback is open
-	let shouldShowAIChatbar = $derived(!isScreenshotMode && !isFeedbackOpen);
 
 	// Initialize thread context
 	const threadContext = new SupportThreadContext();
@@ -124,7 +120,6 @@
 	}
 </script>
 
-<AIChatbar isFeedbackOpen={!shouldShowAIChatbar} />
 <FeedbackButton {isFeedbackOpen} onToggle={setWidgetOpen} bind:isScreenshotMode {chatUIContext} />
 
 {#if isScreenshotMode}

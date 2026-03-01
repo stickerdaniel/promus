@@ -7,19 +7,27 @@ const taskValidator = v.object({
 	id: v.string(),
 	title: v.string(),
 	notes: v.optional(v.string()),
-	agentLogs: v.optional(v.string())
+	agentLogs: v.optional(v.string()),
+	threadId: v.optional(v.string())
 });
 
 const boardValidator = v.record(v.string(), v.array(taskValidator));
 
 type ColumnId = (typeof COLUMN_IDS)[number];
-type BoardTask = { id: string; title: string; notes?: string; agentLogs?: string };
+type BoardTask = {
+	id: string;
+	title: string;
+	notes?: string;
+	agentLogs?: string;
+	threadId?: string;
+};
 type Board = Record<ColumnId, BoardTask[]>;
 type StoredTask = {
 	id: string;
 	title: string;
 	notes?: string;
 	agentLogs?: string;
+	threadId?: string;
 	columnId: ColumnId;
 	order: number;
 	createdAt: number;
@@ -66,7 +74,8 @@ function toBoard(tasks: StoredTask[]): Board {
 				id: task.id,
 				title: task.title,
 				...(task.notes ? { notes: task.notes } : {}),
-				...(task.agentLogs ? { agentLogs: task.agentLogs } : {})
+				...(task.agentLogs ? { agentLogs: task.agentLogs } : {}),
+				...(task.threadId ? { threadId: task.threadId } : {})
 			}));
 	}
 
@@ -99,11 +108,13 @@ function sanitizeAndFlattenBoard(
 			const existing = existingTasksById.get(id);
 			const notes = rawTask.notes?.trim() || undefined;
 			const agentLogs = rawTask.agentLogs?.trim() || existing?.agentLogs || undefined;
+			const threadId = rawTask.threadId || existing?.threadId || undefined;
 			tasks.push({
 				id,
 				title,
 				...(notes ? { notes } : {}),
 				...(agentLogs ? { agentLogs } : {}),
+				...(threadId ? { threadId } : {}),
 				columnId,
 				order: index,
 				createdAt: existing?.createdAt ?? now,
@@ -165,5 +176,31 @@ export const saveBoard = authedMutation({
 		}
 
 		return toBoard(sanitizedTasks);
+	}
+});
+
+export const updateTaskThreadId = authedMutation({
+	args: {
+		taskId: v.string(),
+		threadId: v.string()
+	},
+	handler: async (ctx, args) => {
+		const board = await ctx.db
+			.query('todoBoards')
+			.withIndex('by_user', (q) => q.eq('userId', ctx.user._id))
+			.first();
+
+		if (!board) throw new Error('Board not found');
+
+		const tasks = board.tasks as StoredTask[];
+		const taskIndex = tasks.findIndex((t) => t.id === args.taskId);
+		if (taskIndex === -1) throw new Error('Task not found');
+
+		tasks[taskIndex] = { ...tasks[taskIndex], threadId: args.threadId };
+
+		await ctx.db.patch(board._id, {
+			tasks,
+			updatedAt: Date.now()
+		});
 	}
 });

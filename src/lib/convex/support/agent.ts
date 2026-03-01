@@ -1,8 +1,6 @@
 import { Agent } from '@convex-dev/agent';
 import { components } from '../_generated/api';
-import { openrouter } from '@openrouter/ai-sdk-provider';
-// Import env to ensure OPENROUTER_API_KEY is validated at module load time
-import '../env';
+import { getSupportLanguageModel } from './llmProvider';
 
 /**
  * Customer Support AI Agent
@@ -17,7 +15,7 @@ export const supportAgent = new Agent(components.agent, {
 	name: 'Kai',
 
 	// Language model configuration
-	languageModel: openrouter('qwen/qwen3-vl-30b-a3b-thinking'),
+	languageModel: getSupportLanguageModel(),
 
 	// System instructions defining agent behavior
 	instructions: `You are a helpful customer support agent for Promus, a modern SaaS application template built with SvelteKit, Convex, and Tailwind CSS. Your answers are brief and in WhatsApp style.

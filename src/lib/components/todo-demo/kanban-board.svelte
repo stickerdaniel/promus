@@ -15,6 +15,7 @@
 	import KanbanColumn from './kanban-column.svelte';
 	import KanbanItem from './kanban-item.svelte';
 	import TodoDetailDialog from './todo-detail-dialog.svelte';
+	import TodoChatPanel from './todo-chat-panel.svelte';
 
 	const { t } = getTranslate();
 	const convexClient = useConvexClient();
@@ -175,65 +176,73 @@
 	}
 </script>
 
-<DragDropProvider
-	{sensors}
-	modifiers={[RestrictToWindowEdges]}
-	onDragStart={() => {
-		dragStartSnapshot = cloneBoard(items);
-		overlayTilted = true;
-		isDragging = true;
-	}}
-	onDragEnd={(event) => {
-		void handleDragEnd(event as EndEvent);
-	}}
-	onDragOver={syncItemOrder}
->
-	<div class="grid items-start gap-3 md:grid-cols-3">
-		{#each columnIds as columnId, colIdx (columnId)}
-			<KanbanColumn
-				id={columnId}
-				title={$t(`todo_demo.column.${columnId}`)}
-				index={colIdx}
-				onAdd={(title) => addTodo(columnId, title)}
-			>
-				{#each items[columnId] as task, taskIdx (task.id)}
-					<KanbanItem
-						{task}
-						index={taskIdx}
-						group={columnId}
-						data={{ group: columnId }}
-						onclick={handleTaskClick}
-					/>
+<div class="flex gap-6">
+	<div class="min-w-0 flex-1">
+		<DragDropProvider
+			{sensors}
+			modifiers={[RestrictToWindowEdges]}
+			onDragStart={() => {
+				dragStartSnapshot = cloneBoard(items);
+				overlayTilted = true;
+				isDragging = true;
+			}}
+			onDragEnd={(event) => {
+				void handleDragEnd(event as EndEvent);
+			}}
+			onDragOver={syncItemOrder}
+		>
+			<div class="grid items-start gap-3 md:grid-cols-3">
+				{#each columnIds as columnId, colIdx (columnId)}
+					<KanbanColumn
+						id={columnId}
+						title={$t(`todo_demo.column.${columnId}`)}
+						index={colIdx}
+						onAdd={(title) => addTodo(columnId, title)}
+					>
+						{#each items[columnId] as task, taskIdx (task.id)}
+							<KanbanItem
+								{task}
+								index={taskIdx}
+								group={columnId}
+								data={{ group: columnId }}
+								onclick={handleTaskClick}
+							/>
+						{/each}
+					</KanbanColumn>
 				{/each}
-			</KanbanColumn>
-		{/each}
+			</div>
+
+			<DragOverlay>
+				{#snippet children(source)}
+					{#if source.data.group}
+						{@const task = items[source.data.group as ColumnId]?.find((t) => t.id === source.id)}
+						{#if task}
+							<KanbanItem {task} index={0} isOverlay {overlayTilted} />
+						{/if}
+					{:else}
+						{@const colId = source.id as ColumnId}
+						<KanbanColumn
+							id={colId}
+							title={$t(`todo_demo.column.${colId}`)}
+							index={0}
+							isOverlay
+							{overlayTilted}
+							onAdd={() => {}}
+						>
+							{#each items[colId] as task, taskIdx (task.id)}
+								<KanbanItem {task} index={taskIdx} group={colId} data={{ group: colId }} />
+							{/each}
+						</KanbanColumn>
+					{/if}
+				{/snippet}
+			</DragOverlay>
+		</DragDropProvider>
 	</div>
 
-	<DragOverlay>
-		{#snippet children(source)}
-			{#if source.data.group}
-				{@const task = items[source.data.group as ColumnId]?.find((t) => t.id === source.id)}
-				{#if task}
-					<KanbanItem {task} index={0} isOverlay {overlayTilted} />
-				{/if}
-			{:else}
-				{@const colId = source.id as ColumnId}
-				<KanbanColumn
-					id={colId}
-					title={$t(`todo_demo.column.${colId}`)}
-					index={0}
-					isOverlay
-					{overlayTilted}
-					onAdd={() => {}}
-				>
-					{#each items[colId] as task, taskIdx (task.id)}
-						<KanbanItem {task} index={taskIdx} group={colId} data={{ group: colId }} />
-					{/each}
-				</KanbanColumn>
-			{/if}
-		{/snippet}
-	</DragOverlay>
-</DragDropProvider>
+	<div class="hidden w-80 shrink-0 lg:block" style="height: calc(100vh - 12rem);">
+		<TodoChatPanel />
+	</div>
+</div>
 
 {#if selectedTask}
 	<TodoDetailDialog

@@ -1,7 +1,6 @@
 import { Agent } from '@convex-dev/agent';
 import { components } from './_generated/api';
-import { openrouter } from '@openrouter/ai-sdk-provider';
-import './env';
+import { getSupportLanguageModel } from './support/llmProvider';
 
 /**
  * Vibe Sandbox Agent
@@ -12,7 +11,7 @@ import './env';
  */
 export const vibeAgent = new Agent(components.agent, {
 	name: 'Vibe',
-	languageModel: openrouter('qwen/qwen3-vl-30b-a3b-thinking'),
+	languageModel: getSupportLanguageModel(),
 	instructions: '',
 	maxSteps: 1
 });

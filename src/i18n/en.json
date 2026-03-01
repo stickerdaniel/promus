@@ -1106,6 +1106,11 @@
 			"task_5": "Prepare for meeting with Sarah",
 			"task_6": "Connect with conference speakers on LinkedIn"
 		},
+		"chat": {
+			"empty_state": "Ask me anything about this task",
+			"placeholder": "Ask about this task...",
+			"title": "Task AI"
+		},
 		"save_failed": "Failed to save board changes. Please try again.",
 		"subheading": "Add a task. Promus researches, drafts, and executes in the background — connected to all your professional tools."
 	},

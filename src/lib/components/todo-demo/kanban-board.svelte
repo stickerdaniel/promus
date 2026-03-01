@@ -20,6 +20,26 @@
 	const { t } = getTranslate();
 	const convexClient = useConvexClient();
 
+	// Auto-start sandbox if not ready
+	const sandboxSession = useQuery(api.sandboxApi.getSession, {});
+	let sandboxStartFired = $state(false);
+
+	$effect(() => {
+		const session = sandboxSession.data;
+		if (sandboxStartFired) return;
+		// Skip if query is still loading (data is undefined)
+		if (session === undefined && !sandboxSession.error) return;
+		// Skip if already creating or ready
+		if (session && (session.status === 'creating' || session.status === 'ready')) return;
+		// Session is null, stopped, deleted, or error → start it
+		sandboxStartFired = true;
+		fetch('/api/sandbox/manage', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ action: 'start' })
+		}).catch((err) => console.warn('[kanban] Auto-start sandbox failed:', err));
+	});
+
 	const sensors = [PointerSensor, KeyboardSensor];
 	const columnIds: ColumnId[] = ['todo', 'in-progress', 'done'];
 	const boardQuery = useQuery(api.todos.getBoard, {});
@@ -240,7 +260,7 @@
 	</div>
 
 	<div class="hidden w-80 shrink-0 lg:block" style="height: calc(100vh - 12rem);">
-		<TodoChatPanel />
+		<TodoChatPanel taskThreadId={selectedTask?.threadId} />
 	</div>
 </div>
 

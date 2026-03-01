@@ -29,7 +29,7 @@
 				class="relative mx-auto grid max-w-6xl grid-cols-1 items-center px-6 lg:grid-cols-2 lg:gap-12 lg:px-12"
 			>
 				<div class="mx-auto max-w-lg text-center lg:ml-0 lg:max-w-full lg:text-left">
-					<h1 class="mt-8 max-w-4xl text-4xl font-bold md:text-5xl lg:mt-16 xl:text-6xl">
+					<h1 class="mt-8 max-w-4xl font-serif text-4xl font-bold md:text-5xl lg:mt-16 xl:text-6xl">
 						<T keyName="hero.tagline" />
 					</h1>
 					<p class="mt-8 max-w-3xl text-lg text-balance">

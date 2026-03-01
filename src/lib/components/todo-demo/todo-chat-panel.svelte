@@ -12,9 +12,11 @@
 	};
 
 	let {
-		threadId = $bindable<string | undefined>(undefined)
+		threadId = $bindable<string | undefined>(undefined),
+		taskThreadId
 	}: {
 		threadId?: string;
+		taskThreadId?: string;
 	} = $props();
 
 	const { t } = getTranslate();
@@ -26,7 +28,7 @@
 		listMessages: api.todo.messages.listMessages
 	};
 
-	let activeThreadId = $derived(threadId ?? null);
+	let activeThreadId = $derived(taskThreadId ?? threadId ?? null);
 
 	async function handleSend(prompt: string) {
 		if (!activeThreadId) {

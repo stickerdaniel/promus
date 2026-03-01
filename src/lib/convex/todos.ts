@@ -1,4 +1,6 @@
 import { v } from 'convex/values';
+import { internalMutation } from './_generated/server';
+import { internal } from './_generated/api';
 import { authedMutation, authedQuery } from './functions';
 
 const COLUMN_IDS = ['todo', 'in-progress', 'done'] as const;
@@ -175,6 +177,19 @@ export const saveBoard = authedMutation({
 			});
 		}
 
+		// Detect new tasks and trigger agent for each
+		for (const task of sanitizedTasks) {
+			if (!existingTasksById.has(task.id)) {
+				await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNewTask, {
+					userId: ctx.user._id,
+					taskId: task.id,
+					taskTitle: task.title,
+					taskNotes: task.notes,
+					taskColumn: task.columnId
+				});
+			}
+		}
+
 		return toBoard(sanitizedTasks);
 	}
 });
@@ -202,5 +217,59 @@ export const updateTaskThreadId = authedMutation({
 			tasks,
 			updatedAt: Date.now()
 		});
+	}
+});
+
+// ── Internal mutations (called from agent actions) ──────────────────────────
+
+/** Helper to find board + task by userId + taskId and patch a field */
+async function patchTask(
+	ctx: { db: any },
+	args: { userId: string; taskId: string },
+	patch: Partial<StoredTask>
+) {
+	const board = await ctx.db
+		.query('todoBoards')
+		.withIndex('by_user', (q: any) => q.eq('userId', args.userId))
+		.first();
+	if (!board) throw new Error('Board not found');
+
+	const tasks = board.tasks as StoredTask[];
+	const idx = tasks.findIndex((t) => t.id === args.taskId);
+	if (idx === -1) throw new Error('Task not found');
+
+	tasks[idx] = { ...tasks[idx], ...patch, updatedAt: Date.now() };
+	await ctx.db.patch(board._id, { tasks, updatedAt: Date.now() });
+}
+
+export const updateTaskThreadIdInternal = internalMutation({
+	args: { userId: v.string(), taskId: v.string(), threadId: v.string() },
+	handler: async (ctx, args) => {
+		await patchTask(ctx, args, { threadId: args.threadId });
+	}
+});
+
+export const updateTaskAgentLogsInternal = internalMutation({
+	args: { userId: v.string(), taskId: v.string(), agentLogs: v.string() },
+	handler: async (ctx, args) => {
+		await patchTask(ctx, args, { agentLogs: args.agentLogs });
+	}
+});
+
+export const updateTaskNotesInternal = internalMutation({
+	args: { userId: v.string(), taskId: v.string(), notes: v.string() },
+	handler: async (ctx, args) => {
+		await patchTask(ctx, args, { notes: args.notes });
+	}
+});
+
+export const moveTaskInternal = internalMutation({
+	args: {
+		userId: v.string(),
+		taskId: v.string(),
+		columnId: v.union(v.literal('todo'), v.literal('in-progress'), v.literal('done'))
+	},
+	handler: async (ctx, args) => {
+		await patchTask(ctx, args, { columnId: args.columnId });
 	}
 });

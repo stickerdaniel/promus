@@ -139,7 +139,7 @@ export const triggerAgentForNewTask = internalAction({
 			'',
 			otherTasks.length > 0 ? `Other tasks on the board:\n${otherTasks.join('\n')}` : null,
 			'',
-			'Analyze this task and take appropriate action. If it is vague or missing key details, use createTask to ask the user for the missing info. If it involves Unipile operations, use executeVibeTask. Update task notes with your findings.'
+			'Analyze this task and take appropriate action. If it is vague or missing key details, use createTask to ask the user for the missing info. If it involves Unipile operations, write TypeScript code and use executeUnipileCode. Update task notes with your findings.'
 		]
 			.filter(Boolean)
 			.join('\n');

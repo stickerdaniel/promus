@@ -76,10 +76,13 @@
 			<span class="min-w-0">{task.title}</span>
 			{#if task.agentStatus === 'working'}
 				<Logo class="size-4 shrink-0 text-muted-foreground agent-working" />
-			{:else if task.hasUnreadNotes}
-				<span class="size-2 shrink-0 rounded-full bg-blue-500"></span>
 			{:else if task.notes}
-				<StickyNoteIcon class="size-4 shrink-0 text-muted-foreground" />
+				<span class="flex shrink-0 items-center gap-1.5">
+					{#if task.hasUnreadNotes}
+						<span class="size-2 rounded-full bg-blue-500"></span>
+					{/if}
+					<StickyNoteIcon class="size-4 text-muted-foreground" />
+				</span>
 			{/if}
 		</div>
 	</div>

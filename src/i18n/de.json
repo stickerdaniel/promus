@@ -1090,8 +1090,9 @@
 		},
 		"column": {
 			"done": "Erledigt",
-			"in-progress": "In Bearbeitung",
-			"todo": "Zu erledigen"
+			"prepared": "Vorbereitet",
+			"todo": "Zu erledigen",
+			"working-on": "In Bearbeitung"
 		},
 		"cta": "Kostenlos starten",
 		"detail": {

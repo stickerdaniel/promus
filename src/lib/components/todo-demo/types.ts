@@ -6,6 +6,6 @@ export type TodoItem = {
 	threadId?: string;
 };
 
-export type ColumnId = 'todo' | 'in-progress' | 'done';
+export type ColumnId = 'todo' | 'working-on' | 'prepared' | 'done';
 
 export type KanbanData = Record<ColumnId, TodoItem[]>;

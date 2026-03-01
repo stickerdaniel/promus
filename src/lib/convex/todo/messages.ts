@@ -109,26 +109,42 @@ export const triggerAgentForNewTask = internalAction({
 			threadId
 		});
 
-		// 3. Build prompt from task context
+		// 3. Fetch full board for context
+		const board = await ctx.runQuery(internal.todos.getBoardInternal, {
+			userId: args.userId
+		});
+
+		const otherTasks: string[] = [];
+		for (const [col, tasks] of Object.entries(board)) {
+			for (const t of tasks as { id: string; title: string }[]) {
+				if (t.id !== args.taskId) {
+					otherTasks.push(`  - [${col}] ${t.title}`);
+				}
+			}
+		}
+
+		// 4. Build prompt from task context
 		const prompt = [
-			`New task created: "${args.taskTitle}"`,
+			`New task: "${args.taskTitle}"`,
 			`Task ID: ${args.taskId}`,
 			`Current column: ${args.taskColumn}`,
 			args.taskNotes ? `Notes: ${args.taskNotes}` : null,
 			'',
-			'Analyze this task and take appropriate action. If it involves Unipile operations (messaging, email, contacts), use the executeVibeTask tool. Update task notes with your findings and move the task as appropriate.'
+			otherTasks.length > 0 ? `Other tasks on the board:\n${otherTasks.join('\n')}` : null,
+			'',
+			'Analyze this task and take appropriate action. If it is vague or missing key details, use createTask to ask the user for the missing info. If it involves Unipile operations, use executeVibeTask. Update task notes with your findings.'
 		]
 			.filter(Boolean)
 			.join('\n');
 
-		// 4. Save the prompt as a user message
+		// 5. Save the prompt as a user message
 		const { messageId } = await todoAgent.saveMessage(ctx, {
 			threadId,
 			prompt,
 			skipEmbeddings: true
 		});
 
-		// 5. Run the agent with streaming
+		// 6. Run the agent with streaming
 		const result = await todoAgent.streamText(
 			ctx,
 			{ threadId, userId: args.userId },
@@ -143,7 +159,7 @@ export const triggerAgentForNewTask = internalAction({
 
 		const response = await result.consumeStream();
 
-		// 6. Update task with agent summary
+		// 7. Update task with agent summary
 		const summary =
 			typeof response === 'object' && response !== null && 'text' in response
 				? String((response as { text: string }).text)

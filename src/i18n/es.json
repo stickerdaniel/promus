@@ -1090,8 +1090,9 @@
 		},
 		"column": {
 			"done": "Hecho",
-			"in-progress": "En progreso",
-			"todo": "Por hacer"
+			"prepared": "Preparado",
+			"todo": "Por hacer",
+			"working-on": "En progreso"
 		},
 		"cta": "Empezar gratis",
 		"detail": {

@@ -1,9 +1,9 @@
 import { v } from 'convex/values';
-import { internalMutation } from './_generated/server';
+import { internalMutation, internalQuery } from './_generated/server';
 import { internal } from './_generated/api';
 import { authedMutation, authedQuery } from './functions';
 
-const COLUMN_IDS = ['todo', 'in-progress', 'done'] as const;
+const COLUMN_IDS = ['todo', 'working-on', 'prepared', 'done'] as const;
 
 const taskValidator = v.object({
 	id: v.string(),
@@ -39,17 +39,19 @@ type StoredTask = {
 function emptyBoard(): Board {
 	return {
 		todo: [],
-		'in-progress': [],
+		'working-on': [],
+		prepared: [],
 		done: []
 	};
 }
 
 function parseBoard(input: Record<string, BoardTask[]>): Board {
 	const todo = input.todo;
-	const inProgress = input['in-progress'];
+	const workingOn = input['working-on'];
+	const prepared = input.prepared;
 	const done = input.done;
-	if (!todo || !inProgress || !done) {
-		throw new Error('Board must include todo, in-progress, and done columns');
+	if (!todo || !workingOn || !prepared || !done) {
+		throw new Error('Board must include todo, working-on, prepared, and done columns');
 	}
 
 	for (const key of Object.keys(input)) {
@@ -60,7 +62,8 @@ function parseBoard(input: Record<string, BoardTask[]>): Board {
 
 	return {
 		todo,
-		'in-progress': inProgress,
+		'working-on': workingOn,
+		prepared,
 		done
 	};
 }
@@ -177,7 +180,7 @@ export const saveBoard = authedMutation({
 			});
 		}
 
-		// Detect new tasks and tasks moved to in-progress, trigger agent for each
+		// Detect new tasks and tasks moved to working-on, trigger agent for each
 		for (const task of sanitizedTasks) {
 			if (!existingTasksById.has(task.id)) {
 				// New task — always trigger agent
@@ -189,11 +192,11 @@ export const saveBoard = authedMutation({
 					taskColumn: task.columnId
 				});
 			} else {
-				// Existing task moved to in-progress that hasn't been researched yet
+				// Existing task moved to working-on that hasn't been researched yet
 				const oldTask = existingTasksById.get(task.id)!;
 				if (
-					task.columnId === 'in-progress' &&
-					oldTask.columnId !== 'in-progress' &&
+					task.columnId === 'working-on' &&
+					oldTask.columnId !== 'working-on' &&
 					!oldTask.threadId
 				) {
 					await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNewTask, {
@@ -284,7 +287,12 @@ export const moveTaskInternal = internalMutation({
 	args: {
 		userId: v.string(),
 		taskId: v.string(),
-		columnId: v.union(v.literal('todo'), v.literal('in-progress'), v.literal('done'))
+		columnId: v.union(
+			v.literal('todo'),
+			v.literal('working-on'),
+			v.literal('prepared'),
+			v.literal('done')
+		)
 	},
 	handler: async (ctx, args) => {
 		await patchTask(ctx, args, { columnId: args.columnId });
@@ -334,5 +342,18 @@ export const addTaskInternal = internalMutation({
 		}
 
 		return taskId;
+	}
+});
+
+export const getBoardInternal = internalQuery({
+	args: { userId: v.string() },
+	handler: async (ctx, args) => {
+		const board = await ctx.db
+			.query('todoBoards')
+			.withIndex('by_user', (q: any) => q.eq('userId', args.userId))
+			.first();
+
+		if (!board) return emptyBoard();
+		return toBoard(board.tasks as StoredTask[]);
 	}
 });

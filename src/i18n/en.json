@@ -1090,8 +1090,9 @@
 		},
 		"column": {
 			"done": "Done",
-			"in-progress": "In Progress",
-			"todo": "To Do"
+			"prepared": "Prepared",
+			"todo": "To Do",
+			"working-on": "Working On"
 		},
 		"cta": "Get Started Free",
 		"detail": {

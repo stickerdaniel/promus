@@ -1,6 +1,5 @@
 import { localizedHref } from '$lib/utils/i18n';
 import ListChecksIcon from '@lucide/svelte/icons/list-checks';
-import TerminalIcon from '@lucide/svelte/icons/terminal';
 import ServerCogIcon from '@lucide/svelte/icons/server-cog';
 import Logo from '$lib/components/icons/logo.svelte';
 import type { SidebarConfig } from '../types';
@@ -25,12 +24,6 @@ export function getAppSidebarConfig(pageState: PageState, userRole?: string): Si
 				url: localizedHref('/app/my-tasks'),
 				icon: ListChecksIcon,
 				isActive: pathname === `/${lang}/app/my-tasks`
-			},
-			{
-				translationKey: 'app.sidebar.sandbox',
-				url: localizedHref('/app/sandbox'),
-				icon: TerminalIcon,
-				isActive: pathname === `/${lang}/app/sandbox`
 			}
 		],
 		footerLinks:

@@ -16,6 +16,9 @@
 	import KanbanItem from './kanban-item.svelte';
 	import TodoDetailDialog from './todo-detail-dialog.svelte';
 	import TodoChatPanel from './todo-chat-panel.svelte';
+	import Logo from '$lib/components/icons/logo.svelte';
+	import XIcon from '@lucide/svelte/icons/x';
+	import { Button } from '$lib/components/ui/button/index.js';
 
 	const { t } = getTranslate();
 	const convexClient = useConvexClient();
@@ -41,12 +44,13 @@
 	});
 
 	const sensors = [PointerSensor, KeyboardSensor];
-	const columnIds: ColumnId[] = ['todo', 'in-progress', 'done'];
+	const columnIds: ColumnId[] = ['todo', 'working-on', 'prepared', 'done'];
 	const boardQuery = useQuery(api.todos.getBoard, {});
 
 	let items: KanbanData = $state({
 		todo: [],
-		'in-progress': [],
+		'working-on': [],
+		prepared: [],
 		done: []
 	});
 	let overlayTilted = $state(false);
@@ -55,6 +59,7 @@
 	let dragStartSnapshot = $state<KanbanData | null>(null);
 	let selectedTask = $state<TodoItem | null>(null);
 	let dialogOpen = $state(false);
+	let chatPanelOpen = $state(false);
 
 	type SyncEvent = {
 		operation: { source?: { type?: unknown } | null; target?: unknown | null };
@@ -67,7 +72,8 @@
 	function cloneBoard(board: KanbanData): KanbanData {
 		return {
 			todo: board.todo.map((t) => ({ ...t })),
-			'in-progress': board['in-progress'].map((t) => ({ ...t })),
+			'working-on': board['working-on'].map((t) => ({ ...t })),
+			prepared: board.prepared.map((t) => ({ ...t })),
 			done: board.done.map((t) => ({ ...t }))
 		};
 	}
@@ -211,7 +217,7 @@
 			}}
 			onDragOver={syncItemOrder}
 		>
-			<div class="grid items-start gap-3 md:grid-cols-3">
+			<div class="grid items-start gap-3 md:grid-cols-4">
 				{#each columnIds as columnId, colIdx (columnId)}
 					<KanbanColumn
 						id={columnId}
@@ -259,9 +265,26 @@
 		</DragDropProvider>
 	</div>
 
-	<div class="hidden w-80 shrink-0 lg:block" style="height: calc(100vh - 12rem);">
-		<TodoChatPanel taskThreadId={selectedTask?.threadId} />
-	</div>
+	{#if chatPanelOpen}
+		<div class="hidden w-80 shrink-0 lg:block" style="height: calc(100vh - 12rem);">
+			<TodoChatPanel taskThreadId={selectedTask?.threadId} />
+		</div>
+	{/if}
+</div>
+
+<div class="fixed bottom-6 right-6 z-50 lg:block hidden">
+	<Button
+		variant={chatPanelOpen ? 'outline' : 'default'}
+		size="icon"
+		class="size-12 rounded-full shadow-lg"
+		onclick={() => (chatPanelOpen = !chatPanelOpen)}
+	>
+		{#if chatPanelOpen}
+			<XIcon class="size-5" />
+		{:else}
+			<Logo class="size-5" />
+		{/if}
+	</Button>
 </div>
 
 {#if selectedTask}

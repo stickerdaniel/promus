@@ -21,7 +21,12 @@ export default defineSchema({
 				notes: v.optional(v.string()),
 				agentLogs: v.optional(v.string()),
 				threadId: v.optional(v.string()),
-				columnId: v.union(v.literal('todo'), v.literal('in-progress'), v.literal('done')),
+				columnId: v.union(
+					v.literal('todo'),
+					v.literal('working-on'),
+					v.literal('prepared'),
+					v.literal('done')
+				),
 				order: v.number(),
 				createdAt: v.number(),
 				updatedAt: v.number()

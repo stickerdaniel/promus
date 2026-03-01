@@ -171,10 +171,10 @@ IMPORTANT — Failure handling:
 
 IMPORTANT — Style:
 - Never use emojis in notes, task titles, or messages
-- Be concise and actionable
-- Use bullet points for lists
-- Focus on practical next steps
-- Summarize tool results clearly`,
+- Task notes are shown directly to the user — write them in plain, non-technical language
+- Keep notes short: 2-4 bullet points max, each one sentence
+- Focus on findings and next steps, not implementation details or tool output
+- No technical jargon, error codes, API names, or JSON in notes`,
 
 	tools: {
 		createTask,

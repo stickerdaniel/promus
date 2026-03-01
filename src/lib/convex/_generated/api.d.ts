@@ -47,6 +47,7 @@ import type * as i18n_translations from "../i18n/translations.js";
 import type * as messages from "../messages.js";
 import type * as sandboxAgent from "../sandboxAgent.js";
 import type * as sandboxApi from "../sandboxApi.js";
+import type * as sandboxExecute from "../sandboxExecute.js";
 import type * as storage from "../storage.js";
 import type * as support_agent from "../support/agent.js";
 import type * as support_files from "../support/files.js";
@@ -112,6 +113,7 @@ declare const fullApi: ApiFromModules<{
   messages: typeof messages;
   sandboxAgent: typeof sandboxAgent;
   sandboxApi: typeof sandboxApi;
+  sandboxExecute: typeof sandboxExecute;
   storage: typeof storage;
   "support/agent": typeof support_agent;
   "support/files": typeof support_files;

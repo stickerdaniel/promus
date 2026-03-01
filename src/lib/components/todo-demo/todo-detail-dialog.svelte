@@ -5,7 +5,9 @@
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { T, getTranslate } from '@tolgee/svelte';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
-	import BotIcon from '@lucide/svelte/icons/bot';
+	import PencilIcon from '@lucide/svelte/icons/pencil';
+	import EyeIcon from '@lucide/svelte/icons/eye';
+	import Markdown from '$lib/components/prompt-kit/markdown/Markdown.svelte';
 	import type { TodoItem } from './types.js';
 
 	let {
@@ -24,11 +26,13 @@
 
 	let editTitle = $state('');
 	let editNotes = $state('');
+	let editingNotes = $state(false);
 
 	$effect(() => {
 		if (open) {
 			editTitle = task.title;
 			editNotes = task.notes ?? '';
+			editingNotes = false;
 		}
 	});
 
@@ -62,31 +66,45 @@
 				<Input id="todo-title" bind:value={editTitle} />
 			</div>
 			<div class="grid gap-2">
-				<label for="todo-notes" class="text-sm font-medium">
-					<T keyName="todo_demo.detail.notes" />
-				</label>
-				<Textarea
-					id="todo-notes"
-					bind:value={editNotes}
-					placeholder={$t('todo_demo.detail.notes_placeholder')}
-					rows={3}
-				/>
-			</div>
-			{#if task.agentLogs}
-				<div class="grid gap-2">
-					<label for="todo-agent-logs" class="flex items-center gap-1.5 text-sm font-medium">
-						<BotIcon class="size-3.5 text-muted-foreground" />
-						<T keyName="todo_demo.detail.agent_logs" />
+				<div class="flex items-center justify-between">
+					<label for="todo-notes" class="text-sm font-medium">
+						<T keyName="todo_demo.detail.notes" />
 					</label>
-					<Textarea
-						id="todo-agent-logs"
-						value={task.agentLogs}
-						readonly
-						rows={4}
-						class="bg-muted/50 font-mono text-xs"
-					/>
+					{#if editNotes}
+						<Button
+							variant="ghost"
+							size="sm"
+							class="h-6 gap-1 px-2 text-xs text-muted-foreground"
+							onclick={() => (editingNotes = !editingNotes)}
+						>
+							{#if editingNotes}
+								<EyeIcon class="size-3" />
+								Preview
+							{:else}
+								<PencilIcon class="size-3" />
+								Edit
+							{/if}
+						</Button>
+					{/if}
 				</div>
-			{/if}
+				{#if editingNotes || !editNotes}
+					<Textarea
+						id="todo-notes"
+						bind:value={editNotes}
+						placeholder={$t('todo_demo.detail.notes_placeholder')}
+						rows={3}
+					/>
+				{:else}
+					<div
+						class="max-h-60 overflow-y-auto rounded-md border bg-muted/30 p-3 text-sm"
+						role="button"
+						tabindex="0"
+						ondblclick={() => (editingNotes = true)}
+					>
+						<Markdown content={editNotes} class="prose-sm" />
+					</div>
+				{/if}
+			</div>
 		</div>
 		<Dialog.Footer class="flex items-center justify-between sm:justify-between">
 			<Button variant="destructive" size="sm" onclick={handleDelete}>

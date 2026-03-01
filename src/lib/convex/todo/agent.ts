@@ -4,71 +4,56 @@ import { components, internal } from '../_generated/api';
 import { getTaskLanguageModel } from '../support/llmProvider';
 import type { ToolCtx } from '@convex-dev/agent';
 
-const MAX_VIBE_RESULT = 4096;
+const MAX_RESULT = 4096;
 
 function truncate(str: string, max: number): string {
 	if (str.length <= max) return str;
 	return str.slice(0, max) + '\n\n[truncated]';
 }
 
-export const executeVibeTask = createTool({
+export const executeUnipileCode = createTool({
 	description:
-		'Delegate Unipile SDK work to the vibe sandbox. Use this when the task involves messaging, email, or contact operations via the Unipile API.',
+		'Execute TypeScript code that uses the Unipile SDK. Write code that uses the `unipile` global object to interact with messaging, email, and contact APIs. The code runs in a sandboxed VM with a 15-second timeout.',
 	args: z.object({
-		prompt: z.string().describe('What to do with the Unipile SDK')
+		code: z
+			.string()
+			.describe(
+				'TypeScript code to execute. Has access to `unipile` global and `console.log()` for output. No imports allowed.'
+			)
 	}),
 	handler: async (ctx: ToolCtx, args) => {
-		if (!ctx.userId) {
-			return { success: false, error: 'No userId available' };
-		}
-
-		// Look up user's sandbox session, retrying if it's still starting
-		let session = await ctx.runQuery(components.sandbox.sessions.getUserSession, {
-			userId: ctx.userId
-		});
-
-		if (!session || session.status === 'creating') {
-			for (let i = 0; i < 6; i++) {
-				await new Promise((resolve) => setTimeout(resolve, 5000));
-				session = await ctx.runQuery(components.sandbox.sessions.getUserSession, {
-					userId: ctx.userId
-				});
-				if (session && session.status === 'ready') break;
-			}
-		}
-
-		if (!session || (session.status !== 'ready' && session.status !== 'stopped')) {
-			return {
-				success: false,
-				error: `Sandbox not available (status: ${session?.status ?? 'none'}). Reload the Kanban board.`
-			};
+		const siteUrl = process.env.SITE_URL;
+		const internalKey = process.env.SANDBOX_INTERNAL_API_KEY;
+		if (!siteUrl || !internalKey) {
+			return { success: false, error: 'SITE_URL or SANDBOX_INTERNAL_API_KEY not configured' };
 		}
 
 		try {
-			const result: any = await ctx.runAction(internal.sandboxExecute.runVibeTask, {
-				sandboxId: session.sandboxId,
-				prompt: args.prompt
+			const response = await fetch(`${siteUrl}/api/sandbox/execute`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					'x-internal-key': internalKey
+				},
+				body: JSON.stringify({ code: args.code })
 			});
 
-			if (!result.success) {
-				return { success: false, error: result.error };
+			if (!response.ok) {
+				const text = await response.text();
+				return { success: false, error: `HTTP ${response.status}: ${text}` };
 			}
 
+			const result = await response.json();
 			return {
-				success: true,
-				vibeOutput: truncate(result.vibeOutput ?? '', MAX_VIBE_RESULT),
-				scriptResult: result.scriptResult
-					? {
-							success: result.scriptResult.success,
-							output: truncate(result.scriptResult.output ?? '', MAX_VIBE_RESULT),
-							error: result.scriptResult.error
-						}
-					: null
+				success: result.success,
+				output: truncate(result.output ?? '', MAX_RESULT),
+				error: result.error,
+				durationMs: result.durationMs
 			};
 		} catch (e) {
 			return {
 				success: false,
-				error: `Action failed: ${e instanceof Error ? e.message : String(e)}`
+				error: `Fetch failed: ${e instanceof Error ? e.message : String(e)}`
 			};
 		}
 	}
@@ -134,7 +119,7 @@ export const todoAgent = new Agent(components.agent, {
 
 	languageModel: getTaskLanguageModel() as any,
 
-	instructions: `You are a helpful task assistant with access to tools for managing tasks and delegating Unipile SDK work to a sandbox environment.
+	instructions: `You are a helpful task assistant with access to tools for managing tasks and executing Unipile SDK code directly.
 
 Board columns: todo → working-on → prepared → done
 - "todo": tasks not yet started
@@ -144,14 +129,15 @@ Board columns: todo → working-on → prepared → done
 
 Your responsibilities:
 - Help users plan and organize their work
-- When a task involves Unipile operations (messaging, email, contacts), use the executeVibeTask tool to delegate the work to the sandbox
+- Break complex tasks into actionable sub-tasks
+- When a task involves Unipile operations (messaging, email, contacts), write TypeScript code and execute it using the executeUnipileCode tool
 - Update task notes with findings and progress using updateTaskNotes
 - Move tasks between columns using moveTask as work progresses
 - Consider the user's other tasks (provided in context) when analyzing a task — avoid duplicates, notice related work
 
 Tool usage:
 - createTask: Use ONLY to ask the user for missing context or clarification. For example, if a task is vague ("plan trip"), create a task like "Decide travel dates for trip" or "Confirm budget for trip". Do NOT use it to break tasks into execution steps — that is your job, not the user's.
-- executeVibeTask: Use when the task involves Unipile SDK operations (sending messages, reading emails, managing contacts, etc.)
+- executeUnipileCode: Write and execute TypeScript code that uses the Unipile SDK. You write the code yourself — see the SDK reference below.
 - updateTaskNotes: Use to record findings, progress, or results on the task
 - moveTask: Use to move tasks between columns
 
@@ -159,13 +145,13 @@ Workflow for new tasks:
 1. Analyze the task title, notes, and the user's other tasks for context
 2. If the task is unclear or missing key info, use createTask to ask the user what you need (e.g. "Specify budget for X", "Confirm recipient for Y")
 3. Move to "working-on" and begin research/execution
-4. If Unipile work is needed, use executeVibeTask
+4. If Unipile work is needed, use executeUnipileCode
 5. Record results in task notes using updateTaskNotes
 6. Move to "prepared" when research/drafts are ready for user review
 7. Move to "done" only after successful execution
 
 IMPORTANT — Failure handling:
-- If a task fails (sandbox error, API failure, missing info), move it BACK to "todo" using moveTask
+- If a task fails (API failure, missing info), move it BACK to "todo" using moveTask
 - Update the task notes explaining what went wrong and what is needed to retry
 - Never leave a failed task in "working-on" or "prepared"
 
@@ -174,11 +160,96 @@ IMPORTANT — Style:
 - Task notes are shown directly to the user — write them in plain, non-technical language
 - Keep notes short: 2-4 bullet points max, each one sentence
 - Focus on findings and next steps, not implementation details or tool output
-- No technical jargon, error codes, API names, or JSON in notes`,
+- No technical jargon, error codes, API names, or JSON in notes
+
+---
+
+## Unipile SDK Reference (for executeUnipileCode)
+
+### Available Globals
+
+The \`unipile\` object is a pre-configured SDK client with the following resources:
+
+#### \`unipile.account\`
+- \`getAll(input?: { limit?: number; cursor?: string })\` — List all connected accounts
+- \`getOne(accountId: string)\` — Get a single account by ID
+
+#### \`unipile.messaging\`
+- \`getAllChats(input?: { limit?: number; cursor?: string; account_id?: string; unread?: boolean; before?: string; after?: string })\` — List chats
+- \`getChat(chatId: string)\` — Get a single chat
+- \`getAllMessagesFromChat(input: { chat_id: string; limit?: number; cursor?: string; before?: string; after?: string })\` — List messages in a chat
+- \`getMessage(messageId: string)\` — Get a single message
+- \`getAllMessages(input?: { account_id?: string; limit?: number; cursor?: string })\` — List all messages
+- \`getAllAttendees(input?: { account_id?: string; limit?: number; cursor?: string })\` — List attendees
+- \`getAttendee(attendeeId: string)\` — Get a single attendee
+- \`sendMessage(input: { chat_id: string; text: string })\` — Send a message to a chat
+- \`startNewChat(input: { account_id: string; text: string; attendees_ids: string[] })\` — Start a new chat
+
+#### \`unipile.email\`
+- \`getAll(input?: { account_id?: string; role?: string; folder?: string; from?: string; to?: string; limit?: number; cursor?: string })\` — List emails
+- \`getOne(emailId: string)\` — Get a single email
+- \`getAllFolders(input?: { account_id?: string })\` — List email folders
+- \`send(input: { account_id: string; body: string; to: { email: string; display_name?: string }[]; subject?: string; cc?: object[]; bcc?: object[] })\` — Send an email
+
+#### \`unipile.users\`
+- \`getProfile(input: { account_id: string; identifier: string })\` — Get a user profile
+- \`getOwnProfile(accountId: string)\` — Get own profile
+- \`getAllRelations(input: { account_id: string; limit?: number; cursor?: string })\` — List relations
+- \`getAllPosts(input: { account_id: string; identifier: string; limit?: number; cursor?: string })\` — List posts
+- \`getPost(input: { account_id: string; post_id: string })\` — Get a single post
+
+### Other Globals
+- \`console.log(...args)\` — Output results (captured and returned)
+- \`fetch\`, \`JSON\`, \`Date\`, \`Promise\`, \`Buffer\`, \`URL\`, \`Headers\`, \`URLSearchParams\`, \`setTimeout\`, \`AbortController\`, \`TextEncoder\`, \`TextDecoder\`, \`FormData\`, \`Blob\`
+
+### Rules
+1. Do NOT use \`import\` or \`require\` — only the globals listed above are available
+2. Use \`console.log()\` to output results
+3. Use top-level await freely (the script is wrapped in an async IIFE)
+4. SDK methods return parsed data directly — no \`.json()\` call needed
+5. Handle errors with try/catch and log useful error messages
+6. The script runs with a 15-second timeout
+
+### Examples
+
+**List connected accounts:**
+\`\`\`typescript
+const data = await unipile.account.getAll();
+console.log(JSON.stringify(data, null, 2));
+\`\`\`
+
+**Get all messaging chats:**
+\`\`\`typescript
+const data = await unipile.messaging.getAllChats({ limit: 20 });
+console.log(JSON.stringify(data, null, 2));
+\`\`\`
+
+**Send a message to a chat:**
+\`\`\`typescript
+const data = await unipile.messaging.sendMessage({ chat_id: 'CHAT_ID', text: 'Hello!' });
+console.log(JSON.stringify(data, null, 2));
+\`\`\`
+
+**Send an email:**
+\`\`\`typescript
+const data = await unipile.email.send({
+  account_id: 'ACCOUNT_ID',
+  to: [{ email: 'recipient@example.com', display_name: 'Recipient' }],
+  subject: 'Test Email',
+  body: '<p>Hello from Promus!</p>'
+});
+console.log(JSON.stringify(data, null, 2));
+\`\`\`
+
+**List emails:**
+\`\`\`typescript
+const data = await unipile.email.getAll({ limit: 10 });
+console.log(JSON.stringify(data, null, 2));
+\`\`\``,
 
 	tools: {
 		createTask,
-		executeVibeTask,
+		executeUnipileCode,
 		updateTaskNotes,
 		moveTask
 	},
@@ -191,5 +262,5 @@ IMPORTANT — Style:
 		recentMessages: 20
 	},
 
-	maxSteps: 8
+	maxSteps: 10
 });

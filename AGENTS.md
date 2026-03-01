@@ -392,35 +392,27 @@ A customizable Svelte component for building node-based editors and interactive 
 
 ## Task Agent Architecture
 
-Two agents, both Devstral via AWS Bedrock:
+Single agent (Claude Opus via Convex Agent) that generates and executes Unipile SDK code directly:
 
 ```
-Kanban task → Orchestrator (plan + delegate) → Executor (write + run code) → results back
+Kanban task → Agent (plan + write code + execute) → results back
 ```
 
-**Orchestrator** (Convex Agent, server-side): decomposes task into subtasks, delegates to Executor, validates results, updates Kanban status, asks user for confirmation when needed.
+**Agent** (Convex Agent, server-side): analyzes task, writes TypeScript code using the Unipile SDK, executes it via `executeUnipileCode` tool (POST to `/api/sandbox/execute` → Node VM with SDK facade), updates Kanban status.
 
-**Executor** (Daytona Sandbox + Vibe CLI): receives focused subtask, writes Unipile SDK code on the fly, executes it, returns structured results. No pre-wrapped endpoints — Devstral generates code for any SDK method using `docs/references/unipile-node-sdk/` as context.
-
-Why two: token efficiency (Executor gets small context), reliability (failed subtask doesn't restart whole plan), flexibility (any SDK endpoint without wrappers).
+The agent's instructions include the full Unipile SDK reference so it knows all available methods, parameters, and patterns.
 
 ### Example: "Connect with hackathon attendees on LinkedIn"
 
-1. Orchestrator plans: search emails → extract names → search LinkedIn → connect
-2. Executor: writes Unipile `emails.list` code → returns emails
-3. Orchestrator: extracts attendee names from email content
-4. Executor: writes Unipile `linkedin.search` code → returns profiles
-5. Executor: writes Unipile `linkedin.connect` code → sends requests
-6. Orchestrator: "Connected 47/100" → task Done
-
-### LLM Routing
-
-SvelteKit proxy at `/api/sandbox/llm/chat/completions` → AWS Bedrock. Creds stay server-side, never in sandbox.
-Switchable: `VIBE_LLM_PROVIDER` = `bedrock` | `openrouter` | `mistral`
+1. Agent writes code: `unipile.email.getAll(...)` → returns emails
+2. Agent extracts attendee names from email content
+3. Agent writes code: `unipile.users.getProfile(...)` → returns profiles
+4. Agent writes code: connect requests → sends them
+5. Agent: "Connected 47/100" → task Done
 
 ### Eval
 
-Planner only via W&B Weave — no sandbox execution in evals (too slow/flaky).
+Planner only via W&B Weave.
 
 - **Plan quality**: LLM-as-judge scores task decomposition
 - **Code quality**: LLM-as-judge scores generated SDK code (without running it)
@@ -428,16 +420,13 @@ Planner only via W&B Weave — no sandbox execution in evals (too slow/flaky).
 
 ### Key Files
 
-| File                                                     | Role                                         |
-| -------------------------------------------------------- | -------------------------------------------- |
-| `src/lib/convex/sandboxApi.ts`                           | Orchestrator ↔ Sandbox messaging + streaming |
-| `src/lib/server/sandbox/sandbox-manager.ts`              | Daytona sandbox lifecycle                    |
-| `src/lib/server/sandbox/config-builder.ts`               | Vibe config (provider-aware)                 |
-| `src/routes/api/sandbox/llm/chat/completions/+server.ts` | Bedrock LLM proxy                            |
-| `scripts/build-vibe-snapshot.ts`                         | Pre-bake sandbox deps into Daytona snapshot  |
-| `docs/references/unipile-node-sdk/`                      | Unipile SDK source (Executor context)        |
-| `docs/references/mistral-vibe/`                          | Vibe CLI source (config/backend reference)   |
-| `docs/references/daytona-sdk/`                           | Daytona SDK types                            |
+| File                                        | Role                                 |
+| ------------------------------------------- | ------------------------------------ |
+| `src/lib/convex/todo/agent.ts`              | Agent definition + tools + SDK docs  |
+| `src/lib/convex/todo/messages.ts`           | Thread messaging + agent trigger     |
+| `src/lib/server/sandbox/script-executor.ts` | Node VM executor with Unipile facade |
+| `src/routes/api/sandbox/execute/+server.ts` | Slim endpoint for code execution     |
+| `docs/references/unipile-node-sdk/`         | Unipile SDK source (reference)       |
 
 ## Plan Mode
 

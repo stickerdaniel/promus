@@ -167,6 +167,7 @@ export declare const components: {
                   image?: null | string;
                   locale?: null | string;
                   name: string;
+                  phoneNumber?: null | string;
                   role?: null | string;
                   updatedAt: number;
                   userId?: null | string;
@@ -264,6 +265,7 @@ export declare const components: {
                     | "banReason"
                     | "banExpires"
                     | "locale"
+                    | "phoneNumber"
                     | "_id";
                   operator?:
                     | "lt"
@@ -494,6 +496,7 @@ export declare const components: {
                     | "banReason"
                     | "banExpires"
                     | "locale"
+                    | "phoneNumber"
                     | "_id";
                   operator?:
                     | "lt"
@@ -797,6 +800,7 @@ export declare const components: {
                   image?: null | string;
                   locale?: null | string;
                   name?: string;
+                  phoneNumber?: null | string;
                   role?: null | string;
                   updatedAt?: number;
                   userId?: null | string;
@@ -816,6 +820,7 @@ export declare const components: {
                     | "banReason"
                     | "banExpires"
                     | "locale"
+                    | "phoneNumber"
                     | "_id";
                   operator?:
                     | "lt"
@@ -1090,6 +1095,7 @@ export declare const components: {
                   image?: null | string;
                   locale?: null | string;
                   name?: string;
+                  phoneNumber?: null | string;
                   role?: null | string;
                   updatedAt?: number;
                   userId?: null | string;
@@ -1109,6 +1115,7 @@ export declare const components: {
                     | "banReason"
                     | "banExpires"
                     | "locale"
+                    | "phoneNumber"
                     | "_id";
                   operator?:
                     | "lt"

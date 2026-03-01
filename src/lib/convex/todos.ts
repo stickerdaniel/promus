@@ -3,23 +3,54 @@ import { authedMutation, authedQuery } from './functions';
 
 const COLUMN_IDS = ['todo', 'in-progress', 'done'] as const;
 
+const agentStatusValidator = v.optional(
+	v.union(
+		v.literal('idle'),
+		v.literal('working'),
+		v.literal('done'),
+		v.literal('awaiting_approval')
+	)
+);
+const agentDraftTypeValidator = v.optional(
+	v.union(v.literal('message'), v.literal('email'), v.literal('research'))
+);
+
 const taskValidator = v.object({
 	id: v.string(),
 	title: v.string(),
 	notes: v.optional(v.string()),
-	agentLogs: v.optional(v.string())
+	agentLogs: v.optional(v.string()),
+	agentStatus: agentStatusValidator,
+	agentSummary: v.optional(v.string()),
+	agentDraft: v.optional(v.string()),
+	agentDraftType: agentDraftTypeValidator
 });
 
 const boardValidator = v.record(v.string(), v.array(taskValidator));
 
 type ColumnId = (typeof COLUMN_IDS)[number];
-type BoardTask = { id: string; title: string; notes?: string; agentLogs?: string };
+type AgentStatus = 'idle' | 'working' | 'done' | 'awaiting_approval';
+type AgentDraftType = 'message' | 'email' | 'research';
+type BoardTask = {
+	id: string;
+	title: string;
+	notes?: string;
+	agentLogs?: string;
+	agentStatus?: AgentStatus;
+	agentSummary?: string;
+	agentDraft?: string;
+	agentDraftType?: AgentDraftType;
+};
 type Board = Record<ColumnId, BoardTask[]>;
 type StoredTask = {
 	id: string;
 	title: string;
 	notes?: string;
 	agentLogs?: string;
+	agentStatus?: AgentStatus;
+	agentSummary?: string;
+	agentDraft?: string;
+	agentDraftType?: AgentDraftType;
 	columnId: ColumnId;
 	order: number;
 	createdAt: number;
@@ -66,7 +97,11 @@ function toBoard(tasks: StoredTask[]): Board {
 				id: task.id,
 				title: task.title,
 				...(task.notes ? { notes: task.notes } : {}),
-				...(task.agentLogs ? { agentLogs: task.agentLogs } : {})
+				...(task.agentLogs ? { agentLogs: task.agentLogs } : {}),
+				...(task.agentStatus ? { agentStatus: task.agentStatus } : {}),
+				...(task.agentSummary ? { agentSummary: task.agentSummary } : {}),
+				...(task.agentDraft ? { agentDraft: task.agentDraft } : {}),
+				...(task.agentDraftType ? { agentDraftType: task.agentDraftType } : {})
 			}));
 	}
 
@@ -98,12 +133,22 @@ function sanitizeAndFlattenBoard(
 
 			const existing = existingTasksById.get(id);
 			const notes = rawTask.notes?.trim() || undefined;
+			// agentLogs are server-only (never sent by client), so preserve from existing
 			const agentLogs = rawTask.agentLogs?.trim() || existing?.agentLogs || undefined;
+			// Agent fields: client board is authoritative (toBoard includes them when reading)
+			const agentStatus = rawTask.agentStatus || undefined;
+			const agentSummary = rawTask.agentSummary?.trim() || undefined;
+			const agentDraft = rawTask.agentDraft?.trim() || undefined;
+			const agentDraftType = rawTask.agentDraftType || undefined;
 			tasks.push({
 				id,
 				title,
 				...(notes ? { notes } : {}),
 				...(agentLogs ? { agentLogs } : {}),
+				...(agentStatus ? { agentStatus } : {}),
+				...(agentSummary ? { agentSummary } : {}),
+				...(agentDraft ? { agentDraft } : {}),
+				...(agentDraftType ? { agentDraftType } : {}),
 				columnId,
 				order: index,
 				createdAt: existing?.createdAt ?? now,

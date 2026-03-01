@@ -170,6 +170,11 @@ export const createAuthOptions = (ctx: GenericCtx<DataModel>): BetterAuthOptions
 					required: false,
 					defaultValue: 'en',
 					input: true
+				},
+				phoneNumber: {
+					type: 'string',
+					required: false,
+					input: true
 				}
 			}
 		},

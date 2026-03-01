@@ -40,6 +40,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   image?: null | string;
                   locale?: null | string;
                   name: string;
+                  phoneNumber?: null | string;
                   role?: null | string;
                   updatedAt: number;
                   userId?: null | string;
@@ -138,6 +139,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "banReason"
                     | "banExpires"
                     | "locale"
+                    | "phoneNumber"
                     | "_id";
                   operator?:
                     | "lt"
@@ -369,6 +371,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "banReason"
                     | "banExpires"
                     | "locale"
+                    | "phoneNumber"
                     | "_id";
                   operator?:
                     | "lt"
@@ -675,6 +678,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   image?: null | string;
                   locale?: null | string;
                   name?: string;
+                  phoneNumber?: null | string;
                   role?: null | string;
                   updatedAt?: number;
                   userId?: null | string;
@@ -694,6 +698,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "banReason"
                     | "banExpires"
                     | "locale"
+                    | "phoneNumber"
                     | "_id";
                   operator?:
                     | "lt"
@@ -969,6 +974,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                   image?: null | string;
                   locale?: null | string;
                   name?: string;
+                  phoneNumber?: null | string;
                   role?: null | string;
                   updatedAt?: number;
                   userId?: null | string;
@@ -988,6 +994,7 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
                     | "banReason"
                     | "banExpires"
                     | "locale"
+                    | "phoneNumber"
                     | "_id";
                   operator?:
                     | "lt"

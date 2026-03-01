@@ -15,6 +15,8 @@
 <script lang="ts">
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import StickyNoteIcon from '@lucide/svelte/icons/sticky-note';
+	import Logo from '$lib/components/icons/logo.svelte';
+	import { Separator } from '$lib/components/ui/separator/index.js';
 
 	let {
 		task,
@@ -71,8 +73,18 @@
 		onpointerdown={handlePointerDown}
 		onpointerup={handlePointerUp}
 	>
-		<span>{task.title}</span>
-		{#if task.notes}
+		<div class="flex items-center gap-1.5">
+			<span class="flex-1">{task.title}</span>
+			{#if task.agentStatus === 'working'}
+				<Logo class="size-4 shrink-0 agent-working" style="--logo-color: var(--primary)" />
+			{:else if task.agentStatus === 'done' || task.agentStatus === 'awaiting_approval'}
+				<Logo class="size-4 shrink-0 agent-done" style="--logo-color: var(--primary)" />
+			{/if}
+		</div>
+		{#if task.agentSummary}
+			<Separator class="my-1.5" />
+			<p class="text-xs text-muted-foreground line-clamp-2">{task.agentSummary}</p>
+		{:else if task.notes}
 			<StickyNoteIcon class="mt-1.5 size-3.5 text-muted-foreground" />
 		{/if}
 	</div>

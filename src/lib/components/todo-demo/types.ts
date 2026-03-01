@@ -1,8 +1,15 @@
+export type AgentStatus = 'idle' | 'working' | 'done' | 'awaiting_approval';
+export type AgentDraftType = 'message' | 'email' | 'research';
+
 export type TodoItem = {
 	id: string;
 	title: string;
 	notes?: string;
 	agentLogs?: string;
+	agentStatus?: AgentStatus;
+	agentSummary?: string;
+	agentDraft?: string;
+	agentDraftType?: AgentDraftType;
 };
 
 export type ColumnId = 'todo' | 'in-progress' | 'done';

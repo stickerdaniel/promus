@@ -20,6 +20,19 @@ export default defineSchema({
 				title: v.string(),
 				notes: v.optional(v.string()),
 				agentLogs: v.optional(v.string()),
+				agentStatus: v.optional(
+					v.union(
+						v.literal('idle'),
+						v.literal('working'),
+						v.literal('done'),
+						v.literal('awaiting_approval')
+					)
+				),
+				agentSummary: v.optional(v.string()),
+				agentDraft: v.optional(v.string()),
+				agentDraftType: v.optional(
+					v.union(v.literal('message'), v.literal('email'), v.literal('research'))
+				),
 				columnId: v.union(v.literal('todo'), v.literal('in-progress'), v.literal('done')),
 				order: v.number(),
 				createdAt: v.number(),

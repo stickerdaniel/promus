@@ -46,6 +46,19 @@ function isEmailsRoute(pathname: string): boolean {
 }
 
 /**
+ * Bypass SvelteKit CSRF origin check for internal API routes
+ * that authenticate via shared secret (x-internal-key) instead of cookies.
+ */
+const handleCsrfBypass: Handle = async function handleCsrfBypass({ event, resolve }) {
+	if (event.url.pathname === '/api/sandbox/run-internal') {
+		// Mark request as same-origin so SvelteKit skips the CSRF check.
+		// The route handler validates x-internal-key independently.
+		event.request.headers.set('origin', event.url.origin);
+	}
+	return resolve(event);
+};
+
+/**
  * Block access to dev-only routes in production
  */
 const handleDevOnlyRoutes: Handle = async function handleDevOnlyRoutes({ event, resolve }) {
@@ -143,4 +156,10 @@ const authFirstPattern: Handle = async function authFirstPattern({ event, resolv
 	return resolve(event);
 };
 
-export const handle = sequence(handleDevOnlyRoutes, handleAuth, handleLanguage, authFirstPattern);
+export const handle = sequence(
+	handleCsrfBypass,
+	handleDevOnlyRoutes,
+	handleAuth,
+	handleLanguage,
+	authFirstPattern
+);

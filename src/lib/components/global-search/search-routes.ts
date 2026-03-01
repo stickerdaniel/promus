@@ -21,27 +21,6 @@ export const SEARCH_ROUTES: SearchRouteEntry[] = [
 		keywords: ['home', 'landing']
 	},
 	{
-		href: '/pricing',
-		access: 'public',
-		group: 'public',
-		titleKey: 'nav.pricing',
-		keywords: ['pricing', 'plans', 'billing']
-	},
-	{
-		href: '/about',
-		access: 'public',
-		group: 'public',
-		seoTitleKey: 'meta.about.title',
-		titleKey: 'nav.about',
-		keywords: ['about', 'team']
-	},
-	{
-		href: '/shadcn-demo',
-		access: 'public',
-		group: 'public',
-		keywords: ['demo', 'shadcn']
-	},
-	{
 		href: '/signin',
 		access: 'public',
 		group: 'authentication',

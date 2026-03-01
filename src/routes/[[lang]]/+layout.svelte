@@ -12,7 +12,9 @@
 
 	let { data, children }: { data: LayoutData; children: any } = $props();
 
-	const isAdminRoute = $derived(page.url.pathname.includes('/admin'));
+	const isInternalRoute = $derived(
+		page.url.pathname.includes('/admin') || page.url.pathname.includes('/app')
+	);
 
 	// Set language context with a function to maintain reactivity
 	// This ensures useLanguage() always returns the current value of data.lang
@@ -69,7 +71,7 @@
 <TolgeeProvider {tolgee}>
 	<CommandMenu />
 	{@render children()}
-	{#if !isAdminRoute}
+	{#if !isInternalRoute}
 		<CustomerSupport />
 	{/if}
 </TolgeeProvider>

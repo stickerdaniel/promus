@@ -22,11 +22,20 @@ export const executeUnipileCode = createTool({
 			)
 	}),
 	handler: async (ctx: ToolCtx, args) => {
+		if (!ctx.userId) {
+			return { success: false, error: 'No userId — cannot resolve account access' };
+		}
+
 		const siteUrl = process.env.SITE_URL;
 		const internalKey = process.env.SANDBOX_INTERNAL_API_KEY;
 		if (!siteUrl || !internalKey) {
 			return { success: false, error: 'SITE_URL or SANDBOX_INTERNAL_API_KEY not configured' };
 		}
+
+		const allowedAccountIds: string[] = await ctx.runQuery(
+			components.unipile.queries.getUserAccountIds,
+			{ userId: ctx.userId }
+		);
 
 		try {
 			const response = await fetch(`${siteUrl}/api/sandbox/execute`, {
@@ -35,7 +44,7 @@ export const executeUnipileCode = createTool({
 					'Content-Type': 'application/json',
 					'x-internal-key': internalKey
 				},
-				body: JSON.stringify({ code: args.code })
+				body: JSON.stringify({ code: args.code, allowedAccountIds })
 			});
 
 			if (!response.ok) {
@@ -157,6 +166,7 @@ IMPORTANT — Failure handling:
 
 IMPORTANT — Style:
 - Never use emojis in notes, task titles, or messages
+- This is the USER's personal todo list — always write notes and titles from THEIR perspective (first person). Say "I want..." or "Need to...", never "User wants..." or "The user needs..."
 - Task notes are shown directly to the user — write them in plain, non-technical language
 - Keep notes short: 2-4 bullet points max, each one sentence
 - Focus on findings and next steps, not implementation details or tool output
@@ -199,6 +209,7 @@ The \`unipile\` object is a pre-configured SDK client with the following resourc
 - \`getPost(input: { account_id: string; post_id: string })\` — Get a single post
 
 ### Other Globals
+- \`USER_ACCOUNT_IDS\` — Frozen array of the current user's Unipile account IDs. Use these instead of hardcoded IDs. The SDK facade is scoped to these accounts — passing a foreign account_id will throw "Access denied".
 - \`console.log(...args)\` — Output results (captured and returned)
 - \`fetch\`, \`JSON\`, \`Date\`, \`Promise\`, \`Buffer\`, \`URL\`, \`Headers\`, \`URLSearchParams\`, \`setTimeout\`, \`AbortController\`, \`TextEncoder\`, \`TextDecoder\`, \`FormData\`, \`Blob\`
 
@@ -232,8 +243,9 @@ console.log(JSON.stringify(data, null, 2));
 
 **Send an email:**
 \`\`\`typescript
+const accountId = USER_ACCOUNT_IDS[0];
 const data = await unipile.email.send({
-  account_id: 'ACCOUNT_ID',
+  account_id: accountId,
   to: [{ email: 'recipient@example.com', display_name: 'Recipient' }],
   subject: 'Test Email',
   body: '<p>Hello from Promus!</p>'
@@ -241,9 +253,9 @@ const data = await unipile.email.send({
 console.log(JSON.stringify(data, null, 2));
 \`\`\`
 
-**List emails:**
+**List emails for a specific account:**
 \`\`\`typescript
-const data = await unipile.email.getAll({ limit: 10 });
+const data = await unipile.email.getAll({ account_id: USER_ACCOUNT_IDS[0], limit: 10 });
 console.log(JSON.stringify(data, null, 2));
 \`\`\``,
 

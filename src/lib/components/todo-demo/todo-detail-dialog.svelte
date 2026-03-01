@@ -124,14 +124,14 @@
 			</div>
 		{:else if task.agentStatus === 'done' && task.agentSummary}
 			<div class="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">
-				<Logo class="size-4 text-primary agent-done" />
+				<Logo class="size-4 text-primary" />
 				<span class="text-sm text-muted-foreground">{task.agentSummary}</span>
 			</div>
 		{:else if task.agentStatus === 'awaiting_approval'}
 			<div class="grid gap-3">
 				<Separator />
 				<div class="flex items-center gap-2">
-					<Logo class="size-4 text-primary agent-done" />
+					<Logo class="size-4 text-primary" />
 					<span class="text-sm font-medium">Agent needs approval</span>
 				</div>
 				{#if task.agentDraft}

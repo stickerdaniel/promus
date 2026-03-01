@@ -74,12 +74,10 @@
 	>
 		<div class="flex items-center justify-between gap-2">
 			<span class="min-w-0">{task.title}</span>
-			{#if task.agentStatus === 'working' || task.agentStatus === 'done' || task.agentStatus === 'awaiting_approval'}
-				<Logo
-					class="size-4 shrink-0 text-muted-foreground {task.agentStatus === 'working'
-						? 'agent-working'
-						: 'agent-done'}"
-				/>
+			{#if task.agentStatus === 'working'}
+				<Logo class="size-4 shrink-0 text-muted-foreground agent-working" />
+			{:else if task.hasUnreadNotes}
+				<span class="size-2 shrink-0 rounded-full bg-blue-500"></span>
 			{:else if task.notes}
 				<StickyNoteIcon class="size-4 shrink-0 text-muted-foreground" />
 			{/if}

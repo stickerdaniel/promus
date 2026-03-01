@@ -16,15 +16,26 @@ export const POST: RequestHandler = async ({ request }) => {
 		error(401, 'Invalid internal key');
 	}
 
-	const { code } = await request.json();
+	const { code, allowedAccountIds } = await request.json();
 	if (!code || typeof code !== 'string') {
 		error(400, 'code is required');
+	}
+	if (
+		!Array.isArray(allowedAccountIds) ||
+		!allowedAccountIds.every((id: unknown) => typeof id === 'string')
+	) {
+		error(400, 'allowedAccountIds must be a string[]');
 	}
 
 	if (!env.UNIPILE_DSN || !env.UNIPILE_API_KEY) {
 		error(500, 'UNIPILE_DSN or UNIPILE_API_KEY not configured');
 	}
 
-	const result = await executeScript(code, env.UNIPILE_DSN, env.UNIPILE_API_KEY);
+	const result = await executeScript(
+		code,
+		env.UNIPILE_DSN,
+		env.UNIPILE_API_KEY,
+		allowedAccountIds as string[]
+	);
 	return json(result);
 };

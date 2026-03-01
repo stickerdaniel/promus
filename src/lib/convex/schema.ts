@@ -40,6 +40,7 @@ export default defineSchema({
 				agentDraftType: v.optional(
 					v.union(v.literal('message'), v.literal('email'), v.literal('research'))
 				),
+				hasUnreadNotes: v.optional(v.boolean()),
 				order: v.number(),
 				createdAt: v.number(),
 				updatedAt: v.number()

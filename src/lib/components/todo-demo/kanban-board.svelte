@@ -133,6 +133,20 @@
 	function handleTaskClick(task: TodoItem) {
 		selectedTask = { ...task };
 		dialogOpen = true;
+
+		if (task.hasUnreadNotes) {
+			const rollbackBoard = cloneBoard(items);
+			const nextBoard = cloneBoard(items);
+			for (const colId of columnIds) {
+				const idx = nextBoard[colId].findIndex((t) => t.id === task.id);
+				if (idx !== -1) {
+					nextBoard[colId][idx] = { ...nextBoard[colId][idx], hasUnreadNotes: false };
+					break;
+				}
+			}
+			items = nextBoard;
+			void persistBoard(nextBoard, rollbackBoard);
+		}
 	}
 
 	async function handleTaskSave(id: string, updates: { title: string; notes?: string }) {

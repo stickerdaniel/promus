@@ -116,7 +116,13 @@ export const triggerAgentForNewTask = internalAction({
 			threadId
 		});
 
-		// 3. Fetch full board for context
+		// 3. Fetch user's Unipile account IDs
+		const userAccountIds: string[] = await ctx.runQuery(
+			components.unipile.queries.getUserAccountIds,
+			{ userId: args.userId }
+		);
+
+		// 4. Fetch full board for context
 		const board = await ctx.runQuery(internal.todos.getBoardInternal, {
 			userId: args.userId
 		});
@@ -130,12 +136,19 @@ export const triggerAgentForNewTask = internalAction({
 			}
 		}
 
-		// 4. Build prompt from task context
+		// 5. Build prompt from task context
+		const accountLine =
+			userAccountIds.length > 0
+				? `Your Unipile account IDs: ${userAccountIds.join(', ')}`
+				: 'No Unipile accounts connected. If this task requires messaging or email, create a clarifying sub-task asking the user to connect an account.';
+
 		const prompt = [
 			`New task: "${args.taskTitle}"`,
 			`Task ID: ${args.taskId}`,
 			`Current column: ${args.taskColumn}`,
 			args.taskNotes ? `Notes: ${args.taskNotes}` : null,
+			'',
+			accountLine,
 			'',
 			otherTasks.length > 0 ? `Other tasks on the board:\n${otherTasks.join('\n')}` : null,
 			'',
@@ -144,14 +157,14 @@ export const triggerAgentForNewTask = internalAction({
 			.filter(Boolean)
 			.join('\n');
 
-		// 5. Save the prompt as a user message
+		// 6. Save the prompt as a user message
 		const { messageId } = await todoAgent.saveMessage(ctx, {
 			threadId,
 			prompt,
 			skipEmbeddings: true
 		});
 
-		// 6. Run the agent with streaming
+		// 7. Run the agent with streaming
 		const result = await todoAgent.streamText(
 			ctx,
 			{ threadId, userId: args.userId },
@@ -166,7 +179,7 @@ export const triggerAgentForNewTask = internalAction({
 
 		const response = await result.consumeStream();
 
-		// 7. Update task with agent summary
+		// 8. Update task with agent summary
 		const summary =
 			typeof response === 'object' && response !== null && 'text' in response
 				? String((response as { text: string }).text)
@@ -178,7 +191,7 @@ export const triggerAgentForNewTask = internalAction({
 			agentLogs: summary.slice(0, 2000)
 		});
 
-		// 8. Mark task as done with summary
+		// 9. Mark task as done with summary
 		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
 			userId: args.userId,
 			taskId: args.taskId,
@@ -201,7 +214,20 @@ export const triggerAgentForTaskUpdate = internalAction({
 		prompt: v.string()
 	},
 	handler: async (ctx, args) => {
-		// 1. Fetch board for context
+		// 0. Mark task as working
+		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
+			userId: args.userId,
+			taskId: args.taskId,
+			agentStatus: 'working'
+		});
+
+		// 1. Fetch user's Unipile account IDs
+		const userAccountIds: string[] = await ctx.runQuery(
+			components.unipile.queries.getUserAccountIds,
+			{ userId: args.userId }
+		);
+
+		// 2. Fetch board for context
 		const board = await ctx.runQuery(internal.todos.getBoardInternal, {
 			userId: args.userId
 		});
@@ -215,22 +241,29 @@ export const triggerAgentForTaskUpdate = internalAction({
 			}
 		}
 
+		const accountLine =
+			userAccountIds.length > 0
+				? `Your Unipile account IDs: ${userAccountIds.join(', ')}`
+				: 'No Unipile accounts connected.';
+
 		const fullPrompt = [
 			args.prompt,
+			'',
+			accountLine,
 			'',
 			otherTasks.length > 0 ? `Other tasks on the board:\n${otherTasks.join('\n')}` : null
 		]
 			.filter(Boolean)
 			.join('\n');
 
-		// 2. Save user message to existing thread
+		// 3. Save user message to existing thread
 		const { messageId } = await todoAgent.saveMessage(ctx, {
 			threadId: args.threadId,
 			prompt: fullPrompt,
 			skipEmbeddings: true
 		});
 
-		// 3. Run agent
+		// 4. Run agent
 		const result = await todoAgent.streamText(
 			ctx,
 			{ threadId: args.threadId, userId: args.userId },
@@ -245,7 +278,7 @@ export const triggerAgentForTaskUpdate = internalAction({
 
 		const response = await result.consumeStream();
 
-		// 4. Update agent logs
+		// 5. Update agent logs
 		const summary =
 			typeof response === 'object' && response !== null && 'text' in response
 				? String((response as { text: string }).text)
@@ -255,6 +288,14 @@ export const triggerAgentForTaskUpdate = internalAction({
 			userId: args.userId,
 			taskId: args.taskId,
 			agentLogs: summary.slice(0, 2000)
+		});
+
+		// 6. Mark task as done
+		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
+			userId: args.userId,
+			taskId: args.taskId,
+			agentStatus: 'done',
+			agentSummary: summary.slice(0, 200)
 		});
 	}
 });

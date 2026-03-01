@@ -48,3 +48,8 @@ references/
 
 .opencode/plans
 .eslintcache
+
+# Python evals
+evals/.venv/
+evals/__pycache__/
+evals/**/__pycache__/

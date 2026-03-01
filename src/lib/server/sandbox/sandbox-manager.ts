@@ -42,7 +42,77 @@ export async function createSandbox(userId: string): Promise<SandboxCreateResult
 		.map(([k, v]) => `export ${k}="${v}"`)
 		.join('\n');
 	await sandbox.fs.uploadFile(Buffer.from(envFileContent), '/root/.vibe-env');
-	console.warn(`[sandbox.manager] uploaded config + env sandboxId=${sandbox.id}`);
+
+	// 3. Upload Unipile SDK type hints so vibe gets autocomplete
+	const unipileDts = `/** Pre-configured Unipile SDK client. Do NOT instantiate — use directly. */
+declare const unipile: {
+  account: {
+    getAll(input?: { limit?: number; cursor?: string }): Promise<any>;
+    getOne(accountId: string): Promise<any>;
+  };
+  messaging: {
+    getAllChats(input?: { limit?: number; cursor?: string; account_id?: string; account_type?: string; unread?: boolean; before?: string; after?: string }): Promise<any>;
+    getChat(chatId: string): Promise<any>;
+    getAllMessagesFromChat(input: { chat_id: string; sender_id?: string; limit?: number; cursor?: string; before?: string; after?: string }): Promise<any>;
+    getMessage(messageId: string): Promise<any>;
+    getAllMessages(input?: { account_id?: string; sender_id?: string; limit?: number; cursor?: string; before?: string; after?: string }): Promise<any>;
+    getAllMessagesFromAttendee(input: { attendee_id: string; limit?: number; cursor?: string; before?: string; after?: string }): Promise<any>;
+    getAllChatsFromAttendee(input: { attendee_id: string; account_id?: string; limit?: number; cursor?: string; before?: string; after?: string }): Promise<any>;
+    getMessageAttachment(input: { message_id: string; attachment_id: string }): Promise<Blob>;
+    getAllAttendees(input?: { account_id?: string; limit?: number; cursor?: string }): Promise<any>;
+    getAttendee(attendeeId: string): Promise<any>;
+    sendMessage(input: { chat_id: string; text: string; thread_id?: string }): Promise<any>;
+    startNewChat(input: { account_id: string; text: string; attendees_ids: string[]; subject?: string }): Promise<any>;
+    setChatStatus(input: { chat_id: string; action: string; value: any }): Promise<any>;
+  };
+  email: {
+    getAll(input?: { account_id?: string; role?: string; folder?: string; from?: string; to?: string; any_email?: string; limit?: number; cursor?: string; before?: string; after?: string }): Promise<any>;
+    getOne(emailId: string): Promise<any>;
+    getAllFolders(input?: { account_id?: string }): Promise<any>;
+    getOneFolder(folderId: string): Promise<any>;
+    getEmailAttachment(input: { email_id: string; attachment_id: string }): Promise<Blob>;
+    send(input: { account_id: string; body: string; to: { email: string; display_name?: string }[]; subject?: string; cc?: object[]; bcc?: object[]; from?: object }): Promise<any>;
+  };
+  users: {
+    getProfile(input: { account_id: string; identifier: string }): Promise<any>;
+    getOwnProfile(accountId: string): Promise<any>;
+    getAllRelations(input: { account_id: string; limit?: number; cursor?: string }): Promise<any>;
+    getAllPosts(input: { account_id: string; identifier: string; is_company?: boolean; limit?: number; cursor?: string }): Promise<any>;
+    getPost(input: { account_id: string; post_id: string }): Promise<any>;
+    getAllPostComments(input: { account_id: string; post_id: string; limit?: number; cursor?: string }): Promise<any>;
+    getCompanyProfile(input: { account_id: string; identifier: string }): Promise<any>;
+    sendInvitation(input: { account_id: string; provider_id: string; message?: string }): Promise<any>;
+    createPost(input: { account_id?: string; text: string }): Promise<any>;
+    sendPostComment(input: { account_id: string; post_id: string; text: string }): Promise<any>;
+  };
+};
+declare const console: { log(...args: any[]): void; warn(...args: any[]): void; error(...args: any[]): void };
+declare function fetch(input: string | URL | Request, init?: RequestInit): Promise<Response>;
+declare function setTimeout(callback: () => void, ms?: number): number;
+declare function clearTimeout(id: number): void;
+`;
+	await sandbox.fs.uploadFile(Buffer.from(unipileDts), '/root/unipile.d.ts');
+
+	// 4. Upload tsconfig.json for LSP support
+	const tsconfig = JSON.stringify(
+		{
+			compilerOptions: {
+				target: 'ES2022',
+				module: 'ESNext',
+				moduleResolution: 'node',
+				strict: true,
+				noEmit: true,
+				skipLibCheck: true
+			},
+			include: ['*.ts', '*.d.ts']
+		},
+		null,
+		2
+	);
+	await sandbox.fs.uploadFile(Buffer.from(tsconfig), '/root/tsconfig.json');
+	console.warn(
+		`[sandbox.manager] uploaded config + env + types + tsconfig sandboxId=${sandbox.id}`
+	);
 
 	return { sandboxId: sandbox.id, previewUrl: '', previewToken: '' };
 }

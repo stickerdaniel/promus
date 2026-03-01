@@ -3,6 +3,7 @@ export type TodoItem = {
 	title: string;
 	notes?: string;
 	agentLogs?: string;
+	threadId?: string;
 };
 
 export type ColumnId = 'todo' | 'in-progress' | 'done';

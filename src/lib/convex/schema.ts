@@ -20,6 +20,7 @@ export default defineSchema({
 				title: v.string(),
 				notes: v.optional(v.string()),
 				agentLogs: v.optional(v.string()),
+				threadId: v.optional(v.string()),
 				columnId: v.union(v.literal('todo'), v.literal('in-progress'), v.literal('done')),
 				order: v.number(),
 				createdAt: v.number(),

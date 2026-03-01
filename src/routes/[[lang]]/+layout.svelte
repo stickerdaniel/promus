@@ -4,11 +4,15 @@
 	import { browser } from '$app/environment';
 	import CommandMenu from '$lib/components/global-search/command-menu.svelte';
 	import { setGlobalSearchContext } from '$lib/components/global-search/context.svelte';
+	import { page } from '$app/state';
 	import type { LayoutData } from './$types';
 	import { watch } from 'runed';
 	import { languageContext } from '$lib/i18n/context';
+	import CustomerSupport from '$lib/components/customer-support/customer-support.svelte';
 
 	let { data, children }: { data: LayoutData; children: any } = $props();
+
+	const isAdminRoute = $derived(page.url.pathname.includes('/admin'));
 
 	// Set language context with a function to maintain reactivity
 	// This ensures useLanguage() always returns the current value of data.lang
@@ -65,4 +69,7 @@
 <TolgeeProvider {tolgee}>
 	<CommandMenu />
 	{@render children()}
+	{#if !isAdminRoute}
+		<CustomerSupport />
+	{/if}
 </TolgeeProvider>

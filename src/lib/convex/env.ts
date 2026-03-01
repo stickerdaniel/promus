@@ -21,7 +21,6 @@ export const REQUIRED_VAR_NAMES = [
 	'AUTH_EMAIL',
 	'AUTUMN_SECRET_KEY',
 	'RESEND_API_KEY',
-	'OPENROUTER_API_KEY',
 	'RESEND_WEBHOOK_SECRET'
 ] as const;
 
@@ -79,9 +78,6 @@ export const getAutumnSecretKey = (): string => getRequiredEnv('AUTUMN_SECRET_KE
 /** Resend API key for email delivery */
 export const getResendApiKey = (): string => getRequiredEnv('RESEND_API_KEY');
 
-/** OpenRouter API key for AI support chat */
-export const getOpenRouterApiKey = (): string => getRequiredEnv('OPENROUTER_API_KEY');
-
 /** Resend webhook secret for signature verification */
 export const getResendWebhookSecret = (): string => getRequiredEnv('RESEND_WEBHOOK_SECRET');
 
@@ -109,3 +105,11 @@ export const unipileConfig = {
 	dsn: process.env.UNIPILE_DSN,
 	apiKey: process.env.UNIPILE_API_KEY
 };
+
+/**
+ * Support LLM provider config
+ * SUPPORT_LLM_PROVIDER: 'bedrock' (default) | 'openrouter'
+ * When 'openrouter': requires OPENROUTER_API_KEY
+ * When 'bedrock': requires AWS_BEARER_TOKEN_BEDROCK, optional AWS_REGION
+ */
+export const supportLlmProvider = process.env.SUPPORT_LLM_PROVIDER ?? 'bedrock';

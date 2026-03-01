@@ -1106,6 +1106,11 @@
 			"task_5": "Preparar reunión con Sarah",
 			"task_6": "Conectar con ponentes en LinkedIn"
 		},
+		"chat": {
+			"empty_state": "Pregúntame lo que sea sobre esta tarea",
+			"placeholder": "Pregunta sobre esta tarea...",
+			"title": "IA de tareas"
+		},
 		"save_failed": "No se pudieron guardar los cambios del tablero. Por favor, inténtalo de nuevo.",
 		"subheading": "Añade una tarea. Promus investiga, redacta y ejecuta en segundo plano — conectado a todas tus herramientas profesionales."
 	},

@@ -1106,6 +1106,11 @@
 			"task_5": "Meeting mit Sarah vorbereiten",
 			"task_6": "Mit Konferenz-Speakern auf LinkedIn connecten"
 		},
+		"chat": {
+			"empty_state": "Frag mich alles über diese Aufgabe",
+			"placeholder": "Frag etwas zu dieser Aufgabe...",
+			"title": "Aufgaben-KI"
+		},
 		"save_failed": "Änderungen am Board konnten nicht gespeichert werden. Bitte versuch es erneut.",
 		"subheading": "Füge eine Aufgabe hinzu. Promus recherchiert, formuliert und erledigt im Hintergrund — verbunden mit all deinen professionellen Tools."
 	},

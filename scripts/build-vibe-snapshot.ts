@@ -14,7 +14,9 @@ async function main(): Promise<void> {
 	const image = Image.base('python:3.12-slim').runCommands(
 		'apt-get update && apt-get install -y --no-install-recommends git curl ripgrep && rm -rf /var/lib/apt/lists/*',
 		'curl -LsSf https://astral.sh/uv/install.sh | sh',
-		'/root/.local/bin/uv pip install --system mistral-vibe starlette uvicorn sse-starlette boto3'
+		'/root/.local/bin/uv pip install --system mistral-vibe starlette uvicorn sse-starlette boto3',
+		'curl -fsSL https://deb.nodesource.com/setup_22.x | bash - && apt-get install -y nodejs && rm -rf /var/lib/apt/lists/*',
+		'cd /root && npm init -y && npm install unipile-node-sdk@1.9.3 typescript@5.9.3'
 	);
 
 	console.log(`Creating snapshot: ${SNAPSHOT_NAME}`);

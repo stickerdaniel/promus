@@ -29,28 +29,27 @@
 	let isLoading = $state(false);
 	let isConnecting = $state(false);
 	let error = $state('');
-
-	async function registerAndLoad() {
-		try {
-			await client.action(api.unipile.registerNewAccount, {});
-		} catch {
-			// Registration failure is non-fatal; loadAccounts will still show existing accounts
-		}
-		loadAccounts();
-	}
+	let awaitingAuth = $state(false);
 
 	$effect(() => {
-		registerAndLoad();
+		loadAccounts();
 	});
 
-	// Auto-refresh accounts when user returns from the auth wizard tab
+	// When returning from the auth wizard tab, register the new account
 	useEventListener(
 		() => document,
 		'visibilitychange',
-		() => {
-			if (document.visibilityState === 'visible' && !isLoading) {
-				registerAndLoad();
+		async () => {
+			if (document.visibilityState !== 'visible' || isLoading) return;
+			if (awaitingAuth) {
+				awaitingAuth = false;
+				try {
+					await client.action(api.unipile.registerNewAccount, {});
+				} catch {
+					// Registration failure is non-fatal
+				}
 			}
+			loadAccounts();
 		}
 	);
 
@@ -102,6 +101,7 @@
 		isConnecting = true;
 		try {
 			const { url } = await client.action(api.unipile.getHostedAuthLink, {});
+			awaitingAuth = true;
 			window.open(url, '_blank');
 		} catch {
 			toast.error($t('settings.connections.connect_failed'));

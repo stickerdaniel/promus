@@ -122,7 +122,7 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 			);
 			error(409, 'Sandbox is still being created');
 		} else if (session.status === 'ready') {
-			// Verify sandbox is still alive and refresh preview credentials.
+			// Verify sandbox is still alive
 			try {
 				console.warn(
 					`[sandbox.manage:${reqId}] validating ready sandbox sandboxId=${session.sandboxId}`
@@ -132,19 +132,15 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 					sessionId: session._id,
 					status: 'ready',
 					sandboxId: result.sandboxId,
-					previewUrl: result.previewUrl,
-					previewToken: result.previewToken,
 					threadId: session.threadId
 				});
-				console.warn(
-					`[sandbox.manage:${reqId}] readyValidationOk sandboxId=${result.sandboxId} sessionId=${session._id}`
-				);
+				console.warn(`[sandbox.manage:${reqId}] readyValidationOk sandboxId=${result.sandboxId}`);
 			} catch (e) {
 				console.error(`[sandbox.manage:${reqId}] readyValidationFailed ${previewError(e)}`);
 				await client.mutation(api.sandboxApi.updateSession, {
 					sessionId: session._id,
 					status: 'error',
-					errorMessage: e instanceof Error ? e.message : 'Sandbox health check failed'
+					errorMessage: e instanceof Error ? e.message : 'Sandbox is unreachable'
 				});
 				error(500, 'Sandbox is no longer reachable. Delete and recreate.');
 			}

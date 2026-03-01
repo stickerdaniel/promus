@@ -18,12 +18,6 @@ export const executeVibeTask = createTool({
 		prompt: z.string().describe('What to do with the Unipile SDK')
 	}),
 	handler: async (ctx: ToolCtx, args) => {
-		const siteUrl = process.env.SITE_URL;
-		const internalKey = process.env.SANDBOX_INTERNAL_API_KEY;
-		if (!siteUrl || !internalKey) {
-			return { success: false, error: 'SITE_URL or SANDBOX_INTERNAL_API_KEY not configured' };
-		}
-
 		if (!ctx.userId) {
 			return { success: false, error: 'No userId available' };
 		}
@@ -33,16 +27,7 @@ export const executeVibeTask = createTool({
 			userId: ctx.userId
 		});
 
-		if (session && session.status === 'stopped') {
-			return {
-				success: false,
-				error:
-					'Sandbox is stopped. Please restart it from the Sandbox page or reload the Kanban board.'
-			};
-		}
-
 		if (!session || session.status === 'creating') {
-			// Poll up to 6 times (30s total) waiting for sandbox to become ready
 			for (let i = 0; i < 6; i++) {
 				await new Promise((resolve) => setTimeout(resolve, 5000));
 				session = await ctx.runQuery(components.sandbox.sessions.getUserSession, {
@@ -52,32 +37,23 @@ export const executeVibeTask = createTool({
 			}
 		}
 
-		if (!session || session.status !== 'ready') {
+		if (!session || (session.status !== 'ready' && session.status !== 'stopped')) {
 			return {
 				success: false,
-				error: 'Sandbox is still starting up. Please try again in a moment.'
+				error: `Sandbox not available (status: ${session?.status ?? 'none'}). Reload the Kanban board.`
 			};
 		}
 
 		try {
-			const response = await fetch(`${siteUrl}/api/sandbox/run-internal`, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					'x-internal-key': internalKey
-				},
-				body: JSON.stringify({
-					sandboxId: session.sandboxId,
-					prompt: args.prompt
-				})
+			const result: any = await ctx.runAction(internal.sandboxExecute.runVibeTask, {
+				sandboxId: session.sandboxId,
+				prompt: args.prompt
 			});
 
-			if (!response.ok) {
-				const text = await response.text();
-				return { success: false, error: `HTTP ${response.status}: ${text}` };
+			if (!result.success) {
+				return { success: false, error: result.error };
 			}
 
-			const result = await response.json();
 			return {
 				success: true,
 				vibeOutput: truncate(result.vibeOutput ?? '', MAX_VIBE_RESULT),
@@ -92,7 +68,7 @@ export const executeVibeTask = createTool({
 		} catch (e) {
 			return {
 				success: false,
-				error: `Fetch failed: ${e instanceof Error ? e.message : String(e)}`
+				error: `Action failed: ${e instanceof Error ? e.message : String(e)}`
 			};
 		}
 	}
@@ -135,10 +111,12 @@ export const createTask = createTool({
 
 export const moveTask = createTool({
 	description:
-		'Move a task to a different column (todo, in-progress, done). Include the taskId from your system prompt.',
+		'Move a task to a different column (todo, working-on, prepared, done). Include the taskId from your system prompt.',
 	args: z.object({
 		taskId: z.string().describe('The task ID to move'),
-		columnId: z.enum(['todo', 'in-progress', 'done']).describe('Target column to move the task to')
+		columnId: z
+			.enum(['todo', 'working-on', 'prepared', 'done'])
+			.describe('Target column to move the task to')
 	}),
 	handler: async (ctx: ToolCtx, args) => {
 		if (!ctx.userId) return { success: false, error: 'No userId' };
@@ -158,27 +136,41 @@ export const todoAgent = new Agent(components.agent, {
 
 	instructions: `You are a helpful task assistant with access to tools for managing tasks and delegating Unipile SDK work to a sandbox environment.
 
+Board columns: todo → working-on → prepared → done
+- "todo": tasks not yet started
+- "working-on": tasks you are actively researching/executing
+- "prepared": tasks where all research and drafts are ready, awaiting user confirmation before final execution
+- "done": completed tasks
+
 Your responsibilities:
 - Help users plan and organize their work
-- Break complex tasks into actionable sub-tasks
 - When a task involves Unipile operations (messaging, email, contacts), use the executeVibeTask tool to delegate the work to the sandbox
 - Update task notes with findings and progress using updateTaskNotes
-- Move tasks between columns (todo → in-progress → done) using moveTask as work progresses
+- Move tasks between columns using moveTask as work progresses
+- Consider the user's other tasks (provided in context) when analyzing a task — avoid duplicates, notice related work
 
 Tool usage:
-- createTask: Use to add follow-up tasks, sub-tasks, or clarifying questions as new todos. Great for breaking a complex task into smaller actionable steps.
+- createTask: Use ONLY to ask the user for missing context or clarification. For example, if a task is vague ("plan trip"), create a task like "Decide travel dates for trip" or "Confirm budget for trip". Do NOT use it to break tasks into execution steps — that is your job, not the user's.
 - executeVibeTask: Use when the task involves Unipile SDK operations (sending messages, reading emails, managing contacts, etc.)
 - updateTaskNotes: Use to record findings, progress, or results on the task
-- moveTask: Use to move a task to "in-progress" when starting work, and to "done" when complete
+- moveTask: Use to move tasks between columns
 
 Workflow for new tasks:
-1. Analyze the task title and notes — identify unknowns or sub-steps
-2. Use createTask to add follow-up todos for missing info or sub-steps that the user should address
-3. If Unipile work is needed, move to "in-progress" and use executeVibeTask
-4. Record results in task notes using updateTaskNotes
-5. Move to "done" when complete, or leave in "in-progress" if more work is needed
+1. Analyze the task title, notes, and the user's other tasks for context
+2. If the task is unclear or missing key info, use createTask to ask the user what you need (e.g. "Specify budget for X", "Confirm recipient for Y")
+3. Move to "working-on" and begin research/execution
+4. If Unipile work is needed, use executeVibeTask
+5. Record results in task notes using updateTaskNotes
+6. Move to "prepared" when research/drafts are ready for user review
+7. Move to "done" only after successful execution
 
-Communication style:
+IMPORTANT — Failure handling:
+- If a task fails (sandbox error, API failure, missing info), move it BACK to "todo" using moveTask
+- Update the task notes explaining what went wrong and what is needed to retry
+- Never leave a failed task in "working-on" or "prepared"
+
+IMPORTANT — Style:
+- Never use emojis in notes, task titles, or messages
 - Be concise and actionable
 - Use bullet points for lists
 - Focus on practical next steps

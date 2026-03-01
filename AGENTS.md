@@ -390,6 +390,55 @@ A customizable Svelte component for building node-based editors and interactive 
 - `vercel logs` - View deployment logs
 - `vercel domains` - Manage custom domains
 
+## Task Agent Architecture
+
+Two agents, both Devstral via AWS Bedrock:
+
+```
+Kanban task → Orchestrator (plan + delegate) → Executor (write + run code) → results back
+```
+
+**Orchestrator** (Convex Agent, server-side): decomposes task into subtasks, delegates to Executor, validates results, updates Kanban status, asks user for confirmation when needed.
+
+**Executor** (Daytona Sandbox + Vibe CLI): receives focused subtask, writes Unipile SDK code on the fly, executes it, returns structured results. No pre-wrapped endpoints — Devstral generates code for any SDK method using `docs/references/unipile-node-sdk/` as context.
+
+Why two: token efficiency (Executor gets small context), reliability (failed subtask doesn't restart whole plan), flexibility (any SDK endpoint without wrappers).
+
+### Example: "Connect with hackathon attendees on LinkedIn"
+
+1. Orchestrator plans: search emails → extract names → search LinkedIn → connect
+2. Executor: writes Unipile `emails.list` code → returns emails
+3. Orchestrator: extracts attendee names from email content
+4. Executor: writes Unipile `linkedin.search` code → returns profiles
+5. Executor: writes Unipile `linkedin.connect` code → sends requests
+6. Orchestrator: "Connected 47/100" → task Done
+
+### LLM Routing
+
+SvelteKit proxy at `/api/sandbox/llm/chat/completions` → AWS Bedrock. Creds stay server-side, never in sandbox.
+Switchable: `VIBE_LLM_PROVIDER` = `bedrock` | `openrouter` | `mistral`
+
+### Eval
+
+Planner only via W&B Weave — no sandbox execution in evals (too slow/flaky).
+
+- **Plan quality**: LLM-as-judge scores task decomposition
+- **Code quality**: LLM-as-judge scores generated SDK code (without running it)
+- **Self-improvement**: `.claude/skills/wandb-improve/` reads Weave scores, suggests prompt changes
+
+### Key Files
+
+| File                                                     | Role                                         |
+| -------------------------------------------------------- | -------------------------------------------- |
+| `src/lib/convex/sandboxApi.ts`                           | Orchestrator ↔ Sandbox messaging + streaming |
+| `src/lib/server/sandbox/sandbox-manager.ts`              | Daytona sandbox lifecycle                    |
+| `src/lib/server/sandbox/config-builder.ts`               | Vibe config (provider-aware)                 |
+| `src/routes/api/sandbox/llm/chat/completions/+server.ts` | Bedrock LLM proxy                            |
+| `scripts/build-vibe-snapshot.ts`                         | Pre-bake sandbox deps into Daytona snapshot  |
+| `docs/references/unipile-node-sdk/`                      | Unipile SDK source (Executor context)        |
+| `docs/references/mistral-vibe/`                          | Vibe CLI source (config/backend reference)   |
+| `docs/references/daytona-sdk/`                           | Daytona SDK types                            |
+
 ## Plan Mode
 
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.

@@ -1,0 +1,132 @@
+[
+	{
+		"task_title": "Connect with the 100 people from the hackathon on LinkedIn",
+		"context": "Attended Mistral AI hackathon, registration emails in Gmail",
+		"expected_steps": [
+			"search emails for hackathon",
+			"extract attendee names",
+			"search LinkedIn profiles",
+			"send connection requests"
+		],
+		"expected_sdk_calls": ["emails.list", "linkedin.search", "linkedin.connect"]
+	},
+	{
+		"task_title": "Follow up with Marc about the project proposal",
+		"context": "Marc is a colleague, proposal was sent last week via email",
+		"expected_steps": [
+			"search emails for proposal thread with Marc",
+			"summarize proposal status",
+			"draft follow-up email",
+			"send email"
+		],
+		"expected_sdk_calls": ["emails.list", "emails.send"]
+	},
+	{
+		"task_title": "Find and message all attendees from yesterday's AI conference on WhatsApp",
+		"context": "AI Summit Paris, have contact list in email confirmation",
+		"expected_steps": [
+			"search emails for conference confirmation",
+			"extract attendee contacts",
+			"draft personalized messages",
+			"send WhatsApp messages"
+		],
+		"expected_sdk_calls": ["emails.list", "messaging.send"]
+	},
+	{
+		"task_title": "Cancel my gym membership at FitnessPark",
+		"context": "Want to cancel, need to find cancellation policy first",
+		"expected_steps": [
+			"search emails for FitnessPark correspondence",
+			"find cancellation terms",
+			"draft cancellation email",
+			"send email"
+		],
+		"expected_sdk_calls": ["emails.list", "emails.send"]
+	},
+	{
+		"task_title": "Send connection request to all speakers from the Mistral meetup",
+		"context": "Networking from last night's Mistral AI community event, speakers listed in event email",
+		"expected_steps": [
+			"search emails for meetup details",
+			"extract speaker names",
+			"search LinkedIn profiles",
+			"send connection requests with personalized notes"
+		],
+		"expected_sdk_calls": ["emails.list", "linkedin.search", "linkedin.connect"]
+	},
+	{
+		"task_title": "Remind Sarah about our dinner on Friday via WhatsApp",
+		"context": "Sarah is a friend, confirming plans made last week",
+		"expected_steps": [
+			"search contacts for Sarah",
+			"draft casual reminder message",
+			"send WhatsApp message"
+		],
+		"expected_sdk_calls": ["messaging.send"]
+	},
+	{
+		"task_title": "Draft a thank you email to the hiring manager at Stripe",
+		"context": "Had an interview yesterday, want to follow up professionally",
+		"expected_steps": [
+			"search emails for Stripe interview thread",
+			"extract hiring manager name and email",
+			"draft thank you email",
+			"send email"
+		],
+		"expected_sdk_calls": ["emails.list", "emails.send"]
+	},
+	{
+		"task_title": "Find all unread emails from investors and summarize them",
+		"context": "Fundraising round, need to stay on top of investor communications",
+		"expected_steps": [
+			"search emails from known investor contacts",
+			"filter unread",
+			"extract key points from each",
+			"compile summary"
+		],
+		"expected_sdk_calls": ["emails.list"]
+	},
+	{
+		"task_title": "Message Tom on LinkedIn about the partnership opportunity",
+		"context": "Tom is VP of Sales at a potential partner company, met at conference",
+		"expected_steps": [
+			"search LinkedIn for Tom's profile",
+			"draft professional partnership message",
+			"send LinkedIn message"
+		],
+		"expected_sdk_calls": ["linkedin.search", "messaging.send"]
+	},
+	{
+		"task_title": "Send meeting notes to the team via email",
+		"context": "Team standup notes from this morning, 5 team members",
+		"expected_steps": [
+			"search contacts for team members",
+			"format meeting notes",
+			"draft email with notes",
+			"send to all team members"
+		],
+		"expected_sdk_calls": ["emails.send"]
+	},
+	{
+		"task_title": "Reply to the landlord's email about the lease renewal",
+		"context": "Lease expires in 2 months, want to negotiate terms",
+		"expected_steps": [
+			"search emails for landlord's lease email",
+			"read current terms",
+			"draft negotiation reply",
+			"send email"
+		],
+		"expected_sdk_calls": ["emails.list", "emails.send"]
+	},
+	{
+		"task_title": "Check if any of my LinkedIn connections work at OpenAI and message them",
+		"context": "Exploring job opportunities, want to get referrals",
+		"expected_steps": [
+			"search LinkedIn connections at OpenAI",
+			"filter relevant roles",
+			"draft personalized outreach messages",
+			"send messages"
+		],
+		"expected_sdk_calls": ["linkedin.search", "messaging.send"]
+	}
+]

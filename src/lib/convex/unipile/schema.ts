@@ -8,5 +8,7 @@ export default defineSchema({
 		provider: v.string(),
 		status: v.string(),
 		connectedAt: v.number()
-	}).index('by_user', ['userId'])
+	})
+		.index('by_user', ['userId'])
+		.index('by_unipile_account', ['unipileAccountId'])
 });

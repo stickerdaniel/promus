@@ -99,6 +99,9 @@ export const githubOAuth = {
 	clientSecret: process.env.AUTH_GITHUB_SECRET
 };
 
+/** Convex Site URL for HTTP routes (webhooks). Optional — webhook features degrade gracefully. */
+export const getConvexSiteUrl = (): string | undefined => process.env.CONVEX_SITE_URL;
+
 /** Unipile API DSN (base URL) */
 export const unipileConfig = {
 	enabled: !!(process.env.UNIPILE_DSN && process.env.UNIPILE_API_KEY),

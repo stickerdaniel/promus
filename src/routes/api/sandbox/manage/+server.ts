@@ -112,10 +112,48 @@ export const POST: RequestHandler = async ({ request, locals }) => {
 				error(500, 'Failed to resume sandbox');
 			}
 		} else if (session.status === 'error') {
+			// Auto-recover: delete broken session and create fresh
 			console.warn(
-				`[sandbox.manage:${reqId}] refusing start: error state sessionId=${session._id}`
+				`[sandbox.manage:${reqId}] error state, auto-recovering sessionId=${session._id}`
 			);
-			error(500, 'Sandbox is in error state. Delete and recreate.');
+			try {
+				if (session.sandboxId !== 'pending') {
+					await deleteSandbox(session.sandboxId).catch(() => {});
+				}
+			} catch {
+				// best effort
+			}
+			await client.mutation(api.sandboxApi.deleteSession, { sessionId: session._id });
+
+			// Create fresh session
+			await client.mutation(api.sandboxApi.createSession, {
+				sandboxId: 'pending',
+				status: 'creating'
+			});
+			const freshSession = await client.query(api.sandboxApi.getSession, {});
+			if (!freshSession) error(500, 'Failed to create session after recovery');
+
+			try {
+				const result = await createSandbox(freshSession.userId);
+				const { threadId } = await client.mutation(api.sandboxApi.createThread, {});
+				await client.mutation(api.sandboxApi.updateSession, {
+					sessionId: freshSession._id,
+					status: 'ready',
+					sandboxId: result.sandboxId,
+					previewUrl: result.previewUrl,
+					previewToken: result.previewToken,
+					threadId
+				});
+				console.warn(`[sandbox.manage:${reqId}] recovered sessionId=${freshSession._id}`);
+			} catch (e) {
+				console.error(`[sandbox.manage:${reqId}] recovery failed ${previewError(e)}`);
+				await client.mutation(api.sandboxApi.updateSession, {
+					sessionId: freshSession._id,
+					status: 'error',
+					errorMessage: e instanceof Error ? e.message : 'Unknown error'
+				});
+				error(500, 'Failed to recover sandbox');
+			}
 		} else if (session.status === 'creating') {
 			console.warn(
 				`[sandbox.manage:${reqId}] refusing start: still creating sessionId=${session._id}`

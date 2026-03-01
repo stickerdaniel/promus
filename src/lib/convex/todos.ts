@@ -177,9 +177,10 @@ export const saveBoard = authedMutation({
 			});
 		}
 
-		// Detect new tasks and trigger agent for each
+		// Detect new tasks and tasks moved to in-progress, trigger agent for each
 		for (const task of sanitizedTasks) {
 			if (!existingTasksById.has(task.id)) {
+				// New task — always trigger agent
 				await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNewTask, {
 					userId: ctx.user._id,
 					taskId: task.id,
@@ -187,6 +188,22 @@ export const saveBoard = authedMutation({
 					taskNotes: task.notes,
 					taskColumn: task.columnId
 				});
+			} else {
+				// Existing task moved to in-progress that hasn't been researched yet
+				const oldTask = existingTasksById.get(task.id)!;
+				if (
+					task.columnId === 'in-progress' &&
+					oldTask.columnId !== 'in-progress' &&
+					!oldTask.threadId
+				) {
+					await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNewTask, {
+						userId: ctx.user._id,
+						taskId: task.id,
+						taskTitle: task.title,
+						taskNotes: task.notes,
+						taskColumn: task.columnId
+					});
+				}
 			}
 		}
 
@@ -271,5 +288,51 @@ export const moveTaskInternal = internalMutation({
 	},
 	handler: async (ctx, args) => {
 		await patchTask(ctx, args, { columnId: args.columnId });
+	}
+});
+
+export const addTaskInternal = internalMutation({
+	args: {
+		userId: v.string(),
+		title: v.string(),
+		notes: v.optional(v.string())
+	},
+	returns: v.string(),
+	handler: async (ctx, args) => {
+		const board = await ctx.db
+			.query('todoBoards')
+			.withIndex('by_user', (q: any) => q.eq('userId', args.userId))
+			.first();
+
+		const taskId = crypto.randomUUID();
+		const now = Date.now();
+		const newTask: StoredTask = {
+			id: taskId,
+			title: args.title,
+			...(args.notes ? { notes: args.notes } : {}),
+			columnId: 'todo',
+			order: 0,
+			createdAt: now,
+			updatedAt: now
+		};
+
+		if (board) {
+			const tasks = board.tasks as StoredTask[];
+			const todoTasks = tasks.filter((t) => t.columnId === 'todo');
+			newTask.order = todoTasks.length > 0 ? Math.max(...todoTasks.map((t) => t.order)) + 1 : 0;
+			await ctx.db.patch(board._id, {
+				tasks: [...tasks, newTask],
+				updatedAt: now
+			});
+		} else {
+			await ctx.db.insert('todoBoards', {
+				userId: args.userId,
+				tasks: [newTask],
+				createdAt: now,
+				updatedAt: now
+			});
+		}
+
+		return taskId;
 	}
 });

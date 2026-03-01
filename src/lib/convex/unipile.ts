@@ -1,7 +1,7 @@
 import { query, action } from './_generated/server';
-import { components } from './_generated/api';
+import { components, internal } from './_generated/api';
 import { v } from 'convex/values';
-import { unipileConfig, getSiteUrl } from './env';
+import { unipileConfig, getSiteUrl, getConvexSiteUrl } from './env';
 import { authComponent } from './auth';
 
 export const isUnipileEnabled = query({
@@ -20,10 +20,31 @@ export const getHostedAuthLink = action({
 			throw new Error('Unipile is not configured');
 		}
 
+		const user = await authComponent.getAuthUser(ctx);
+		if (!user) throw new Error('Not authenticated');
+
+		const convexSiteUrl = getConvexSiteUrl();
+
+		// Generate nonce and webhook URL if CONVEX_SITE_URL is configured
+		let notifyUrl: string | undefined;
+		let nonce: string | undefined;
+
+		if (convexSiteUrl) {
+			nonce = crypto.randomUUID();
+			notifyUrl = `${convexSiteUrl}/unipile-webhook`;
+
+			await ctx.runMutation(internal.unipileWebhook.createPendingAuth, {
+				nonce,
+				userId: user._id
+			});
+		}
+
 		return await ctx.runAction(components.unipile.actions.getHostedAuthLink, {
 			dsn: unipileConfig.dsn,
 			apiKey: unipileConfig.apiKey,
-			siteUrl: getSiteUrl()
+			siteUrl: getSiteUrl(),
+			notifyUrl,
+			name: nonce
 		});
 	}
 });

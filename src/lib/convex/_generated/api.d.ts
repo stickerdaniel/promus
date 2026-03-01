@@ -62,6 +62,7 @@ import type * as todo_messages from "../todo/messages.js";
 import type * as todo_threads from "../todo/threads.js";
 import type * as todos from "../todos.js";
 import type * as unipile from "../unipile.js";
+import type * as unipileWebhook from "../unipileWebhook.js";
 import type * as users from "../users.js";
 import type * as utils_anonymousUser from "../utils/anonymousUser.js";
 
@@ -126,6 +127,7 @@ declare const fullApi: ApiFromModules<{
   "todo/threads": typeof todo_threads;
   todos: typeof todos;
   unipile: typeof unipile;
+  unipileWebhook: typeof unipileWebhook;
   users: typeof users;
   "utils/anonymousUser": typeof utils_anonymousUser;
 }>;
@@ -4900,7 +4902,13 @@ export declare const components: {
       getHostedAuthLink: FunctionReference<
         "action",
         "internal",
-        { apiKey: string; dsn: string; siteUrl: string },
+        {
+          apiKey: string;
+          dsn: string;
+          name?: string;
+          notifyUrl?: string;
+          siteUrl: string;
+        },
         { url: string }
       >;
       listAccounts: FunctionReference<

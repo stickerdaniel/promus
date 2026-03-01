@@ -174,7 +174,20 @@ export default defineSchema({
 	})
 		.index('by_fileId', ['fileId'])
 		.index('by_storageId', ['storageId'])
-		.index('by_url', ['url'])
+		.index('by_url', ['url']),
+
+	// Pending Unipile OAuth auth flows — nonce-based correlation for webhook completion
+	pendingUnipileAuth: defineTable({
+		nonce: v.string(), // crypto.randomUUID, used as `name` in Unipile API
+		userId: v.string(), // Better Auth user ID
+		createdAt: v.number(),
+		expiresAt: v.number(), // 24h TTL
+		status: v.union(v.literal('pending'), v.literal('completed'), v.literal('expired')),
+		unipileAccountId: v.optional(v.string()) // Set on completion
+	})
+		.index('by_nonce', ['nonce'])
+		.index('by_user', ['userId'])
+		.index('by_expires', ['expiresAt'])
 
 	// Note: The agent component automatically creates the following tables:
 	// - agent:threads - Conversation threads for customer support

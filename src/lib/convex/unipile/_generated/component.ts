@@ -34,7 +34,13 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       getHostedAuthLink: FunctionReference<
         "action",
         "internal",
-        { apiKey: string; dsn: string; siteUrl: string },
+        {
+          apiKey: string;
+          dsn: string;
+          name?: string;
+          notifyUrl?: string;
+          siteUrl: string;
+        },
         { url: string },
         Name
       >;

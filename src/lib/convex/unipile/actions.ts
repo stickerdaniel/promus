@@ -85,11 +85,25 @@ export const getHostedAuthLink = action({
 	args: {
 		dsn: v.string(),
 		apiKey: v.string(),
-		siteUrl: v.string()
+		siteUrl: v.string(),
+		notifyUrl: v.optional(v.string()),
+		name: v.optional(v.string())
 	},
 	returns: v.object({ url: v.string() }),
-	handler: async (_ctx, { dsn, apiKey, siteUrl }) => {
+	handler: async (_ctx, { dsn, apiKey, siteUrl, notifyUrl, name }) => {
 		const expiresOn = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
+		const payload: Record<string, unknown> = {
+			type: 'create',
+			expiresOn,
+			api_url: `https://${dsn}`,
+			providers: '*',
+			success_redirect_url: `${siteUrl}/app/my-tasks`,
+			failure_redirect_url: `${siteUrl}/app/my-tasks`
+		};
+
+		if (notifyUrl) payload.notify_url = notifyUrl;
+		if (name) payload.name = name;
 
 		const response = await fetch(`https://${dsn}/api/v1/hosted/accounts/link`, {
 			method: 'POST',
@@ -97,14 +111,7 @@ export const getHostedAuthLink = action({
 				'X-API-KEY': apiKey,
 				'Content-Type': 'application/json'
 			},
-			body: JSON.stringify({
-				type: 'create',
-				expiresOn,
-				api_url: `https://${dsn}`,
-				providers: '*',
-				success_redirect_url: `${siteUrl}/app/my-tasks`,
-				failure_redirect_url: `${siteUrl}/app/my-tasks`
-			})
+			body: JSON.stringify(payload)
 		});
 
 		if (!response.ok) {

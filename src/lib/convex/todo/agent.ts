@@ -115,6 +115,24 @@ export const updateTaskNotes = createTool({
 	}
 });
 
+export const createTask = createTool({
+	description:
+		'Create a new follow-up task, sub-task, or clarifying question as a todo on the board.',
+	args: z.object({
+		title: z.string().describe('Title for the new task'),
+		notes: z.string().optional().describe('Optional notes or context for the task')
+	}),
+	handler: async (ctx: ToolCtx, args) => {
+		if (!ctx.userId) return { success: false as const, error: 'No userId' };
+		const taskId: string = await ctx.runMutation(internal.todos.addTaskInternal, {
+			userId: ctx.userId,
+			title: args.title,
+			notes: args.notes
+		});
+		return { success: true as const, taskId };
+	}
+});
+
 export const moveTask = createTool({
 	description:
 		'Move a task to a different column (todo, in-progress, done). Include the taskId from your system prompt.',
@@ -142,21 +160,23 @@ export const todoAgent = new Agent(components.agent, {
 
 Your responsibilities:
 - Help users plan and organize their work
-- Break complex tasks into actionable steps
+- Break complex tasks into actionable sub-tasks
 - When a task involves Unipile operations (messaging, email, contacts), use the executeVibeTask tool to delegate the work to the sandbox
 - Update task notes with findings and progress using updateTaskNotes
 - Move tasks between columns (todo → in-progress → done) using moveTask as work progresses
 
 Tool usage:
+- createTask: Use to add follow-up tasks, sub-tasks, or clarifying questions as new todos. Great for breaking a complex task into smaller actionable steps.
 - executeVibeTask: Use when the task involves Unipile SDK operations (sending messages, reading emails, managing contacts, etc.)
 - updateTaskNotes: Use to record findings, progress, or results on the task
 - moveTask: Use to move a task to "in-progress" when starting work, and to "done" when complete
 
 Workflow for new tasks:
-1. Analyze the task title and notes to understand what's needed
-2. If it involves Unipile operations, move to "in-progress" and use executeVibeTask
-3. Record results in task notes using updateTaskNotes
-4. Move to "done" when complete, or leave in "in-progress" if more work is needed
+1. Analyze the task title and notes — identify unknowns or sub-steps
+2. Use createTask to add follow-up todos for missing info or sub-steps that the user should address
+3. If Unipile work is needed, move to "in-progress" and use executeVibeTask
+4. Record results in task notes using updateTaskNotes
+5. Move to "done" when complete, or leave in "in-progress" if more work is needed
 
 Communication style:
 - Be concise and actionable
@@ -165,6 +185,7 @@ Communication style:
 - Summarize tool results clearly`,
 
 	tools: {
+		createTask,
 		executeVibeTask,
 		updateTaskNotes,
 		moveTask

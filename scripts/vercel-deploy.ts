@@ -292,6 +292,36 @@ async function main(): Promise<void> {
 		console.log(`${colors.green}SITE_URL set successfully${colors.reset}`);
 		if (setResult.stdout) console.log(`  stdout: ${setResult.stdout}`);
 
+		// Set CONVEX_SITE_URL for webhook routes (uses .convex.site domain)
+		if (actualDeploymentUrlSlug) {
+			const previewConvexSiteUrl = `https://${actualDeploymentUrlSlug}.convex.site`;
+			console.log(`Setting CONVEX_SITE_URL for preview: ${previewConvexSiteUrl}`);
+			const convexSiteResult = await runCommandWithRetry(
+				'bunx',
+				[
+					'convex',
+					'env',
+					'set',
+					'--deployment-name',
+					actualDeploymentName,
+					'CONVEX_SITE_URL',
+					previewConvexSiteUrl
+				],
+				{
+					maxRetries: 3,
+					delayMs: 3000,
+					description: 'convex env set CONVEX_SITE_URL'
+				}
+			);
+			if (convexSiteResult.success) {
+				console.log(`${colors.green}CONVEX_SITE_URL set successfully${colors.reset}`);
+			} else {
+				console.warn(
+					`${colors.yellow}Warning: Failed to set CONVEX_SITE_URL for preview${colors.reset}`
+				);
+			}
+		}
+
 		// Verify SITE_URL was set correctly by listing env vars
 		console.log('Verifying SITE_URL was set correctly...');
 		const listResult = runCommandCapture('bunx', [
@@ -368,6 +398,28 @@ async function main(): Promise<void> {
 				if (setResult.stderr) console.warn(`  stderr: ${setResult.stderr}`);
 			} else {
 				console.log(`${colors.green}Production SITE_URL set successfully${colors.reset}`);
+			}
+
+			// Set CONVEX_SITE_URL for webhook routes (uses .convex.site domain)
+			if (actualDeploymentUrlSlug) {
+				const prodConvexSiteUrl = `https://${actualDeploymentUrlSlug}.convex.site`;
+				console.log(`Setting CONVEX_SITE_URL for production: ${prodConvexSiteUrl}`);
+				const convexSiteResult = await runCommandWithRetry(
+					'bunx',
+					['convex', 'env', 'set', '--prod', 'CONVEX_SITE_URL', prodConvexSiteUrl],
+					{
+						maxRetries: 3,
+						delayMs: 3000,
+						description: 'convex env set CONVEX_SITE_URL (production)'
+					}
+				);
+				if (convexSiteResult.success) {
+					console.log(`${colors.green}Production CONVEX_SITE_URL set successfully${colors.reset}`);
+				} else {
+					console.warn(
+						`${colors.yellow}Warning: Failed to set CONVEX_SITE_URL for production${colors.reset}`
+					);
+				}
 			}
 		} else {
 			console.warn(

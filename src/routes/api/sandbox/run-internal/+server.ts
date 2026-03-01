@@ -2,6 +2,7 @@ import { json, error } from '@sveltejs/kit';
 import type { RequestHandler, RequestEvent } from './$types';
 import { env } from '$env/dynamic/private';
 import { getDaytona } from '$lib/server/sandbox/daytona';
+import { ensureSandboxReady } from '$lib/server/sandbox';
 import { executeScript } from '$lib/server/sandbox/script-executor';
 import { buildVibePrompt } from '$lib/server/sandbox/vibe-prompt-builder';
 
@@ -32,6 +33,9 @@ export const POST: RequestHandler = async ({ request }: RequestEvent) => {
 	if (!sandboxId || !prompt) {
 		error(400, 'sandboxId and prompt are required');
 	}
+
+	// Ensure sandbox is running (may have auto-stopped)
+	await ensureSandboxReady(sandboxId);
 
 	const daytona = getDaytona();
 	const sandbox = await daytona.get(sandboxId);

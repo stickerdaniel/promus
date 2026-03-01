@@ -5,6 +5,7 @@
 	import { Button } from '$lib/components/ui/button';
 	import { Avatar, AvatarImage, AvatarFallback } from '$lib/components/ui/avatar';
 	import BotIcon from '@lucide/svelte/icons/bot';
+	import Logo from '$lib/components/icons/logo.svelte';
 	import ChevronRightIcon from '@lucide/svelte/icons/chevron-right';
 	import SendIcon from '@lucide/svelte/icons/send';
 	import UsersRoundIcon from '@lucide/svelte/icons/users-round';
@@ -220,7 +221,7 @@
 							>
 								<Avatar class="size-12 bg-primary outline outline-4 outline-secondary">
 									<AvatarFallback class="bg-primary text-primary-foreground">
-										<BotIcon class="size-8" />
+										<Logo class="size-8" />
 									</AvatarFallback>
 								</Avatar>
 							</motion.div>
@@ -301,7 +302,7 @@
 								? thread.assignedAdmin?.image || thread.assignedAdmin?.name
 									? undefined
 									: UsersRoundIcon
-								: BotIcon}
+								: Logo}
 							image={showAdminAvatar ? thread.assignedAdmin?.image : undefined}
 							title={thread.lastMessage || thread.summary || $t('support.thread.new_conversation')}
 							subtitle={`${thread.lastMessageRole === 'user' ? $t('support.message.role_you') : showAdminAvatar ? thread.assignedAdmin?.name || $t('support.message.role_support') : thread.lastAgentName || $t('support.message.role_kai')}\u00A0\u00A0·\u00A0\u00A0${formatRelativeTime(thread.lastMessageAt)}`}

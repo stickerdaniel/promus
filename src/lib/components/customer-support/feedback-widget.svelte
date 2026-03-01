@@ -16,6 +16,7 @@
 	// Import thread navigation components
 	import ThreadsOverview from './threads-overview.svelte';
 	import BotIcon from '@lucide/svelte/icons/bot';
+	import Logo from '$lib/components/icons/logo.svelte';
 	import MessagesSquareIcon from '@lucide/svelte/icons/messages-square';
 	import UsersRoundIcon from '@lucide/svelte/icons/users-round';
 	import { SlidingPanel } from '$lib/components/ui/sliding-panel';
@@ -37,7 +38,7 @@
 	const threadContext = supportThreadContext.get();
 
 	// Derive agent name from context with fallback
-	let agentName = $derived(threadContext.currentAgentName || 'Kai');
+	let agentName = $derived(threadContext.currentAgentName || 'Coda');
 
 	// Derive chat panel open state
 	const isChatOpen = $derived(threadContext.currentView !== 'overview');
@@ -174,7 +175,7 @@
 
 	// Derive title icon based on handoff state
 	const titleIcon = $derived.by(() => {
-		if (!threadContext.isHandedOff) return BotIcon;
+		if (!threadContext.isHandedOff) return Logo;
 		if (!assignedAdmin?.image) return UsersRoundIcon;
 		return undefined;
 	});

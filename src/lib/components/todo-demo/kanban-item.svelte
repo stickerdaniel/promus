@@ -68,28 +68,37 @@
 	}
 </script>
 
-<div class="group/item relative select-none cursor-grab active:cursor-grabbing" {@attach ref}>
-	<!-- Hover shine (all cards) -->
-	<div class="hover-shine pointer-events-none rounded-lg"></div>
+<div
+	class="relative select-none cursor-grab active:cursor-grabbing {isOverlay && overlayTilted
+		? 'drag-tilt-item'
+		: ''}"
+	{@attach ref}
+>
 	<!-- Agent working gradient (fade in/out) -->
 	{#if task.agentStatus === 'working'}
 		<div
-			class="agent-gradient-glow pointer-events-none rounded-lg"
+			class="agent-gradient-glow pointer-events-none rounded-lg {!isOverlay &&
+			(isDragging.current || isDropping.current)
+				? 'invisible'
+				: ''}"
 			transition:fade={{ duration: 600 }}
 		></div>
 		<div
-			class="agent-gradient pointer-events-none rounded-lg"
+			class="agent-gradient pointer-events-none rounded-lg {!isOverlay &&
+			(isDragging.current || isDropping.current)
+				? 'invisible'
+				: ''}"
 			transition:fade={{ duration: 600 }}
 		></div>
 	{/if}
 	<div
-		class="relative z-[1] rounded-lg border border-border/80 bg-card p-3 text-sm text-foreground transition-colors hover:border-transparent focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none dark:border-border/60 dark:bg-background dark:hover:border-transparent {(isDragging.current ||
+		class="relative z-[1] rounded-lg border border-border/80 bg-card p-3 text-sm text-foreground transition-colors hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none dark:border-border/60 dark:bg-background {(isDragging.current ||
 			isDropping.current) &&
 		!isOverlay
 			? 'invisible'
 			: ''} {isDropTarget.current
 			? 'border-primary/35 ring-2 ring-primary/25 bg-primary/[0.04] dark:border-primary/35 dark:ring-primary/25'
-			: ''} {isOverlay && overlayTilted ? 'drag-tilt-item' : ''}"
+			: ''}"
 		role="button"
 		tabindex={isOverlay ? -1 : 0}
 		data-task-id={task.id}
@@ -119,32 +128,6 @@
 </div>
 
 <style>
-	/* --- Hover shine (all cards) --- */
-	.hover-shine {
-		position: absolute;
-		inset: -1px;
-		overflow: hidden;
-		opacity: 0;
-		transition: opacity 0.08s ease-out;
-	}
-	:global(.group\/item:hover) .hover-shine {
-		opacity: 1;
-	}
-	.hover-shine::before {
-		content: '';
-		position: absolute;
-		inset: 0;
-		background: linear-gradient(
-			135deg,
-			rgba(182, 224, 220, 0.15),
-			rgba(234, 239, 140, 0.1),
-			rgba(253, 193, 158, 0.1),
-			rgba(242, 155, 229, 0.12),
-			rgba(196, 174, 255, 0.15)
-		);
-		filter: blur(8px);
-	}
-
 	/* --- Agent working gradient --- */
 	.agent-gradient,
 	.agent-gradient-glow {

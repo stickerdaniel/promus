@@ -41,6 +41,7 @@ export default defineSchema({
 					v.union(v.literal('message'), v.literal('email'), v.literal('research'))
 				),
 				hasUnreadNotes: v.optional(v.boolean()),
+				agentSpec: v.optional(v.string()),
 				order: v.number(),
 				createdAt: v.number(),
 				updatedAt: v.number()

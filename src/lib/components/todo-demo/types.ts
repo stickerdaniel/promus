@@ -12,6 +12,7 @@ export type TodoItem = {
 	agentDraft?: string;
 	agentDraftType?: AgentDraftType;
 	hasUnreadNotes?: boolean;
+	agentSpec?: string;
 };
 
 export type ColumnId = 'todo' | 'working-on' | 'prepared' | 'done';

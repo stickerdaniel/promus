@@ -35,8 +35,17 @@
 	let isDragging = $state(false);
 	let pendingSaveCount = $state(0);
 	let dragStartSnapshot = $state<KanbanData | null>(null);
-	let selectedTask = $state<TodoItem | null>(null);
+	let selectedTaskId = $state<string | null>(null);
 	let dialogOpen = $state(false);
+
+	let selectedTask: TodoItem | undefined = $derived.by(() => {
+		if (!selectedTaskId) return undefined;
+		for (const colId of columnIds) {
+			const found = items[colId].find((t) => t.id === selectedTaskId);
+			if (found) return found;
+		}
+		return undefined;
+	});
 
 	type SyncEvent = {
 		operation: { source?: { type?: unknown } | null; target?: unknown | null };
@@ -131,7 +140,7 @@
 	}
 
 	function handleTaskClick(task: TodoItem) {
-		selectedTask = { ...task };
+		selectedTaskId = task.id;
 		dialogOpen = true;
 
 		if (task.hasUnreadNotes) {
@@ -214,6 +223,19 @@
 		await persistBoard(nextBoard, rollbackBoard);
 	}
 
+	async function handleBlockAction(taskId: string, threadId: string, action: string) {
+		dialogOpen = false;
+		try {
+			await convexClient.mutation(api.todo.messages.sendMessage, {
+				threadId,
+				prompt: `User action from UI: ${action}`
+			});
+		} catch (error) {
+			console.error('[kanban] Failed to send block action:', error);
+			toast.error($t('todo_demo.save_failed'));
+		}
+	}
+
 	function mockAgentStatus(status: AgentStatus) {
 		if (!items.todo.length) return;
 		const rollbackBoard = cloneBoard(items);
@@ -231,6 +253,151 @@
 		};
 		items = nextBoard;
 		void persistBoard(nextBoard, rollbackBoard);
+	}
+
+	function mockAgentSpec() {
+		if (!items.todo.length) return;
+		const spec = JSON.stringify({
+			root: 'container',
+			elements: {
+				container: {
+					type: 'Stack',
+					props: { direction: 'vertical', gap: 'md' },
+					children: ['heading', 'grid', 'summary']
+				},
+				heading: {
+					type: 'Heading',
+					props: { text: 'Top Picks', level: 'h3' },
+					children: []
+				},
+				grid: {
+					type: 'Grid',
+					props: { columns: '2', gap: 'md' },
+					children: ['card1', 'card2']
+				},
+				card1: {
+					type: 'Card',
+					props: { title: 'Roborock S8 Pro Ultra', description: '$1,399' },
+					children: ['desc1', 'link1']
+				},
+				desc1: {
+					type: 'Text',
+					props: {
+						content: 'Self-emptying, self-washing dock. Best overall for large homes with pets.'
+					},
+					children: []
+				},
+				link1: {
+					type: 'Link',
+					props: { text: 'View on Amazon', href: 'https://amazon.com' },
+					children: []
+				},
+				card2: {
+					type: 'Card',
+					props: { title: 'iRobot Roomba j7+', description: '$599' },
+					children: ['desc2', 'link2']
+				},
+				desc2: {
+					type: 'Text',
+					props: { content: 'Smart obstacle avoidance. Great value pick for apartments.' },
+					children: []
+				},
+				link2: {
+					type: 'Link',
+					props: { text: 'View on Amazon', href: 'https://amazon.com' },
+					children: []
+				},
+				summary: {
+					type: 'Text',
+					props: {
+						content: 'Pick the one you prefer and Coda will handle the order.',
+						muted: true
+					},
+					children: []
+				}
+			},
+			state: {}
+		});
+		const rollbackBoard = cloneBoard(items);
+		const nextBoard = cloneBoard(items);
+		nextBoard.todo[0] = {
+			...nextBoard.todo[0],
+			agentSpec: spec,
+			agentStatus: 'done' as AgentStatus,
+			agentSummary: 'Coda found 2 top robot vacuums. Pick your favorite.',
+			notes:
+				'- Coda researched robot vacuums in your budget\n- Found 2 strong options\n- Pick your preferred model below'
+		};
+		items = nextBoard;
+		void persistBoard(nextBoard, rollbackBoard);
+	}
+
+	function findTaskPosition(taskId: string): { colIdx: number; taskIdx: number } | null {
+		for (let c = 0; c < columnIds.length; c++) {
+			const col = items[columnIds[c]];
+			for (let t = 0; t < col.length; t++) {
+				if (col[t].id === taskId) return { colIdx: c, taskIdx: t };
+			}
+		}
+		return null;
+	}
+
+	function focusTask(colIdx: number, taskIdx: number) {
+		const col = items[columnIds[colIdx]];
+		if (!col?.length) return;
+		const clampedIdx = Math.min(taskIdx, col.length - 1);
+		const task = col[clampedIdx];
+		const el = document.querySelector<HTMLElement>(`[data-task-id="${task.id}"]`);
+		el?.focus();
+	}
+
+	function handleBoardKeydown(e: KeyboardEvent) {
+		if (dialogOpen || isDragging) return;
+
+		const active = document.activeElement;
+		const taskId = active?.getAttribute('data-task-id');
+		if (!taskId) return;
+
+		const pos = findTaskPosition(taskId);
+		if (!pos) return;
+
+		switch (e.key) {
+			case 'ArrowDown': {
+				e.preventDefault();
+				const col = items[columnIds[pos.colIdx]];
+				if (pos.taskIdx < col.length - 1) {
+					focusTask(pos.colIdx, pos.taskIdx + 1);
+				}
+				break;
+			}
+			case 'ArrowUp': {
+				e.preventDefault();
+				if (pos.taskIdx > 0) {
+					focusTask(pos.colIdx, pos.taskIdx - 1);
+				}
+				break;
+			}
+			case 'ArrowRight': {
+				e.preventDefault();
+				for (let c = pos.colIdx + 1; c < columnIds.length; c++) {
+					if (items[columnIds[c]].length > 0) {
+						focusTask(c, pos.taskIdx);
+						break;
+					}
+				}
+				break;
+			}
+			case 'ArrowLeft': {
+				e.preventDefault();
+				for (let c = pos.colIdx - 1; c >= 0; c--) {
+					if (items[columnIds[c]].length > 0) {
+						focusTask(c, pos.taskIdx);
+						break;
+					}
+				}
+				break;
+			}
+		}
 	}
 
 	async function handleDragEnd(event: EndEvent): Promise<void> {
@@ -252,6 +419,8 @@
 		await persistBoard(nextBoard, startBoard);
 	}
 </script>
+
+<svelte:window onkeydown={handleBoardKeydown} />
 
 <div>
 	<DragDropProvider
@@ -351,11 +520,14 @@
 			>
 				Reset
 			</Button>
+			<Button variant="outline" size="sm" class="h-6 text-xs" onclick={mockAgentSpec}>
+				Set UI Spec
+			</Button>
 		</div>
 	{/if}
 </div>
 
-{#if selectedTask}
+{#if selectedTask && dialogOpen}
 	<TodoDetailDialog
 		task={selectedTask}
 		bind:open={dialogOpen}
@@ -363,5 +535,6 @@
 		onDelete={handleTaskDelete}
 		onApprove={handleAgentApprove}
 		onReject={handleAgentReject}
+		onBlockAction={handleBlockAction}
 	/>
 {/if}

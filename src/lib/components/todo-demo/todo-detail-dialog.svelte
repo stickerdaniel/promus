@@ -5,14 +5,16 @@
 	import { Textarea } from '$lib/components/ui/textarea/index.js';
 	import { T, getTranslate } from '@tolgee/svelte';
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
-	import PencilIcon from '@lucide/svelte/icons/pencil';
-	import EyeIcon from '@lucide/svelte/icons/eye';
 	import CheckIcon from '@lucide/svelte/icons/check';
 	import XIcon from '@lucide/svelte/icons/x';
 	import Markdown from '$lib/components/prompt-kit/markdown/Markdown.svelte';
 	import Logo from '$lib/components/icons/logo.svelte';
 	import { Separator } from '$lib/components/ui/separator/index.js';
+	import { cmdOrCtrl } from '$lib/hooks/is-mac.svelte.js';
+	import { tick } from 'svelte';
 	import type { TodoItem } from './types.js';
+	import TaskSpecRenderer from './render/TaskSpecRenderer.svelte';
+	import type { Spec } from '@json-render/core';
 
 	let {
 		task,
@@ -20,7 +22,8 @@
 		onSave,
 		onDelete,
 		onApprove,
-		onReject
+		onReject,
+		onBlockAction
 	}: {
 		task: TodoItem;
 		open: boolean;
@@ -28,7 +31,17 @@
 		onDelete: (id: string) => void;
 		onApprove?: (id: string) => void;
 		onReject?: (id: string, feedback: string) => void;
+		onBlockAction?: (taskId: string, threadId: string, action: string) => void;
 	} = $props();
+
+	let parsedSpec: Spec | null = $derived.by(() => {
+		if (!task.agentSpec) return null;
+		try {
+			return JSON.parse(task.agentSpec) as Spec;
+		} catch {
+			return null;
+		}
+	});
 
 	const { t } = getTranslate();
 
@@ -36,13 +49,30 @@
 	let editNotes = $state('');
 	let editingNotes = $state(false);
 	let rejectFeedback = $state('');
+	let initialTaskId = $state('');
 
+	// Reset editable fields when opening a task (or reopening the same one)
 	$effect(() => {
-		if (open) {
+		if (open && task.id !== initialTaskId) {
+			initialTaskId = task.id;
 			editTitle = task.title;
 			editNotes = task.notes ?? '';
 			editingNotes = false;
 			rejectFeedback = '';
+		}
+		if (!open) {
+			initialTaskId = '';
+		}
+	});
+
+	// Keep notes in sync with live backend updates (agent writes)
+	// but only when user is not actively editing
+	$effect(() => {
+		if (open && !editingNotes) {
+			const liveNotes = task.notes ?? '';
+			if (liveNotes !== editNotes) {
+				editNotes = liveNotes;
+			}
 		}
 	});
 
@@ -60,10 +90,33 @@
 		onDelete(task.id);
 		open = false;
 	}
+
+	function handleDialogKeydown(e: KeyboardEvent) {
+		const mod = e.metaKey || e.ctrlKey;
+		if (!mod) return;
+
+		if (e.key === 's') {
+			e.preventDefault();
+			handleSave();
+		} else if (e.key === 'Enter') {
+			e.preventDefault();
+			handleSave();
+		} else if (e.key === 'e' && editNotes) {
+			e.preventDefault();
+			editingNotes = !editingNotes;
+		}
+	}
+
+	function handleTitleKeydown(e: KeyboardEvent) {
+		if (e.key === 'Enter' && !e.shiftKey) {
+			e.preventDefault();
+			handleSave();
+		}
+	}
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="sm:max-w-md">
+	<Dialog.Content class="sm:max-w-md" onkeydown={handleDialogKeydown}>
 		<Dialog.Header>
 			<Dialog.Title><T keyName="todo_demo.detail.title" /></Dialog.Title>
 			<Dialog.Description><T keyName="todo_demo.detail.description" /></Dialog.Description>
@@ -73,49 +126,106 @@
 				<label for="todo-title" class="text-sm font-medium">
 					<T keyName="todo_demo.detail.task_name" />
 				</label>
-				<Input id="todo-title" bind:value={editTitle} />
+				<Input id="todo-title" bind:value={editTitle} onkeydown={handleTitleKeydown} />
 			</div>
 			<div class="grid gap-2">
-				<div class="flex items-center justify-between">
-					<label for="todo-notes" class="text-sm font-medium">
-						<T keyName="todo_demo.detail.notes" />
-					</label>
-					{#if editNotes}
-						<Button
-							variant="ghost"
-							size="sm"
-							class="h-6 gap-1 px-2 text-xs text-muted-foreground"
-							onclick={() => (editingNotes = !editingNotes)}
-						>
-							{#if editingNotes}
-								<EyeIcon class="size-3" />
-								Preview
-							{:else}
-								<PencilIcon class="size-3" />
-								Edit
-							{/if}
-						</Button>
-					{/if}
-				</div>
+				<label for="todo-notes" class="text-sm font-medium">
+					<T keyName="todo_demo.detail.notes" />
+				</label>
 				{#if editingNotes || !editNotes}
 					<Textarea
 						id="todo-notes"
 						bind:value={editNotes}
 						placeholder={$t('todo_demo.detail.notes_placeholder')}
 						rows={3}
+						onblur={async () => {
+							if (!editNotes) return;
+							editingNotes = false;
+							await tick();
+							// Textarea was removed; browser lost focus target.
+							// Redirect to preview div so tab order continues forward.
+							if (!document.activeElement || document.activeElement === document.body) {
+								document.getElementById('todo-notes-preview')?.focus();
+							}
+						}}
 					/>
 				{:else}
 					<div
+						id="todo-notes-preview"
 						class="max-h-60 overflow-y-auto rounded-md border bg-muted/30 p-3 text-sm"
 						role="button"
 						tabindex="0"
-						ondblclick={() => (editingNotes = true)}
+						onkeydown={async (e) => {
+							if (e.key !== 'Enter') return;
+							e.preventDefault();
+							editingNotes = true;
+							await tick();
+							const el = document.getElementById('todo-notes') as HTMLTextAreaElement | null;
+							if (el) {
+								el.focus();
+								el.selectionStart = el.selectionEnd = el.value.length;
+							}
+						}}
+						ondblclick={async (e) => {
+							const target = e.currentTarget as HTMLElement;
+							const sel = window.getSelection();
+							let rawOffset = editNotes.length;
+
+							if (sel && sel.rangeCount > 0) {
+								const range = sel.getRangeAt(0);
+								const preRange = document.createRange();
+								preRange.selectNodeContents(target);
+								preRange.setEnd(range.startContainer, range.startOffset);
+								const textBefore = preRange.toString();
+
+								let found = false;
+								for (let len = Math.min(30, textBefore.length); len >= 3; len--) {
+									const needle = textBefore.slice(-len);
+									const idx = editNotes.indexOf(needle);
+									if (idx !== -1) {
+										rawOffset = idx + needle.length;
+										found = true;
+										break;
+									}
+								}
+
+								if (!found) {
+									const total = (target.textContent ?? '').length;
+									const ratio = total > 0 ? textBefore.length / total : 1;
+									rawOffset = Math.round(ratio * editNotes.length);
+								}
+							}
+
+							editingNotes = true;
+							await tick();
+							const el = document.getElementById('todo-notes') as HTMLTextAreaElement | null;
+							if (el) {
+								el.focus();
+								el.selectionStart = el.selectionEnd = Math.min(rawOffset, el.value.length);
+							}
+						}}
 					>
 						<Markdown content={editNotes} class="prose-sm" />
 					</div>
 				{/if}
 			</div>
 		</div>
+
+		{#if parsedSpec}
+			<div class="max-h-80 overflow-y-auto rounded-md border bg-muted/30 p-3">
+				<TaskSpecRenderer
+					spec={parsedSpec}
+					onStateChange={(changes) => {
+						if (task.threadId && onBlockAction) {
+							const actionChange = changes.find((c) => c.path.includes('pendingAction'));
+							if (actionChange) {
+								onBlockAction(task.id, task.threadId, String(actionChange.value));
+							}
+						}
+					}}
+				/>
+			</div>
+		{/if}
 
 		{#if task.agentStatus === 'working'}
 			<div class="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">
@@ -170,9 +280,11 @@
 			<div class="flex gap-2">
 				<Button variant="outline" onclick={() => (open = false)}>
 					<T keyName="todo_demo.detail.cancel" />
+					<kbd class="ml-1.5 text-[10px] opacity-60">Esc</kbd>
 				</Button>
 				<Button onclick={handleSave} disabled={!editTitle.trim()}>
 					<T keyName="todo_demo.detail.save" />
+					<kbd class="ml-1.5 text-[10px] opacity-60">{cmdOrCtrl}S</kbd>
 				</Button>
 			</div>
 		</Dialog.Footer>

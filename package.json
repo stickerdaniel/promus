@@ -47,6 +47,7 @@
 		"@dnd-kit/helpers": "^0.3.2",
 		"@dnd-kit/state": "^0.3.2",
 		"@gilhrpenner/convex-files-control": "^0.5.1",
+		"@json-render/core": "^0.11.0",
 		"@mmailaender/convex-better-auth-svelte": "^0.5.0",
 		"@openrouter/ai-sdk-provider": "^1.2.3",
 		"@oslojs/crypto": "^1.0.1",
@@ -83,7 +84,11 @@
 		"svelte-toolbelt": "^0.10.6",
 		"unipile-node-sdk": "^1.9.3",
 		"valibot": "^1.2.0",
-		"vercel": "^50.0.0"
+		"vercel": "^50.0.0",
+		"zod": "^4.3.6"
+	},
+	"overrides": {
+		"zod": "4.3.6"
 	},
 	"devDependencies": {
 		"@dnd-kit-svelte/core": "0.0.11",

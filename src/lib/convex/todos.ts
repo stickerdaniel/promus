@@ -27,7 +27,8 @@ const taskValidator = v.object({
 	agentSummary: v.optional(v.string()),
 	agentDraft: v.optional(v.string()),
 	agentDraftType: agentDraftTypeValidator,
-	hasUnreadNotes: v.optional(v.boolean())
+	hasUnreadNotes: v.optional(v.boolean()),
+	agentSpec: v.optional(v.string())
 });
 
 const boardValidator = v.record(v.string(), v.array(taskValidator));
@@ -46,6 +47,7 @@ type BoardTask = {
 	agentDraft?: string;
 	agentDraftType?: AgentDraftType;
 	hasUnreadNotes?: boolean;
+	agentSpec?: string;
 };
 type Board = Record<ColumnId, BoardTask[]>;
 type StoredTask = {
@@ -59,6 +61,7 @@ type StoredTask = {
 	agentDraft?: string;
 	agentDraftType?: AgentDraftType;
 	hasUnreadNotes?: boolean;
+	agentSpec?: string;
 	columnId: ColumnId;
 	order: number;
 	createdAt: number;
@@ -114,7 +117,8 @@ function toBoard(tasks: StoredTask[]): Board {
 				...(task.agentSummary ? { agentSummary: task.agentSummary } : {}),
 				...(task.agentDraft ? { agentDraft: task.agentDraft } : {}),
 				...(task.agentDraftType ? { agentDraftType: task.agentDraftType } : {}),
-				...(task.hasUnreadNotes ? { hasUnreadNotes: task.hasUnreadNotes } : {})
+				...(task.hasUnreadNotes ? { hasUnreadNotes: task.hasUnreadNotes } : {}),
+				...(task.agentSpec ? { agentSpec: task.agentSpec } : {})
 			}));
 	}
 
@@ -153,6 +157,7 @@ function sanitizeAndFlattenBoard(
 			const agentDraft = rawTask.agentDraft?.trim() || existing?.agentDraft || undefined;
 			const agentDraftType = rawTask.agentDraftType || existing?.agentDraftType || undefined;
 			const hasUnreadNotes = rawTask.hasUnreadNotes ?? existing?.hasUnreadNotes ?? undefined;
+			const agentSpec = rawTask.agentSpec || existing?.agentSpec || undefined;
 			tasks.push({
 				id,
 				title,
@@ -164,6 +169,7 @@ function sanitizeAndFlattenBoard(
 				...(agentDraft ? { agentDraft } : {}),
 				...(agentDraftType ? { agentDraftType } : {}),
 				...(hasUnreadNotes ? { hasUnreadNotes } : {}),
+				...(agentSpec ? { agentSpec } : {}),
 				columnId,
 				order: index,
 				createdAt: existing?.createdAt ?? now,
@@ -345,6 +351,13 @@ export const updateTaskNotesInternal = internalMutation({
 	args: { userId: v.string(), taskId: v.string(), notes: v.string() },
 	handler: async (ctx, args) => {
 		await patchTask(ctx, args, { notes: args.notes, hasUnreadNotes: true });
+	}
+});
+
+export const updateTaskSpecInternal = internalMutation({
+	args: { userId: v.string(), taskId: v.string(), agentSpec: v.string() },
+	handler: async (ctx, args) => {
+		await patchTask(ctx, args, { agentSpec: args.agentSpec, hasUnreadNotes: true });
 	}
 });
 

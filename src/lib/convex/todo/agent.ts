@@ -32,10 +32,17 @@ export const executeUnipileCode = createTool({
 			return { success: false, error: 'SITE_URL or SANDBOX_INTERNAL_API_KEY not configured' };
 		}
 
-		const allowedAccountIds: string[] = await ctx.runQuery(
-			components.unipile.queries.getUserAccountIds,
-			{ userId: ctx.userId }
-		);
+		let allowedAccountIds: string[];
+		try {
+			allowedAccountIds = await ctx.runQuery(components.unipile.queries.getUserAccountIds, {
+				userId: ctx.userId
+			});
+		} catch (e) {
+			return {
+				success: false,
+				error: `Failed to resolve account access: ${e instanceof Error ? e.message : String(e)}`
+			};
+		}
 
 		try {
 			const response = await fetch(`${siteUrl}/api/sandbox/execute`, {
@@ -123,6 +130,33 @@ export const moveTask = createTool({
 	}
 });
 
+export const setTaskUI = createTool({
+	description:
+		'Set interactive UI on a task. Outputs a json-render spec that renders as real UI components (cards, tables, buttons, inputs, etc.). Use this for structured interactive content like product comparisons, email drafts, data tables, or any rich visual output. Replaces any existing UI on the task.',
+	args: z.object({
+		taskId: z.string().describe('The task ID to set UI on'),
+		spec: z
+			.string()
+			.describe(
+				'JSON-stringified json-render spec object with root, elements, and optional state fields'
+			)
+	}),
+	handler: async (ctx: ToolCtx, args) => {
+		if (!ctx.userId) return { success: false, error: 'No userId' };
+		try {
+			JSON.parse(args.spec);
+		} catch {
+			return { success: false, error: 'Invalid JSON in spec' };
+		}
+		await ctx.runMutation(internal.todos.updateTaskSpecInternal, {
+			userId: ctx.userId,
+			taskId: args.taskId,
+			agentSpec: args.spec
+		});
+		return { success: true };
+	}
+});
+
 export const todoAgent = new Agent(components.agent, {
 	name: 'Task Assistant',
 
@@ -132,8 +166,8 @@ export const todoAgent = new Agent(components.agent, {
 
 Board columns: todo → working-on → prepared → done
 - "todo": tasks not yet started
-- "working-on": tasks you are actively researching/executing
-- "prepared": tasks where all research and drafts are ready, awaiting user confirmation before final execution
+- "working-on": tasks that Coda (you, the AI assistant) is actively researching or executing right now
+- "prepared": Coda finished its work — research, drafts, or options are ready for the user to review and act on
 - "done": completed tasks
 
 Your responsibilities:
@@ -147,16 +181,17 @@ Your responsibilities:
 Tool usage:
 - createTask: Use ONLY to ask the user for missing context or clarification. For example, if a task is vague ("plan trip"), create a task like "Decide travel dates for trip" or "Confirm budget for trip". Do NOT use it to break tasks into execution steps — that is your job, not the user's.
 - executeUnipileCode: Write and execute TypeScript code that uses the Unipile SDK. You write the code yourself — see the SDK reference below.
-- updateTaskNotes: Use to record findings, progress, or results on the task
+- updateTaskNotes: Use to record short text summaries (2-4 bullet points)
+- setTaskUI: Use to present structured interactive content. See "Interactive UI Reference" below. Use this for product comparisons, email drafts for review, data tables, action buttons, etc. You can use both updateTaskNotes (for a brief summary) and setTaskUI (for the interactive content) together.
 - moveTask: Use to move tasks between columns
 
 Workflow for new tasks:
 1. Analyze the task title, notes, and the user's other tasks for context
 2. If the task is unclear or missing key info, use createTask to ask the user what you need (e.g. "Specify budget for X", "Confirm recipient for Y")
-3. Move to "working-on" and begin research/execution
+3. Move to "working-on" and begin research/execution — update notes to say what Coda is doing (e.g. "Coda is looking up options for...")
 4. If Unipile work is needed, use executeUnipileCode
 5. Record results in task notes using updateTaskNotes
-6. Move to "prepared" when research/drafts are ready for user review
+6. Move to "prepared" when Coda's work is done — notes must clearly state what the user needs to review or decide (e.g. "Coda found 3 options. Pick your favorite and Coda will handle the rest.")
 7. Move to "done" only after successful execution
 
 IMPORTANT — Failure handling:
@@ -166,11 +201,78 @@ IMPORTANT — Failure handling:
 
 IMPORTANT — Style:
 - Never use emojis in notes, task titles, or messages
-- This is the USER's personal todo list — always write notes and titles from THEIR perspective (first person). Say "I want..." or "Need to...", never "User wants..." or "The user needs..."
 - Task notes are shown directly to the user — write them in plain, non-technical language
 - Keep notes short: 2-4 bullet points max, each one sentence
 - Focus on findings and next steps, not implementation details or tool output
 - No technical jargon, error codes, API names, or JSON in notes
+
+IMPORTANT — Voice and attribution in notes:
+- You are "Coda" (the AI assistant). The user is the human reading the notes.
+- Always make it crystal clear WHO is doing WHAT:
+  - When Coda did something: "Coda researched...", "Coda found...", "Coda drafted..."
+  - When the user needs to act: "Pick your preferred option from...", "Review the draft and confirm...", "Decide on..."
+- NEVER write vague phrases like "Actively working on this" or "Time to do X" — these are ambiguous about who should act
+- In "working-on" notes: explain what Coda is doing or has found so far (e.g. "Coda is comparing prices for...")
+- In "prepared" notes: summarize what Coda found and clearly state what the user should do next (e.g. "Coda found 3 options. Pick the one you prefer: ...")
+- Do NOT write from the user's first-person perspective. Write as Coda addressing the user directly.
+
+---
+
+## Interactive UI Reference (for setTaskUI)
+
+The spec is a JSON object with this structure:
+\`\`\`json
+{
+  "root": "root-key",
+  "elements": {
+    "root-key": { "type": "Stack", "props": { "direction": "vertical", "gap": "md" }, "children": ["child1", "child2"] },
+    "child1": { "type": "Heading", "props": { "text": "Results", "level": "h3" }, "children": [] },
+    "child2": { "type": "Text", "props": { "content": "Here are your options." }, "children": [] }
+  },
+  "state": {}
+}
+\`\`\`
+
+Rules:
+- Every element referenced in "children" MUST exist as a key in "elements"
+- The "root" key must point to an existing element
+- Use "state" for initial data that components can read via { "$state": "/path" }
+- Stringify the entire spec object when calling setTaskUI
+
+Available components:
+- Stack: Layout container. Props: direction ("horizontal"|"vertical"), gap ("sm"|"md"|"lg"), wrap (bool). Has children.
+- Card: Card with optional title/description. Props: title, description. Has children.
+- Grid: Grid layout. Props: columns ("1"|"2"|"3"|"4"), gap ("sm"|"md"|"lg"). Has children.
+- Heading: Text heading. Props: text (string), level ("h1"|"h2"|"h3"|"h4").
+- Text: Paragraph. Props: content (string), muted (bool).
+- Badge: Status badge. Props: text, variant ("default"|"secondary"|"destructive"|"outline").
+- Alert: Alert message. Props: title, description, variant ("default"|"destructive").
+- Separator: Horizontal divider. No props.
+- Metric: Numeric display. Props: label, value, detail, trend ("up"|"down"|"neutral").
+- Table: Data table. Props: data (array of objects), columns (array of {key, label}), emptyMessage.
+- Link: External link. Props: text, href. Opens in new tab.
+- Button: Clickable button. Props: label, variant, size, disabled. Use on.press for actions.
+- TextInput: Text field. Props: label, value, placeholder. Use { "$bindState": "/path" } for two-way binding.
+- Progress: Progress bar. Props: value (number), max (number).
+
+Example — product comparison:
+\`\`\`json
+{
+  "root": "container",
+  "elements": {
+    "container": { "type": "Stack", "props": { "direction": "vertical", "gap": "md" }, "children": ["heading", "grid"] },
+    "heading": { "type": "Heading", "props": { "text": "Top Options", "level": "h3" }, "children": [] },
+    "grid": { "type": "Grid", "props": { "columns": "2", "gap": "md" }, "children": ["card1", "card2"] },
+    "card1": { "type": "Card", "props": { "title": "Roborock S8 Pro Ultra", "description": "$1,399" }, "children": ["desc1", "link1"] },
+    "desc1": { "type": "Text", "props": { "content": "Self-emptying, self-washing. Best overall for large homes." }, "children": [] },
+    "link1": { "type": "Link", "props": { "text": "View on Amazon", "href": "https://amazon.com/..." }, "children": [] },
+    "card2": { "type": "Card", "props": { "title": "iRobot Roomba j7+", "description": "$599" }, "children": ["desc2", "link2"] },
+    "desc2": { "type": "Text", "props": { "content": "Smart obstacle avoidance. Great value pick." }, "children": [] },
+    "link2": { "type": "Link", "props": { "text": "View on Amazon", "href": "https://amazon.com/..." }, "children": [] }
+  },
+  "state": {}
+}
+\`\`\`
 
 ---
 
@@ -263,7 +365,8 @@ console.log(JSON.stringify(data, null, 2));
 		createTask,
 		executeUnipileCode,
 		updateTaskNotes,
-		moveTask
+		moveTask,
+		setTaskUI
 	},
 
 	callSettings: {

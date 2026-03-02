@@ -266,7 +266,7 @@ export const saveBoard = authedMutation({
 							threadId: oldTask.threadId,
 							taskId: task.id,
 							taskTitle: task.title,
-							prompt: `User moved task "${task.title}" from "${oldTask.columnId}" to "${task.columnId}". Task ID: ${task.id}. React accordingly — update notes if needed.`
+							prompt: `User moved your task "${task.title}" from "${oldTask.columnId}" to "${task.columnId}". React accordingly — update your notes if needed.`
 						});
 					} else if (notesChanged) {
 						await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForTaskUpdate, {
@@ -274,7 +274,7 @@ export const saveBoard = authedMutation({
 							threadId: oldTask.threadId,
 							taskId: task.id,
 							taskTitle: task.title,
-							prompt: `User updated notes on task "${task.title}". Task ID: ${task.id}. New notes: ${task.notes ?? '(cleared)'}. Acknowledge and adjust your plan if needed.`
+							prompt: `User updated notes on your task "${task.title}". New notes: ${task.notes ?? '(cleared)'}. Acknowledge and adjust your plan if needed.`
 						});
 					}
 				}
@@ -433,6 +433,53 @@ export const getBoardInternal = internalQuery({
 
 		if (!board) return emptyBoard();
 		return toBoard(board.tasks as StoredTask[]);
+	}
+});
+
+export const getTaskIdByThreadId = internalQuery({
+	args: { userId: v.string(), threadId: v.string() },
+	returns: v.union(v.string(), v.null()),
+	handler: async (ctx, args) => {
+		const board = await ctx.db
+			.query('todoBoards')
+			.withIndex('by_user', (q: any) => q.eq('userId', args.userId))
+			.first();
+		if (!board) return null;
+		const task = (board.tasks as StoredTask[]).find((t) => t.threadId === args.threadId);
+		return task?.id ?? null;
+	}
+});
+
+export const getTaskThreadInfo = internalQuery({
+	args: { userId: v.string(), taskId: v.string() },
+	handler: async (ctx, args) => {
+		const board = await ctx.db
+			.query('todoBoards')
+			.withIndex('by_user', (q: any) => q.eq('userId', args.userId))
+			.first();
+		if (!board) return null;
+		const task = (board.tasks as StoredTask[]).find((t) => t.id === args.taskId);
+		if (!task) return null;
+		return {
+			threadId: task.threadId,
+			title: task.title,
+			notes: task.notes,
+			columnId: task.columnId
+		};
+	}
+});
+
+export const getTaskAgentStatus = internalQuery({
+	args: { userId: v.string(), taskId: v.string() },
+	returns: v.union(v.string(), v.null()),
+	handler: async (ctx, args) => {
+		const board = await ctx.db
+			.query('todoBoards')
+			.withIndex('by_user', (q: any) => q.eq('userId', args.userId))
+			.first();
+		if (!board) return null;
+		const task = (board.tasks as StoredTask[]).find((t) => t.id === args.taskId);
+		return task?.agentStatus ?? null;
 	}
 });
 

@@ -57,6 +57,7 @@ import type * as support_types from "../support/types.js";
 import type * as tests from "../tests.js";
 import type * as todo_agent from "../todo/agent.js";
 import type * as todo_messages from "../todo/messages.js";
+import type * as todo_notifications from "../todo/notifications.js";
 import type * as todo_threads from "../todo/threads.js";
 import type * as todos from "../todos.js";
 import type * as unipile from "../unipile.js";
@@ -120,6 +121,7 @@ declare const fullApi: ApiFromModules<{
   tests: typeof tests;
   "todo/agent": typeof todo_agent;
   "todo/messages": typeof todo_messages;
+  "todo/notifications": typeof todo_notifications;
   "todo/threads": typeof todo_threads;
   todos: typeof todos;
   unipile: typeof unipile;

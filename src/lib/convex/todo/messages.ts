@@ -84,6 +84,38 @@ export const listMessages = query({
 });
 
 /**
+ * Build the board context lines showing other tasks (read-only awareness).
+ */
+async function buildBoardContext(
+	ctx: { runQuery: (fn: any, args: any) => Promise<any> },
+	userId: string,
+	excludeTaskId: string
+): Promise<{ otherTasks: string[]; accountLine: string }> {
+	const userAccountIds: string[] = await ctx.runQuery(
+		components.unipile.queries.getUserAccountIds,
+		{ userId }
+	);
+
+	const board = await ctx.runQuery(internal.todos.getBoardInternal, { userId });
+
+	const otherTasks: string[] = [];
+	for (const [col, tasks] of Object.entries(board)) {
+		for (const t of tasks as { id: string; title: string }[]) {
+			if (t.id !== excludeTaskId) {
+				otherTasks.push(`  - [${col}] ${t.title} (id: ${t.id})`);
+			}
+		}
+	}
+
+	const accountLine =
+		userAccountIds.length > 0
+			? `Your Unipile account IDs: ${userAccountIds.join(', ')}`
+			: 'No Unipile accounts connected. If this task requires messaging or email, create a clarifying sub-task asking the user to connect an account.';
+
+	return { otherTasks, accountLine };
+}
+
+/**
  * Auto-triggered when a new task is created on the Kanban board.
  * Creates a thread, runs the agent with tools, and updates the task with results.
  */
@@ -93,7 +125,15 @@ export const triggerAgentForNewTask = internalAction({
 		taskId: v.string(),
 		taskTitle: v.string(),
 		taskNotes: v.optional(v.string()),
-		taskColumn: v.string()
+		taskColumn: v.string(),
+		parentNotification: v.optional(v.string()),
+		incomingNotification: v.optional(
+			v.object({
+				fromTaskId: v.string(),
+				message: v.string(),
+				priority: v.string()
+			})
+		)
 	},
 	handler: async (ctx, args) => {
 		// 0. Mark task as working
@@ -116,55 +156,57 @@ export const triggerAgentForNewTask = internalAction({
 			threadId
 		});
 
-		// 3. Fetch user's Unipile account IDs
-		const userAccountIds: string[] = await ctx.runQuery(
-			components.unipile.queries.getUserAccountIds,
-			{ userId: args.userId }
-		);
+		// 3. Build board context
+		const { otherTasks, accountLine } = await buildBoardContext(ctx, args.userId, args.taskId);
 
-		// 4. Fetch full board for context
-		const board = await ctx.runQuery(internal.todos.getBoardInternal, {
-			userId: args.userId
-		});
-
-		const otherTasks: string[] = [];
-		for (const [col, tasks] of Object.entries(board)) {
-			for (const t of tasks as { id: string; title: string }[]) {
-				if (t.id !== args.taskId) {
-					otherTasks.push(`  - [${col}] ${t.title} (id: ${t.id})`);
-				}
-			}
-		}
-
-		// 5. Build prompt from task context
-		const accountLine =
-			userAccountIds.length > 0
-				? `Your Unipile account IDs: ${userAccountIds.join(', ')}`
-				: 'No Unipile accounts connected. If this task requires messaging or email, create a clarifying sub-task asking the user to connect an account.';
-
-		const prompt = [
-			`New task: "${args.taskTitle}"`,
-			`Task ID: ${args.taskId}`,
+		// 4. Build prompt
+		const promptParts: (string | null)[] = [
+			`You are now the dedicated agent for this task: "${args.taskTitle}"`,
 			`Current column: ${args.taskColumn}`,
 			args.taskNotes ? `Notes: ${args.taskNotes}` : null,
-			'',
+			''
+		];
+
+		// Include parent notification (from createTask)
+		if (args.parentNotification) {
+			promptParts.push(
+				'Context from the agent that created this task:',
+				args.parentNotification,
+				''
+			);
+		}
+
+		// Include incoming notification (from notifyTask to threadless task)
+		if (args.incomingNotification) {
+			promptParts.push(
+				'Incoming notification from another task:',
+				`From task: ${args.incomingNotification.fromTaskId}`,
+				`Priority: ${args.incomingNotification.priority}`,
+				`Message: ${args.incomingNotification.message}`,
+				''
+			);
+		}
+
+		promptParts.push(
 			accountLine,
 			'',
-			otherTasks.length > 0 ? `Other tasks on the board:\n${otherTasks.join('\n')}` : null,
+			otherTasks.length > 0
+				? `Other tasks on the board (for awareness — you can notify them but NOT modify them):\n${otherTasks.join('\n')}`
+				: null,
 			'',
-			'Analyze this task and take appropriate action. If it is vague or missing key details, use createTask to ask the user for the missing info. If it involves Unipile operations, write TypeScript code and use executeUnipileCode. Update task notes with your findings.'
-		]
-			.filter(Boolean)
-			.join('\n');
+			'Analyze this task and take appropriate action. If it is vague or missing key details, use createTask to ask the user for the missing info. If it involves Unipile operations, write TypeScript code and use executeUnipileCode. Update your task notes with your findings using updateMyNotes.'
+		);
 
-		// 6. Save the prompt as a user message
+		const prompt = promptParts.filter(Boolean).join('\n');
+
+		// 5. Save the prompt as a user message
 		const { messageId } = await todoAgent.saveMessage(ctx, {
 			threadId,
 			prompt,
 			skipEmbeddings: true
 		});
 
-		// 7. Run the agent with streaming
+		// 6. Run the agent with streaming
 		const result = await todoAgent.streamText(
 			ctx,
 			{ threadId, userId: args.userId },
@@ -179,7 +221,7 @@ export const triggerAgentForNewTask = internalAction({
 
 		const response = await result.consumeStream();
 
-		// 8. Update task with agent summary
+		// 7. Update task with agent summary
 		const summary =
 			typeof response === 'object' && response !== null && 'text' in response
 				? String((response as { text: string }).text)
@@ -191,7 +233,7 @@ export const triggerAgentForNewTask = internalAction({
 			agentLogs: summary.slice(0, 2000)
 		});
 
-		// 9. Mark task as done with summary
+		// 8. Mark task as done with summary
 		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
 			userId: args.userId,
 			taskId: args.taskId,
@@ -221,49 +263,29 @@ export const triggerAgentForTaskUpdate = internalAction({
 			agentStatus: 'working'
 		});
 
-		// 1. Fetch user's Unipile account IDs
-		const userAccountIds: string[] = await ctx.runQuery(
-			components.unipile.queries.getUserAccountIds,
-			{ userId: args.userId }
-		);
-
-		// 2. Fetch board for context
-		const board = await ctx.runQuery(internal.todos.getBoardInternal, {
-			userId: args.userId
-		});
-
-		const otherTasks: string[] = [];
-		for (const [col, tasks] of Object.entries(board)) {
-			for (const t of tasks as { id: string; title: string }[]) {
-				if (t.id !== args.taskId) {
-					otherTasks.push(`  - [${col}] ${t.title} (id: ${t.id})`);
-				}
-			}
-		}
-
-		const accountLine =
-			userAccountIds.length > 0
-				? `Your Unipile account IDs: ${userAccountIds.join(', ')}`
-				: 'No Unipile accounts connected.';
+		// 1. Build board context
+		const { otherTasks, accountLine } = await buildBoardContext(ctx, args.userId, args.taskId);
 
 		const fullPrompt = [
 			args.prompt,
 			'',
 			accountLine,
 			'',
-			otherTasks.length > 0 ? `Other tasks on the board:\n${otherTasks.join('\n')}` : null
+			otherTasks.length > 0
+				? `Other tasks on the board (for awareness — you can notify them but NOT modify them):\n${otherTasks.join('\n')}`
+				: null
 		]
 			.filter(Boolean)
 			.join('\n');
 
-		// 3. Save user message to existing thread
+		// 2. Save user message to existing thread
 		const { messageId } = await todoAgent.saveMessage(ctx, {
 			threadId: args.threadId,
 			prompt: fullPrompt,
 			skipEmbeddings: true
 		});
 
-		// 4. Run agent
+		// 3. Run agent
 		const result = await todoAgent.streamText(
 			ctx,
 			{ threadId: args.threadId, userId: args.userId },
@@ -278,7 +300,7 @@ export const triggerAgentForTaskUpdate = internalAction({
 
 		const response = await result.consumeStream();
 
-		// 5. Update agent logs
+		// 4. Update agent logs
 		const summary =
 			typeof response === 'object' && response !== null && 'text' in response
 				? String((response as { text: string }).text)
@@ -290,7 +312,140 @@ export const triggerAgentForTaskUpdate = internalAction({
 			agentLogs: summary.slice(0, 2000)
 		});
 
-		// 6. Mark task as done
+		// 5. Mark task as done
+		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
+			userId: args.userId,
+			taskId: args.taskId,
+			agentStatus: 'done',
+			agentSummary: summary.slice(0, 200)
+		});
+	}
+});
+
+/**
+ * Triggered when another task's agent sends a notification to this task.
+ * Wakes the receiving agent to process the notification and decide what to do.
+ */
+export const triggerAgentForNotification = internalAction({
+	args: {
+		userId: v.string(),
+		threadId: v.string(),
+		taskId: v.string(),
+		taskTitle: v.string(),
+		fromTaskId: v.string(),
+		message: v.string(),
+		priority: v.string()
+	},
+	handler: async (ctx, args) => {
+		// 0. Check if agent is already working on this task
+		const currentStatus = await ctx.runQuery(internal.todos.getTaskAgentStatus, {
+			userId: args.userId,
+			taskId: args.taskId
+		});
+
+		if (currentStatus === 'working') {
+			// Agent is busy — queue notification for later delivery
+			await ctx.runMutation(internal.todo.notifications.createNotification, {
+				userId: args.userId,
+				fromTaskId: args.fromTaskId,
+				toTaskId: args.taskId,
+				message: args.message,
+				priority: args.priority as 'low' | 'normal' | 'high',
+				depth: 0
+			});
+			return;
+		}
+
+		// 1. Mark task as working
+		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
+			userId: args.userId,
+			taskId: args.taskId,
+			agentStatus: 'working'
+		});
+
+		// 2. Fetch any queued pending notifications
+		const pendingNotifications = await ctx.runQuery(
+			internal.todo.notifications.getPendingNotifications,
+			{ userId: args.userId, taskId: args.taskId }
+		);
+
+		// 3. Build notification prompt
+		const allNotifications = [
+			{ from: args.fromTaskId, message: args.message, priority: args.priority },
+			...pendingNotifications.map(
+				(n: { fromTaskId: string; message: string; priority: string }) => ({
+					from: n.fromTaskId,
+					message: n.message,
+					priority: n.priority
+				})
+			)
+		];
+
+		const notifLines = allNotifications.map(
+			(n) => `  [${n.priority.toUpperCase()}] From task ${n.from}: ${n.message}`
+		);
+
+		// 4. Build board context
+		const { otherTasks, accountLine } = await buildBoardContext(ctx, args.userId, args.taskId);
+
+		const prompt = [
+			`Notification received for your task: "${args.taskTitle}"`,
+			'',
+			'Incoming notification(s):',
+			...notifLines,
+			'',
+			'Review these notifications and decide if your task needs updating.',
+			'You may update your own notes, move your task, or take no action if irrelevant.',
+			'If you need to notify other tasks in response, use notifyTask.',
+			'',
+			accountLine,
+			'',
+			otherTasks.length > 0
+				? `Other tasks on the board (for awareness only):\n${otherTasks.join('\n')}`
+				: null
+		]
+			.filter(Boolean)
+			.join('\n');
+
+		// 5. Save prompt and run agent
+		const { messageId } = await todoAgent.saveMessage(ctx, {
+			threadId: args.threadId,
+			prompt,
+			skipEmbeddings: true
+		});
+
+		const result = await todoAgent.streamText(
+			ctx,
+			{ threadId: args.threadId, userId: args.userId },
+			{ promptMessageId: messageId },
+			{
+				saveStreamDeltas: {
+					chunking: 'line',
+					throttleMs: 100
+				}
+			}
+		);
+
+		const response = await result.consumeStream();
+
+		// 6. Clear pending notifications
+		await ctx.runMutation(internal.todo.notifications.clearPendingNotifications, {
+			userId: args.userId,
+			taskId: args.taskId
+		});
+
+		// 7. Update agent logs and status
+		const summary =
+			typeof response === 'object' && response !== null && 'text' in response
+				? String((response as { text: string }).text)
+				: 'Agent processed notification.';
+
+		await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
+			userId: args.userId,
+			taskId: args.taskId,
+			agentLogs: summary.slice(0, 2000)
+		});
+
 		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
 			userId: args.userId,
 			taskId: args.taskId,

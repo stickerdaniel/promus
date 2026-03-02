@@ -51,6 +51,22 @@ export default defineSchema({
 		updatedAt: v.number()
 	}).index('by_user', ['userId']),
 
+	// Inter-agent notification queue — enables per-task agents to communicate
+	// When agent A's work affects task B, A sends a notification that wakes B's agent
+	taskNotifications: defineTable({
+		userId: v.string(),
+		fromTaskId: v.string(),
+		toTaskId: v.string(),
+		message: v.string(),
+		priority: v.union(v.literal('low'), v.literal('normal'), v.literal('high')),
+		status: v.union(v.literal('pending'), v.literal('delivered'), v.literal('expired')),
+		depth: v.number(), // Notification chain depth (max 3 hops)
+		createdAt: v.number(),
+		deliveredAt: v.optional(v.number())
+	})
+		.index('by_user_target_status', ['userId', 'toTaskId', 'status'])
+		.index('by_user_source', ['userId', 'fromTaskId']),
+
 	// Email event tracking - stores webhook events from Resend
 	emailEvents: defineTable({
 		emailId: v.string(), // Resend email ID

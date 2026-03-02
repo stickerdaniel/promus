@@ -142,11 +142,7 @@
 							if (!editNotes) return;
 							editingNotes = false;
 							await tick();
-							// Textarea was removed; browser lost focus target.
-							// Redirect to preview div so tab order continues forward.
-							if (!document.activeElement || document.activeElement === document.body) {
-								document.getElementById('todo-notes-preview')?.focus();
-							}
+							document.getElementById('todo-notes-preview')?.focus();
 						}}
 					/>
 				{:else}

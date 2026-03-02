@@ -5,10 +5,21 @@ import { getTaskLanguageModel } from '../support/llmProvider';
 import type { ToolCtx } from '@convex-dev/agent';
 
 const MAX_RESULT = 4096;
+const MAX_NOTIFICATIONS_PER_MINUTE = 5;
+const MAX_NOTIFICATION_DEPTH = 3;
 
 function truncate(str: string, max: number): string {
 	if (str.length <= max) return str;
 	return str.slice(0, max) + '\n\n[truncated]';
+}
+
+/** Resolve the task ID that this agent owns, using the threadId from context. */
+async function resolveOwnTaskId(ctx: ToolCtx): Promise<string | null> {
+	if (!ctx.userId || !ctx.threadId) return null;
+	return await ctx.runQuery(internal.todos.getTaskIdByThreadId, {
+		userId: ctx.userId,
+		threadId: ctx.threadId
+	});
 }
 
 export const executeUnipileCode = createTool({
@@ -75,17 +86,18 @@ export const executeUnipileCode = createTool({
 	}
 });
 
-export const updateTaskNotes = createTool({
-	description: 'Add or update notes on a task. Include the taskId from your system prompt.',
+export const updateMyNotes = createTool({
+	description:
+		'Update notes on YOUR task (the task you are the dedicated agent for). Use for short text summaries (2-4 bullet points).',
 	args: z.object({
-		taskId: z.string().describe('The task ID to update'),
-		notes: z.string().describe('Notes content to set on the task')
+		notes: z.string().describe('Notes content to set on your task')
 	}),
 	handler: async (ctx: ToolCtx, args) => {
-		if (!ctx.userId) return { success: false, error: 'No userId' };
+		const taskId = await resolveOwnTaskId(ctx);
+		if (!taskId) return { success: false, error: 'Could not resolve own task' };
 		await ctx.runMutation(internal.todos.updateTaskNotesInternal, {
-			userId: ctx.userId,
-			taskId: args.taskId,
+			userId: ctx.userId!,
+			taskId,
 			notes: args.notes
 		});
 		return { success: true };
@@ -94,10 +106,16 @@ export const updateTaskNotes = createTool({
 
 export const createTask = createTool({
 	description:
-		'Create a new follow-up task, sub-task, or clarifying question as a todo on the board.',
+		'Create a new sub-task or clarifying question. The new task gets its own dedicated agent that starts working on it immediately. Use notificationMessage to give the new agent context about what you need.',
 	args: z.object({
 		title: z.string().describe('Title for the new task'),
-		notes: z.string().optional().describe('Optional notes or context for the task')
+		notes: z.string().optional().describe('Optional notes or context for the task'),
+		notificationMessage: z
+			.string()
+			.optional()
+			.describe(
+				'Optional message to the new task agent explaining what you need from it and why you created it'
+			)
 	}),
 	handler: async (ctx: ToolCtx, args) => {
 		if (!ctx.userId) return { success: false as const, error: 'No userId' };
@@ -106,35 +124,43 @@ export const createTask = createTool({
 			title: args.title,
 			notes: args.notes
 		});
+		// Auto-trigger the new task's agent
+		await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNewTask, {
+			userId: ctx.userId,
+			taskId,
+			taskTitle: args.title,
+			taskNotes: args.notes,
+			taskColumn: 'todo',
+			parentNotification: args.notificationMessage
+		});
 		return { success: true as const, taskId };
 	}
 });
 
-export const moveTask = createTool({
+export const moveMyTask = createTool({
 	description:
-		'Move a task to a different column (todo, working-on, prepared, done). Include the taskId from your system prompt.',
+		'Move YOUR task to a different column (todo, working-on, prepared, done). You can only move your own task.',
 	args: z.object({
-		taskId: z.string().describe('The task ID to move'),
 		columnId: z
 			.enum(['todo', 'working-on', 'prepared', 'done'])
-			.describe('Target column to move the task to')
+			.describe('Target column to move your task to')
 	}),
 	handler: async (ctx: ToolCtx, args) => {
-		if (!ctx.userId) return { success: false, error: 'No userId' };
+		const taskId = await resolveOwnTaskId(ctx);
+		if (!taskId) return { success: false, error: 'Could not resolve own task' };
 		await ctx.runMutation(internal.todos.moveTaskInternal, {
-			userId: ctx.userId,
-			taskId: args.taskId,
+			userId: ctx.userId!,
+			taskId,
 			columnId: args.columnId
 		});
 		return { success: true };
 	}
 });
 
-export const setTaskUI = createTool({
+export const setMyTaskUI = createTool({
 	description:
-		'Set interactive UI on a task. Outputs a json-render spec that renders as real UI components (cards, tables, buttons, inputs, etc.). Use this for structured interactive content like product comparisons, email drafts, data tables, or any rich visual output. Replaces any existing UI on the task.',
+		'Set interactive UI on YOUR task. Outputs a json-render spec that renders as real UI components (cards, tables, buttons, inputs, etc.). Use for structured interactive content like product comparisons, email drafts, data tables, or any rich visual output. Replaces any existing UI on the task.',
 	args: z.object({
-		taskId: z.string().describe('The task ID to set UI on'),
 		spec: z
 			.string()
 			.describe(
@@ -142,18 +168,119 @@ export const setTaskUI = createTool({
 			)
 	}),
 	handler: async (ctx: ToolCtx, args) => {
-		if (!ctx.userId) return { success: false, error: 'No userId' };
+		const taskId = await resolveOwnTaskId(ctx);
+		if (!taskId) return { success: false, error: 'Could not resolve own task' };
 		try {
 			JSON.parse(args.spec);
 		} catch {
 			return { success: false, error: 'Invalid JSON in spec' };
 		}
 		await ctx.runMutation(internal.todos.updateTaskSpecInternal, {
-			userId: ctx.userId,
-			taskId: args.taskId,
+			userId: ctx.userId!,
+			taskId,
 			agentSpec: args.spec
 		});
 		return { success: true };
+	}
+});
+
+export const notifyTask = createTool({
+	description: `Send a notification to another task's agent. Use this when your work affects or is relevant to another task. The other task's agent will wake up, read your message, and independently decide what to do. You CANNOT modify other tasks directly — you can only notify them. Include enough context so the receiving agent can act on its own.`,
+	args: z.object({
+		taskId: z.string().describe('The ID of the task to notify'),
+		message: z
+			.string()
+			.describe(
+				'The notification message. Be specific about what happened and what the receiving agent might want to do.'
+			),
+		priority: z
+			.enum(['low', 'normal', 'high'])
+			.default('normal')
+			.describe('Notification priority. Use "high" only for blocking issues.')
+	}),
+	handler: async (ctx: ToolCtx, args) => {
+		if (!ctx.userId || !ctx.threadId) return { success: false, error: 'Missing context' };
+
+		// Resolve sender's taskId
+		const senderTaskId = await resolveOwnTaskId(ctx);
+
+		// Rate limit: max 5 notifications per minute per sender
+		if (senderTaskId) {
+			const recentCount: number = await ctx.runQuery(
+				internal.todo.notifications.countRecentNotificationsFrom,
+				{ userId: ctx.userId, fromTaskId: senderTaskId, sinceMs: 60_000 }
+			);
+			if (recentCount >= MAX_NOTIFICATIONS_PER_MINUTE) {
+				return {
+					success: false,
+					error: 'Rate limit: too many notifications sent recently. Wait before notifying again.'
+				};
+			}
+		}
+
+		// Look up the target task
+		const targetInfo = await ctx.runQuery(internal.todos.getTaskThreadInfo, {
+			userId: ctx.userId,
+			taskId: args.taskId
+		});
+		if (!targetInfo) {
+			return { success: false, error: `Task ${args.taskId} not found` };
+		}
+
+		// Determine notification depth from any pending notifications on sender's task
+		const senderDepth: number = senderTaskId
+			? await ctx.runQuery(internal.todo.notifications.getMaxDepthForTask, {
+					userId: ctx.userId,
+					taskId: senderTaskId
+				})
+			: 0;
+		const newDepth = senderDepth + 1;
+
+		if (newDepth > MAX_NOTIFICATION_DEPTH) {
+			return {
+				success: false,
+				error: `Notification chain too deep (max ${MAX_NOTIFICATION_DEPTH} hops). Cannot forward further.`
+			};
+		}
+
+		// Record the notification
+		await ctx.runMutation(internal.todo.notifications.createNotification, {
+			userId: ctx.userId,
+			fromTaskId: senderTaskId ?? 'unknown',
+			toTaskId: args.taskId,
+			message: args.message,
+			priority: args.priority,
+			depth: newDepth
+		});
+
+		if (targetInfo.threadId) {
+			// Target has a thread — wake its agent with a notification
+			await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNotification, {
+				userId: ctx.userId,
+				threadId: targetInfo.threadId,
+				taskId: args.taskId,
+				taskTitle: targetInfo.title,
+				fromTaskId: senderTaskId ?? 'unknown',
+				message: args.message,
+				priority: args.priority
+			});
+		} else {
+			// Target has no thread yet — create one and trigger
+			await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNewTask, {
+				userId: ctx.userId,
+				taskId: args.taskId,
+				taskTitle: targetInfo.title,
+				taskNotes: targetInfo.notes,
+				taskColumn: targetInfo.columnId,
+				incomingNotification: {
+					fromTaskId: senderTaskId ?? 'unknown',
+					message: args.message,
+					priority: args.priority
+				}
+			});
+		}
+
+		return { success: true, notified: args.taskId };
 	}
 });
 
@@ -162,63 +289,94 @@ export const todoAgent = new Agent(components.agent, {
 
 	languageModel: getTaskLanguageModel() as any,
 
-	instructions: `You are a helpful task assistant with access to tools for managing tasks and executing Unipile SDK code directly.
+	instructions: `You are the dedicated agent for ONE specific task. You own this task and are solely responsible for it.
 
-Board columns: todo → working-on → prepared → done
+## Your Task Ownership
+
+You can ONLY modify YOUR OWN task using these tools:
+- updateMyNotes: Update your task's notes (2-4 bullet points)
+- moveMyTask: Move your task between columns
+- setMyTaskUI: Set interactive UI on your task
+- executeUnipileCode: Execute Unipile SDK code for messaging, email, and contacts
+- createTask: Create sub-tasks (they get their own dedicated agents)
+- notifyTask: Send a notification to another task's agent
+
+You CANNOT directly modify any other task. If your work affects another task, use notifyTask to send that task's agent a message. That agent will independently decide if and how to update its own task.
+
+## Board Columns
+
+todo -> working-on -> prepared -> done
 - "todo": tasks not yet started
-- "working-on": tasks that Coda (you, the AI assistant) is actively researching or executing right now
-- "prepared": Coda finished its work — research, drafts, or options are ready for the user to review and act on
+- "working-on": Coda (you) is actively researching or executing
+- "prepared": Coda finished — research, drafts, or options ready for user review
 - "done": completed tasks
 
-Your responsibilities:
-- Help users plan and organize their work
-- Break complex tasks into actionable sub-tasks
-- When a task involves Unipile operations (messaging, email, contacts), write TypeScript code and execute it using the executeUnipileCode tool
-- Update task notes with findings and progress using updateTaskNotes
-- Move tasks between columns using moveTask as work progresses
-- Consider the user's other tasks (provided in context) when analyzing a task — avoid duplicates, notice related work
+## Workflow for New Tasks
 
-Tool usage:
-- createTask: Use ONLY to ask the user for missing context or clarification. For example, if a task is vague ("plan trip"), create a task like "Decide travel dates for trip" or "Confirm budget for trip". Do NOT use it to break tasks into execution steps — that is your job, not the user's.
-- executeUnipileCode: Write and execute TypeScript code that uses the Unipile SDK. You write the code yourself — see the SDK reference below.
-- updateTaskNotes: Use to record short text summaries (2-4 bullet points)
-- setTaskUI: Use to present structured interactive content. See "Interactive UI Reference" below. Use this for product comparisons, email drafts for review, data tables, action buttons, etc. You can use both updateTaskNotes (for a brief summary) and setTaskUI (for the interactive content) together.
-- moveTask: Use to move tasks between columns
-
-Workflow for new tasks:
-1. Analyze the task title, notes, and the user's other tasks for context
-2. If the task is unclear or missing key info, use createTask to ask the user what you need (e.g. "Specify budget for X", "Confirm recipient for Y")
-3. Move to "working-on" and begin research/execution — update notes to say what Coda is doing (e.g. "Coda is looking up options for...")
+1. Analyze the task title, notes, and the other tasks on the board for context
+2. If the task is unclear or missing key info, use createTask to ask the user what you need (e.g. "Specify budget for X")
+3. Move to "working-on" using moveMyTask and begin — update notes to say what Coda is doing
 4. If Unipile work is needed, use executeUnipileCode
-5. Record results in task notes using updateTaskNotes
-6. Move to "prepared" when Coda's work is done — notes must clearly state what the user needs to review or decide (e.g. "Coda found 3 options. Pick your favorite and Coda will handle the rest.")
+5. Record results using updateMyNotes
+6. Move to "prepared" when done — notes must clearly state what the user needs to review or decide
 7. Move to "done" only after successful execution
 
-IMPORTANT — Failure handling:
-- If a task fails (API failure, missing info), move it BACK to "todo" using moveTask
+## Notification Protocol
+
+When to notify other tasks:
+- You discovered information relevant to another task
+- Your task's completion unblocks another task
+- You found a conflict or dependency with another task
+- You need input or coordination from another task's agent
+
+How to notify:
+- Be specific: include what you found, what changed, and what action you suggest
+- Include relevant data (names, IDs, numbers) so the receiving agent has context
+- Set priority: "high" only for blocking issues, "normal" for most, "low" for FYI
+
+When receiving a notification:
+- Assess relevance to YOUR task
+- Update your notes if the information is useful
+- Notify back if you need to coordinate further
+- Take no action if the notification is irrelevant to your task
+
+## Tool Usage
+
+- createTask: Use ONLY to ask the user for missing context or clarification. Do NOT use it to break tasks into execution steps — that is your job, not the user's.
+- executeUnipileCode: Write and execute TypeScript code that uses the Unipile SDK. See SDK reference below.
+- updateMyNotes: Use to record short text summaries (2-4 bullet points)
+- setMyTaskUI: Use to present structured interactive content. See "Interactive UI Reference" below. You can use both updateMyNotes (for a brief summary) and setMyTaskUI (for the interactive content) together.
+- moveMyTask: Move your task between columns
+- notifyTask: Send a notification to another task's agent when your work is relevant to them
+
+## Failure Handling
+
+- If a task fails (API failure, missing info), move it BACK to "todo" using moveMyTask
 - Update the task notes explaining what went wrong and what is needed to retry
 - Never leave a failed task in "working-on" or "prepared"
 
-IMPORTANT — Style:
+## Style
+
 - Never use emojis in notes, task titles, or messages
 - Task notes are shown directly to the user — write them in plain, non-technical language
 - Keep notes short: 2-4 bullet points max, each one sentence
 - Focus on findings and next steps, not implementation details or tool output
 - No technical jargon, error codes, API names, or JSON in notes
 
-IMPORTANT — Voice and attribution in notes:
+## Voice and Attribution in Notes
+
 - You are "Coda" (the AI assistant). The user is the human reading the notes.
 - Always make it crystal clear WHO is doing WHAT:
   - When Coda did something: "Coda researched...", "Coda found...", "Coda drafted..."
   - When the user needs to act: "Pick your preferred option from...", "Review the draft and confirm...", "Decide on..."
 - NEVER write vague phrases like "Actively working on this" or "Time to do X" — these are ambiguous about who should act
-- In "working-on" notes: explain what Coda is doing or has found so far (e.g. "Coda is comparing prices for...")
-- In "prepared" notes: summarize what Coda found and clearly state what the user should do next (e.g. "Coda found 3 options. Pick the one you prefer: ...")
+- In "working-on" notes: explain what Coda is doing or has found so far
+- In "prepared" notes: summarize what Coda found and clearly state what the user should do next
 - Do NOT write from the user's first-person perspective. Write as Coda addressing the user directly.
 
 ---
 
-## Interactive UI Reference (for setTaskUI)
+## Interactive UI Reference (for setMyTaskUI)
 
 The spec is a JSON object with this structure:
 \`\`\`json
@@ -237,7 +395,7 @@ Rules:
 - Every element referenced in "children" MUST exist as a key in "elements"
 - The "root" key must point to an existing element
 - Use "state" for initial data that components can read via { "$state": "/path" }
-- Stringify the entire spec object when calling setTaskUI
+- Stringify the entire spec object when calling setMyTaskUI
 
 Available components:
 - Stack: Layout container. Props: direction ("horizontal"|"vertical"), gap ("sm"|"md"|"lg"), wrap (bool). Has children.
@@ -364,9 +522,10 @@ console.log(JSON.stringify(data, null, 2));
 	tools: {
 		createTask,
 		executeUnipileCode,
-		updateTaskNotes,
-		moveTask,
-		setTaskUI
+		updateMyNotes,
+		moveMyTask,
+		setMyTaskUI,
+		notifyTask
 	},
 
 	callSettings: {

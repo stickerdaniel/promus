@@ -6881,6 +6881,18 @@ export declare const components: {
         { accountId: string; apiKey: string; dsn: string },
         { object: string }
       >;
+      getAccount: FunctionReference<
+        "action",
+        "internal",
+        { accountId: string; apiKey: string; dsn: string },
+        {
+          created_at: string;
+          id: string;
+          name: string;
+          sources: Array<{ id: string; status: string }>;
+          type: string;
+        } | null
+      >;
       getHostedAuthLink: FunctionReference<
         "action",
         "internal",
@@ -6892,20 +6904,6 @@ export declare const components: {
           siteUrl: string;
         },
         { url: string }
-      >;
-      listAccounts: FunctionReference<
-        "action",
-        "internal",
-        { apiKey: string; dsn: string },
-        {
-          items: Array<{
-            created_at: string;
-            id: string;
-            name: string;
-            sources: Array<{ id: string; status: string }>;
-            type: string;
-          }>;
-        }
       >;
     };
     mutations: {
@@ -6923,12 +6921,6 @@ export declare const components: {
       >;
     };
     queries: {
-      getAllRegisteredAccountIds: FunctionReference<
-        "query",
-        "internal",
-        {},
-        Array<string>
-      >;
       getUserAccountIds: FunctionReference<
         "query",
         "internal",

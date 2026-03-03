@@ -49,6 +49,10 @@ export const getHostedAuthLink = action({
 	}
 });
 
+/**
+ * List only this user's Unipile accounts by fetching each known ID individually.
+ * Never calls GET /accounts (global list).
+ */
 export const listAccounts = action({
 	args: {},
 	returns: v.object({
@@ -75,68 +79,55 @@ export const listAccounts = action({
 			throw new Error('Unipile is not configured');
 		}
 
-		// Fetch all Unipile accounts from the API
-		const allAccounts = await ctx.runAction(components.unipile.actions.listAccounts, {
-			dsn: unipileConfig.dsn,
-			apiKey: unipileConfig.apiKey
-		});
-
-		// Get only this user's registered account IDs
+		// Get only this user's registered account IDs from our DB
 		const userAccountIds = await ctx.runQuery(components.unipile.queries.getUserAccountIds, {
 			userId: user._id
 		});
-		const userIds = new Set(userAccountIds);
 
-		// Return only this user's accounts — no auto-claiming
-		return {
-			items: allAccounts.items.filter((a) => userIds.has(a.id))
-		};
+		// Fetch each account individually — skip 404s (deleted on Unipile side)
+		const items = [];
+		for (const accountId of userAccountIds) {
+			const account = await ctx.runAction(components.unipile.actions.getAccount, {
+				dsn: unipileConfig.dsn!,
+				apiKey: unipileConfig.apiKey!,
+				accountId
+			});
+			if (account) items.push(account);
+		}
+
+		return { items };
 	}
 });
 
-export const registerNewAccount = action({
+/**
+ * Reactive query: returns the most recent pending auth status for the current user.
+ * Used by the sidebar to detect when a webhook completes or expires.
+ */
+export const checkPendingAuthStatus = query({
 	args: {},
-	returns: v.null(),
+	returns: v.union(
+		v.object({
+			status: v.union(v.literal('pending'), v.literal('completed'), v.literal('expired')),
+			unipileAccountId: v.optional(v.string())
+		}),
+		v.null()
+	),
 	handler: async (ctx) => {
 		const user = await authComponent.getAuthUser(ctx);
-		if (!user) throw new Error('Not authenticated');
+		if (!user) return null;
 
-		if (!unipileConfig.enabled || !unipileConfig.dsn || !unipileConfig.apiKey) {
-			throw new Error('Unipile is not configured');
-		}
+		const pending = await ctx.db
+			.query('pendingUnipileAuth')
+			.withIndex('by_user', (q) => q.eq('userId', user._id))
+			.order('desc')
+			.first();
 
-		// Fetch all Unipile accounts from the API
-		const allAccounts = await ctx.runAction(components.unipile.actions.listAccounts, {
-			dsn: unipileConfig.dsn,
-			apiKey: unipileConfig.apiKey
-		});
+		if (!pending) return null;
 
-		// Get this user's registered account IDs
-		const userAccountIds = await ctx.runQuery(components.unipile.queries.getUserAccountIds, {
-			userId: user._id
-		});
-		const userIds = new Set(userAccountIds);
-
-		// Get ALL registered account IDs to prevent claiming another user's account
-		const allRegisteredIds = await ctx.runQuery(
-			components.unipile.queries.getAllRegisteredAccountIds,
-			{}
-		);
-		const claimedIds = new Set(allRegisteredIds);
-
-		// Register accounts that exist in Unipile but aren't claimed by anyone
-		const newAccounts = allAccounts.items.filter(
-			(a) => !userIds.has(a.id) && !claimedIds.has(a.id)
-		);
-		for (const account of newAccounts) {
-			await ctx.runMutation(components.unipile.mutations.registerAccount, {
-				userId: user._id,
-				unipileAccountId: account.id,
-				provider: account.type
-			});
-		}
-
-		return null;
+		return {
+			status: pending.status,
+			unipileAccountId: pending.unipileAccountId
+		};
 	}
 });
 

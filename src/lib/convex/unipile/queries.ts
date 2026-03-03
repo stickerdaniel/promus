@@ -12,12 +12,3 @@ export const getUserAccountIds = query({
 		return rows.map((r) => r.unipileAccountId);
 	}
 });
-
-export const getAllRegisteredAccountIds = query({
-	args: {},
-	returns: v.array(v.string()),
-	handler: async (ctx) => {
-		const rows = await ctx.db.query('accounts').collect();
-		return rows.map((r) => r.unipileAccountId);
-	}
-});

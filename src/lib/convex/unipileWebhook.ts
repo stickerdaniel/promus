@@ -62,8 +62,9 @@ export const receiveWebhook = internalMutation({
 });
 
 /**
- * Fetch the new account from Unipile API and register it.
+ * Fetch the new account from Unipile API by its direct ID and register it.
  * Retries up to 3x with backoff if account not yet visible.
+ * Never calls GET /accounts (global list).
  */
 export const handleWebhookPayload = internalAction({
 	args: {
@@ -80,59 +81,36 @@ export const handleWebhookPayload = internalAction({
 
 		const MAX_ATTEMPTS = 3;
 
-		// If we have a direct accountId from the webhook, try to fetch it
-		if (accountId) {
-			try {
-				const response = await fetch(`https://${unipileConfig.dsn}/api/v1/accounts/${accountId}`, {
-					method: 'GET',
-					headers: { 'X-API-KEY': unipileConfig.apiKey! }
-				});
-
-				if (response.ok) {
-					const account = (await response.json()) as {
-						id: string;
-						type: string;
-					};
-					await ctx.runMutation(internal.unipileWebhook.completeAuthFromWebhook, {
-						nonce,
-						userId,
-						unipileAccountId: account.id,
-						provider: account.type
-					});
-					return;
-				}
-			} catch (e) {
-				console.warn(`Failed to fetch account ${accountId}:`, e);
-			}
+		// We require a direct accountId — no fallback guessing
+		if (!accountId) {
+			console.error(`Webhook for nonce ${nonce} missing accountId, marking expired`);
+			await ctx.runMutation(internal.unipileWebhook.failPendingAuth, { nonce });
+			return;
 		}
 
-		// Fallback: list all accounts and find unclaimed ones
 		try {
-			const allAccounts = await ctx.runAction(components.unipile.actions.listAccounts, {
-				dsn: unipileConfig.dsn!,
-				apiKey: unipileConfig.apiKey!
+			const response = await fetch(`https://${unipileConfig.dsn}/api/v1/accounts/${accountId}`, {
+				method: 'GET',
+				headers: { 'X-API-KEY': unipileConfig.apiKey! }
 			});
 
-			const allRegisteredIds = await ctx.runQuery(
-				components.unipile.queries.getAllRegisteredAccountIds,
-				{}
-			);
-			const claimedIds = new Set(allRegisteredIds);
-
-			// Find the first unclaimed account (the one just created via OAuth)
-			const newAccount = allAccounts.items.find((a) => !claimedIds.has(a.id));
-
-			if (newAccount) {
+			if (response.ok) {
+				const account = (await response.json()) as {
+					id: string;
+					type: string;
+				};
 				await ctx.runMutation(internal.unipileWebhook.completeAuthFromWebhook, {
 					nonce,
 					userId,
-					unipileAccountId: newAccount.id,
-					provider: newAccount.type
+					unipileAccountId: account.id,
+					provider: account.type
 				});
 				return;
 			}
+
+			console.warn(`Fetch account ${accountId} returned ${response.status} on attempt ${attempt}`);
 		} catch (e) {
-			console.warn(`Failed to list accounts on attempt ${attempt}:`, e);
+			console.warn(`Failed to fetch account ${accountId}:`, e);
 		}
 
 		// Retry with backoff if account not yet visible
@@ -145,14 +123,37 @@ export const handleWebhookPayload = internalAction({
 				attempt: attempt + 1
 			});
 		} else {
-			console.error(`Failed to find new account for nonce ${nonce} after ${MAX_ATTEMPTS} attempts`);
+			console.error(
+				`Failed to fetch account ${accountId} for nonce ${nonce} after ${MAX_ATTEMPTS} attempts`
+			);
+			await ctx.runMutation(internal.unipileWebhook.failPendingAuth, { nonce });
 		}
 	}
 });
 
 /**
+ * Mark pending auth as expired when webhook processing fails.
+ */
+export const failPendingAuth = internalMutation({
+	args: { nonce: v.string() },
+	returns: v.null(),
+	handler: async (ctx, { nonce }) => {
+		const pending = await ctx.db
+			.query('pendingUnipileAuth')
+			.withIndex('by_nonce', (q) => q.eq('nonce', nonce))
+			.first();
+
+		if (pending && pending.status === 'pending') {
+			await ctx.db.patch(pending._id, { status: 'expired' });
+		}
+
+		return null;
+	}
+});
+
+/**
  * Mark pending auth as completed and register the account in the component table.
- * Idempotent — safe if both webhook and visibilitychange fire.
+ * Idempotent — safe if webhook fires multiple times.
  */
 export const completeAuthFromWebhook = internalMutation({
 	args: {

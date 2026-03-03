@@ -50,7 +50,23 @@
 	let accountsLoaded = $state(false);
 	let isLoading = $state(false);
 	let connectingProvider = $state<string | null>(null);
-	let awaitingAuth = $state(false);
+
+	// Reactive query: auto-updates when webhook completes or expires
+	const pendingAuth = useQuery(api.unipile.checkPendingAuthStatus, {});
+	let lastPendingStatus = $state<string | null>(null);
+
+	$effect(() => {
+		const status = pendingAuth.data?.status;
+		if (!status || status === lastPendingStatus) return;
+
+		if (status === 'completed' && lastPendingStatus === 'pending') {
+			loadAccounts();
+		} else if (status === 'expired' && lastPendingStatus === 'pending') {
+			toast.error($t('settings.connections.connect_failed'));
+		}
+
+		lastPendingStatus = status;
+	});
 
 	$effect(() => {
 		loadAccounts();
@@ -59,16 +75,8 @@
 	useEventListener(
 		() => document,
 		'visibilitychange',
-		async () => {
+		() => {
 			if (document.visibilityState !== 'visible' || isLoading) return;
-			if (awaitingAuth) {
-				awaitingAuth = false;
-				try {
-					await client.action(api.unipile.registerNewAccount, {});
-				} catch {
-					// Registration failure is non-fatal
-				}
-			}
 			loadAccounts();
 		}
 	);
@@ -117,7 +125,6 @@
 		connectingProvider = providerType;
 		try {
 			const { url } = await client.action(api.unipile.getHostedAuthLink, {});
-			awaitingAuth = true;
 			window.open(url, '_blank');
 		} catch {
 			toast.error($t('settings.connections.connect_failed'));

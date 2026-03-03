@@ -9,12 +9,18 @@ export const registerAccount = mutation({
 	},
 	returns: v.null(),
 	handler: async (ctx, { userId, unipileAccountId, provider }) => {
-		// Idempotent: skip if this Unipile account is already registered
+		// Check if this Unipile account is already registered
 		const existing = await ctx.db
 			.query('accounts')
 			.withIndex('by_unipile_account', (q) => q.eq('unipileAccountId', unipileAccountId))
 			.first();
-		if (existing) return null;
+		if (existing) {
+			// Idempotent for same user, but block cross-user hijack
+			if (existing.userId !== userId) {
+				throw new Error('Account already registered to another user');
+			}
+			return null;
+		}
 
 		await ctx.db.insert('accounts', {
 			userId,

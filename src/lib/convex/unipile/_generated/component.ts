@@ -31,6 +31,19 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
         { object: string },
         Name
       >;
+      getAccount: FunctionReference<
+        "action",
+        "internal",
+        { accountId: string; apiKey: string; dsn: string },
+        {
+          created_at: string;
+          id: string;
+          name: string;
+          sources: Array<{ id: string; status: string }>;
+          type: string;
+        } | null,
+        Name
+      >;
       getHostedAuthLink: FunctionReference<
         "action",
         "internal",
@@ -42,21 +55,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
           siteUrl: string;
         },
         { url: string },
-        Name
-      >;
-      listAccounts: FunctionReference<
-        "action",
-        "internal",
-        { apiKey: string; dsn: string },
-        {
-          items: Array<{
-            created_at: string;
-            id: string;
-            name: string;
-            sources: Array<{ id: string; status: string }>;
-            type: string;
-          }>;
-        },
         Name
       >;
     };
@@ -77,13 +75,6 @@ export type ComponentApi<Name extends string | undefined = string | undefined> =
       >;
     };
     queries: {
-      getAllRegisteredAccountIds: FunctionReference<
-        "query",
-        "internal",
-        {},
-        Array<string>,
-        Name
-      >;
       getUserAccountIds: FunctionReference<
         "query",
         "internal",

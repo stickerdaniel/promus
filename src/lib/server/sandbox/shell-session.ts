@@ -107,12 +107,23 @@ function createSession(config: ShellSessionConfig): Bash {
 	});
 }
 
-/** Get or create a session for the given ID. */
+/** Check if two configs have the same allowedAccountIds. */
+function configMatches(a: ShellSessionConfig, b: ShellSessionConfig): boolean {
+	const sortedA = [...a.allowedAccountIds].sort();
+	const sortedB = [...b.allowedAccountIds].sort();
+	return sortedA.length === sortedB.length && sortedA.every((id, i) => id === sortedB[i]);
+}
+
+/** Get or create a session for the given ID. Recreates if allowedAccountIds changed. */
 export function getOrCreateSession(sessionId: string, config: ShellSessionConfig): Bash {
 	const existing = sessions.get(sessionId);
 	if (existing) {
-		existing.lastAccess = Date.now();
-		return existing.bash;
+		if (configMatches(existing.config, config)) {
+			existing.lastAccess = Date.now();
+			return existing.bash;
+		}
+		// Config changed — delete stale session and create fresh
+		sessions.delete(sessionId);
 	}
 
 	const bash = createSession(config);

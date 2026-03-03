@@ -1,58 +1,56 @@
 import { action } from './_generated/server';
 import { v } from 'convex/values';
 
-export const listAccounts = action({
+export const getAccount = action({
 	args: {
 		dsn: v.string(),
-		apiKey: v.string()
+		apiKey: v.string(),
+		accountId: v.string()
 	},
-	returns: v.object({
-		items: v.array(
-			v.object({
-				id: v.string(),
-				name: v.string(),
-				type: v.string(),
-				created_at: v.string(),
-				sources: v.array(
-					v.object({
-						id: v.string(),
-						status: v.string()
-					})
-				)
-			})
-		)
-	}),
-	handler: async (_ctx, { dsn, apiKey }) => {
-		const response = await fetch(`https://${dsn}/api/v1/accounts`, {
+	returns: v.union(
+		v.object({
+			id: v.string(),
+			name: v.string(),
+			type: v.string(),
+			created_at: v.string(),
+			sources: v.array(
+				v.object({
+					id: v.string(),
+					status: v.string()
+				})
+			)
+		}),
+		v.null()
+	),
+	handler: async (_ctx, { dsn, apiKey, accountId }) => {
+		const response = await fetch(`https://${dsn}/api/v1/accounts/${accountId}`, {
 			method: 'GET',
 			headers: { 'X-API-KEY': apiKey }
 		});
+
+		if (response.status === 404) return null;
 
 		if (!response.ok) {
 			const text = await response.text();
 			throw new Error(`Unipile API error: ${response.status} ${text}`);
 		}
 
-		const data = (await response.json()) as {
-			items: Array<{
-				id: string;
-				name: string;
-				type: string;
-				created_at: string;
-				sources: Array<{ id: string; status: string }>;
-			}>;
+		const item = (await response.json()) as {
+			id: string;
+			name: string;
+			type: string;
+			created_at: string;
+			sources: Array<{ id: string; status: string }>;
 		};
 
 		return {
-			items: data.items.map((item) => ({
-				id: item.id,
-				name: item.name ?? '',
-				type: item.type ?? '',
-				created_at: item.created_at ?? '',
-				sources: (item.sources ?? []).map((s) => ({
-					id: s.id,
-					status: s.status
-				}))
+			id: item.id,
+			name: item.name ?? '',
+			type: item.type ?? '',
+			created_at: item.created_at ?? '',
+			sources: (item.sources ?? []).map((s) => ({
+				id: s.id,
+				status: s.status
 			}))
 		};
 	}

@@ -118,7 +118,10 @@
 </script>
 
 <Dialog.Root bind:open>
-	<Dialog.Content class="sm:max-w-md" onkeydown={handleDialogKeydown}>
+	<Dialog.Content
+		class={parsedSpec ? 'sm:max-w-2xl' : 'sm:max-w-md'}
+		onkeydown={handleDialogKeydown}
+	>
 		<Dialog.Header>
 			<Dialog.Title><T keyName="todo_demo.detail.title" /></Dialog.Title>
 			<Dialog.Description><T keyName="todo_demo.detail.description" /></Dialog.Description>

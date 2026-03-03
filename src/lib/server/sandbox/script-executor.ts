@@ -96,18 +96,22 @@ function createScopedUnipileFacade(dsn: string, apiKey: string, allowedAccountId
 		};
 	}
 
-	/** Bind and wrap all methods on a resource, applying blocklist. */
+	/** Bind and wrap all methods on a resource, walking the full prototype chain. */
 	function wrapResource(
 		resource: Record<string, unknown>,
 		blocklist: Set<string> = new Set()
 	): Record<string, unknown> {
 		const wrapped: Record<string, unknown> = {};
-		for (const key of Object.getOwnPropertyNames(Object.getPrototypeOf(resource))) {
-			if (key === 'constructor' || blocklist.has(key)) continue;
-			const val = resource[key];
-			if (typeof val === 'function') {
-				wrapped[key] = wrapMethod(val.bind(resource) as SdkMethod);
+		let proto = Object.getPrototypeOf(resource);
+		while (proto && proto !== Object.prototype) {
+			for (const key of Object.getOwnPropertyNames(proto)) {
+				if (key === 'constructor' || blocklist.has(key) || key in wrapped) continue;
+				const val = resource[key];
+				if (typeof val === 'function') {
+					wrapped[key] = wrapMethod(val.bind(resource) as SdkMethod);
+				}
 			}
+			proto = Object.getPrototypeOf(proto);
 		}
 		return wrapped;
 	}
@@ -182,10 +186,19 @@ export async function executeScript(
 	// 2. Build sandboxed context
 	const unipile = createScopedUnipileFacade(unipileDsn, unipileApiKey, allowedAccountIds);
 
+	const stringify = (v: unknown): string => {
+		if (typeof v === 'string') return v;
+		try {
+			return JSON.stringify(v, null, 2);
+		} catch {
+			return String(v);
+		}
+	};
+
 	const capturedConsole = {
-		log: (...args: unknown[]) => logs.push(args.map(String).join(' ')),
-		warn: (...args: unknown[]) => logs.push(`[warn] ${args.map(String).join(' ')}`),
-		error: (...args: unknown[]) => logs.push(`[error] ${args.map(String).join(' ')}`)
+		log: (...args: unknown[]) => logs.push(args.map(stringify).join(' ')),
+		warn: (...args: unknown[]) => logs.push(`[warn] ${args.map(stringify).join(' ')}`),
+		error: (...args: unknown[]) => logs.push(`[error] ${args.map(stringify).join(' ')}`)
 	};
 
 	const context = vm.createContext({

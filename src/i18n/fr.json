@@ -589,7 +589,7 @@
 		"cta": "Commencer",
 		"cta_demo": "Demander une démo",
 		"cta_sourcecode": "Voir le code source",
-		"description": "Un agent IA qui complète tes tâches. Connecté à tous tes outils professionnels.",
+		"description": "Coda complète tes tâches. Connecté à tous tes outils professionnels.",
 		"section_label": "Accueil",
 		"tagline": "Ta liste de tâches vient de pousser 8 bras.",
 		"title": "Promus"
@@ -724,7 +724,7 @@
 		},
 		"home": {
 			"description": "Ajoute une tâche. Promus recherche, rédige et exécute — connecté à ton email, calendrier et messages.",
-			"title": "L'agent IA qui fait tes tâches"
+			"title": "Coda fait tes tâches"
 		},
 		"pricing": {
 			"description": "Choisis une offre et teste le flux de facturation intégré.",
@@ -761,8 +761,8 @@
 		},
 		"current_plan": "Plan Actuel",
 		"current_plan_badge": "(Plan Actuel)",
-		"description": "Des tarifs simples pour une liste de tâches plus intelligente. Teste l'agent IA gratuitement, passe au niveau supérieur quand tu en as besoin.",
-		"description_autumn": "Des tarifs simples pour une liste de tâches plus intelligente. Teste l'agent IA gratuitement, passe au niveau supérieur quand tu en as besoin.",
+		"description": "Des tarifs simples pour une liste de tâches plus intelligente. Teste Coda gratuitement, passe au niveau supérieur quand tu en as besoin.",
+		"description_autumn": "Des tarifs simples pour une liste de tâches plus intelligente. Teste Coda gratuitement, passe au niveau supérieur quand tu en as besoin.",
 		"features": {
 			"enterprise": {
 				"0": "Limites de messages personnalisées",
@@ -1133,13 +1133,13 @@
 		},
 		"cta": "Commencer gratuitement",
 		"detail": {
-			"agent_draft_title": "Brouillon de l'agent",
-			"agent_feedback_placeholder": "Dis à l'agent quoi changer...",
-			"agent_logs": "Journaux de l'agent",
+			"agent_draft_title": "Brouillon de Coda",
+			"agent_feedback_placeholder": "Dis à Coda quoi changer...",
+			"agent_logs": "Journaux de Coda",
 			"agent_reject": "Rejeter",
 			"agent_send": "Envoyer",
 			"agent_status_awaiting": "En attente de ton approbation",
-			"agent_status_done": "Agent terminé",
+			"agent_status_done": "Coda terminé",
 			"agent_status_working": "Coda travaille...",
 			"agent_submit_feedback": "Envoyer le retour",
 			"cancel": "Annuler",

@@ -589,7 +589,7 @@
 		"cta": "Get started",
 		"cta_demo": "Request a demo",
 		"cta_sourcecode": "View sourcecode",
-		"description": "An AI agent that completes your todos. Connected to all your professional tools.",
+		"description": "Coda completes your todos. Connected to all your professional tools.",
 		"section_label": "Home",
 		"tagline": "Your todo list just grew 8 arms.",
 		"title": "Promus"
@@ -724,7 +724,7 @@
 		},
 		"home": {
 			"description": "Add a task. Promus researches, drafts, and executes — connected to your email, calendar, and messages.",
-			"title": "The AI agent that does your todos"
+			"title": "Coda does your todos"
 		},
 		"pricing": {
 			"description": "Choose a plan and test the integrated billing flow.",
@@ -761,8 +761,8 @@
 		},
 		"current_plan": "Current Plan",
 		"current_plan_badge": "(Current Plan)",
-		"description": "Simple pricing for a smarter todo list. Try the AI agent free, upgrade when you need more.",
-		"description_autumn": "Simple pricing for a smarter todo list. Try the AI agent free, upgrade when you need more.",
+		"description": "Simple pricing for a smarter todo list. Try Coda free, upgrade when you need more.",
+		"description_autumn": "Simple pricing for a smarter todo list. Try Coda free, upgrade when you need more.",
 		"features": {
 			"enterprise": {
 				"0": "Custom message limits",
@@ -1133,13 +1133,13 @@
 		},
 		"cta": "Get Started Free",
 		"detail": {
-			"agent_draft_title": "Agent Draft",
-			"agent_feedback_placeholder": "Tell the agent what to change...",
-			"agent_logs": "Agent logs",
+			"agent_draft_title": "Coda Draft",
+			"agent_feedback_placeholder": "Tell Coda what to change...",
+			"agent_logs": "Coda logs",
 			"agent_reject": "Reject",
 			"agent_send": "Send",
 			"agent_status_awaiting": "Awaiting your approval",
-			"agent_status_done": "Agent completed",
+			"agent_status_done": "Coda completed",
 			"agent_status_working": "Coda is working...",
 			"agent_submit_feedback": "Submit Feedback",
 			"cancel": "Cancel",

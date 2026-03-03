@@ -71,6 +71,7 @@
 		"date-fns": "^4.1.0",
 		"esbuild": "^0.27.3",
 		"isomorphic-dompurify": "^2.32.0",
+		"just-bash": "^2.11.6",
 		"konva": "^10.0.8",
 		"marked": "^17.0.0",
 		"mode-watcher": "^1.1.0",

@@ -235,7 +235,21 @@ export default defineSchema({
 	})
 		.index('by_nonce', ['nonce'])
 		.index('by_user', ['userId'])
-		.index('by_expires', ['expiresAt'])
+		.index('by_expires', ['expiresAt']),
+
+	// Saved scripts — reusable Unipile SDK scripts per user, discovered by the agent
+	savedScripts: defineTable({
+		userId: v.string(),
+		slug: v.string(),
+		title: v.string(),
+		description: v.string(),
+		code: v.string(),
+		tags: v.array(v.string()),
+		createdAt: v.number(),
+		updatedAt: v.number()
+	})
+		.index('by_user', ['userId'])
+		.index('by_user_slug', ['userId', 'slug'])
 
 	// Note: The agent component automatically creates the following tables:
 	// - agent:threads - Conversation threads for customer support

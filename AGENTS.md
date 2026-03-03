@@ -2,11 +2,15 @@
 
 This project is a saas template built with SvelteKit, Convex, Typescript and modern web technologies.
 
+## Coda Branding
+
+"Coda" is the user-facing name for our AI task agent. All UI text, translations, and marketing copy must use "Coda" — never "agent", "AI agent", or similar generic terms. Internal code (variable names, types, file names) can still use `agent`.
+
 ## btca
 
 When you need up-to-date information about technologies used in this project, use btca to query source repositories directly.
 
-**Available resources**: svelte, sveltekit, shadcnSvelte, shadcnSvelteExtras, bitsUi, runed, formsnap, superforms, paneforge, svelteInfinite, motionSvelte, svAnimate, threlte, xyflow, cnblocks, aiElements, convex, convexSvelte, convexAgent, convexHelpers, convexResend, convexPresence, convexRag, convexStripe, convexRateLimiter, convexActionCache, convexFilesControl, convexTimeline, convexMigrations, convexAggregate, convexShardedCounter, convexGeospatial, convexWorkpool, convexWorkflow, convexRetrier, convexCrons, betterAuth, betterSvelteEmail, tailwind, vercelAi, tanstackTable, tolgee, playwright, vitest, valibot, nprogress, renovate
+**Available resources**: svelte, sveltekit, shadcnSvelte, shadcnSvelteExtras, bitsUi, runed, formsnap, superforms, paneforge, svelteInfinite, motionSvelte, svAnimate, threlte, xyflow, cnblocks, aiElements, convex, convexSvelte, convexAgent, convexHelpers, convexResend, convexPresence, convexRag, convexStripe, convexRateLimiter, convexActionCache, convexFilesControl, convexTimeline, convexMigrations, convexAggregate, convexShardedCounter, convexGeospatial, convexWorkpool, convexWorkflow, convexRetrier, convexCrons, betterAuth, betterSvelteEmail, tailwind, vercelAi, tanstackTable, tolgee, playwright, vitest, valibot, nprogress, renovate, justBash
 
 ### Usage
 

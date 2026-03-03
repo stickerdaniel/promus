@@ -58,7 +58,7 @@
 							<span class="text-primary-foreground font-bold text-lg">P</span>
 						</div>
 						<div>
-							<p class="font-semibold text-foreground">Promus Agent</p>
+							<p class="font-semibold text-foreground">Coda</p>
 							<p class="text-xs text-muted-foreground">Powered by Devstral</p>
 						</div>
 					</div>

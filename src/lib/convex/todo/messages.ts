@@ -98,13 +98,19 @@ async function buildBoardContext(
 	ctx: { runQuery: (fn: any, args: any) => Promise<any> },
 	userId: string,
 	excludeTaskId: string
-): Promise<{ otherTasks: string[]; accountLine: string }> {
+): Promise<{ otherTasks: string[]; accountLine: string; savedScriptCount: number }> {
 	const userAccountIds: string[] = await ctx.runQuery(
 		components.unipile.queries.getUserAccountIds,
 		{ userId }
 	);
 
 	const board = await ctx.runQuery(internal.todos.getBoardInternal, { userId });
+
+	const savedScripts: Record<string, string> = await ctx.runQuery(
+		internal.todo.scripts.getAllScripts,
+		{ userId }
+	);
+	const savedScriptCount = Object.keys(savedScripts).length;
 
 	const otherTasks: string[] = [];
 	for (const [col, tasks] of Object.entries(board)) {
@@ -120,7 +126,7 @@ async function buildBoardContext(
 			? `Your Unipile account IDs: ${userAccountIds.join(', ')}`
 			: 'No Unipile accounts connected. If this task requires messaging or email, create a clarifying sub-task asking the user to connect an account.';
 
-	return { otherTasks, accountLine };
+	return { otherTasks, accountLine, savedScriptCount };
 }
 
 /**
@@ -165,7 +171,11 @@ export const triggerAgentForNewTask = internalAction({
 		});
 
 		// 3. Build board context
-		const { otherTasks, accountLine } = await buildBoardContext(ctx, args.userId, args.taskId);
+		const { otherTasks, accountLine, savedScriptCount } = await buildBoardContext(
+			ctx,
+			args.userId,
+			args.taskId
+		);
 
 		// 4. Build prompt
 		const promptParts: (string | null)[] = [
@@ -197,12 +207,15 @@ export const triggerAgentForNewTask = internalAction({
 
 		promptParts.push(
 			accountLine,
+			savedScriptCount > 0
+				? `You have ${savedScriptCount} saved script(s). Use findSavedScripts to check for reusable scripts before writing new ones.`
+				: null,
 			'',
 			otherTasks.length > 0
 				? `Other tasks on the board (for awareness — you can notify them but NOT modify them):\n${otherTasks.join('\n')}`
 				: null,
 			'',
-			'Analyze this task and take appropriate action. If it is vague or missing key details, use createTask to ask the user for the missing info. If it involves Unipile operations, write TypeScript code and use executeUnipileCode. Update your task notes with your findings using updateMyNotes.'
+			'Analyze this task and take appropriate action. If it is vague or missing key details, use createTask to ask the user for the missing info. If it involves Unipile operations, use findSavedScripts first, then the bash tool to explore the SDK and execute scripts. Update your task notes with your findings using updateMyNotes.'
 		);
 
 		const prompt = promptParts.filter(Boolean).join('\n');
@@ -238,7 +251,7 @@ export const triggerAgentForNewTask = internalAction({
 		const summary =
 			typeof response === 'object' && response !== null && 'text' in response
 				? String((response as { text: string }).text)
-				: 'Agent completed analysis.';
+				: 'Coda completed analysis.';
 
 		await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
 			userId: args.userId,
@@ -277,12 +290,19 @@ export const triggerAgentForTaskUpdate = internalAction({
 		});
 
 		// 1. Build board context
-		const { otherTasks, accountLine } = await buildBoardContext(ctx, args.userId, args.taskId);
+		const { otherTasks, accountLine, savedScriptCount } = await buildBoardContext(
+			ctx,
+			args.userId,
+			args.taskId
+		);
 
 		const fullPrompt = [
 			args.prompt,
 			'',
 			accountLine,
+			savedScriptCount > 0
+				? `You have ${savedScriptCount} saved script(s). Use findSavedScripts to check for reusable scripts before writing new ones.`
+				: null,
 			'',
 			otherTasks.length > 0
 				? `Other tasks on the board (for awareness — you can notify them but NOT modify them):\n${otherTasks.join('\n')}`
@@ -322,7 +342,7 @@ export const triggerAgentForTaskUpdate = internalAction({
 		const summary =
 			typeof response === 'object' && response !== null && 'text' in response
 				? String((response as { text: string }).text)
-				: 'Agent processed update.';
+				: 'Coda processed update.';
 
 		await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
 			userId: args.userId,
@@ -404,7 +424,11 @@ export const triggerAgentForNotification = internalAction({
 		);
 
 		// 4. Build board context
-		const { otherTasks, accountLine } = await buildBoardContext(ctx, args.userId, args.taskId);
+		const { otherTasks, accountLine, savedScriptCount } = await buildBoardContext(
+			ctx,
+			args.userId,
+			args.taskId
+		);
 
 		const prompt = [
 			`Notification received for your task: "${args.taskTitle}"`,
@@ -417,6 +441,9 @@ export const triggerAgentForNotification = internalAction({
 			'If you need to notify other tasks in response, use notifyTask.',
 			'',
 			accountLine,
+			savedScriptCount > 0
+				? `You have ${savedScriptCount} saved script(s). Use findSavedScripts to check for reusable scripts before writing new ones.`
+				: null,
 			'',
 			otherTasks.length > 0
 				? `Other tasks on the board (for awareness only):\n${otherTasks.join('\n')}`
@@ -461,7 +488,7 @@ export const triggerAgentForNotification = internalAction({
 		const summary =
 			typeof response === 'object' && response !== null && 'text' in response
 				? String((response as { text: string }).text)
-				: 'Agent processed notification.';
+				: 'Coda processed notification.';
 
 		await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
 			userId: args.userId,

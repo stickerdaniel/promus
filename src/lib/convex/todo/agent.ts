@@ -22,25 +22,28 @@ async function resolveOwnTaskId(ctx: ToolCtx): Promise<string | null> {
 	});
 }
 
-export const executeUnipileCode = createTool({
+export const bash = createTool({
 	description:
-		'Execute TypeScript code that uses the Unipile SDK. Write code that uses the `unipile` global object to interact with messaging, email, and contact APIs. The code runs in a sandboxed VM with a 15-second timeout.',
+		'Run a shell command in a sandboxed virtual filesystem. The session has /sdk/ (read-only Unipile SDK source), /scripts/ (saved scripts), and /workspace/ (scratch). Use grep/cat/ls to explore SDK source, write scripts to /workspace/, and run them with `execute-ts /workspace/script.ts`.',
 	inputSchema: z.object({
-		code: z
+		command: z
 			.string()
 			.describe(
-				'TypeScript code to execute. Has access to `unipile` global and `console.log()` for output. No imports allowed.'
+				'Shell command to run. Supports grep, cat, ls, find, sed, awk, jq, and execute-ts for running TypeScript scripts.'
 			)
 	}),
-	execute: async (ctx: ToolCtx, input) => {
+	execute: async (ctx: ToolCtx, input): Promise<Record<string, unknown>> => {
 		if (!ctx.userId) {
 			return { success: false, error: 'No userId — cannot resolve account access' };
 		}
 
-		const siteUrl = process.env.SITE_URL;
+		const siteUrl = process.env.SANDBOX_URL ?? process.env.SITE_URL;
 		const internalKey = process.env.SANDBOX_INTERNAL_API_KEY;
 		if (!siteUrl || !internalKey) {
-			return { success: false, error: 'SITE_URL or SANDBOX_INTERNAL_API_KEY not configured' };
+			return {
+				success: false,
+				error: 'SANDBOX_URL (or SITE_URL) and SANDBOX_INTERNAL_API_KEY must be configured'
+			};
 		}
 
 		let allowedAccountIds: string[];
@@ -55,14 +58,31 @@ export const executeUnipileCode = createTool({
 			};
 		}
 
+		// Load saved scripts to populate /scripts/ in the session
+		let savedScripts: Record<string, string> | undefined;
 		try {
-			const response = await fetch(`${siteUrl}/api/sandbox/execute`, {
+			savedScripts = await ctx.runQuery(internal.todo.scripts.getAllScripts, {
+				userId: ctx.userId
+			});
+		} catch {
+			// Non-fatal: continue without saved scripts
+		}
+
+		const sessionId = ctx.threadId ?? ctx.userId;
+
+		try {
+			const response: Response = await fetch(`${siteUrl}/api/sandbox/shell`, {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
 					'x-internal-key': internalKey
 				},
-				body: JSON.stringify({ code: input.code, allowedAccountIds })
+				body: JSON.stringify({
+					sessionId,
+					command: input.command,
+					allowedAccountIds,
+					savedScripts
+				})
 			});
 
 			if (!response.ok) {
@@ -70,12 +90,12 @@ export const executeUnipileCode = createTool({
 				return { success: false, error: `HTTP ${response.status}: ${text}` };
 			}
 
-			const result = await response.json();
+			const result: { stdout: string; stderr: string; exitCode: number } = await response.json();
+			const output = [result.stdout, result.stderr].filter(Boolean).join('\n');
 			return {
-				success: result.success,
-				output: truncate(result.output ?? '', MAX_RESULT),
-				error: result.error,
-				durationMs: result.durationMs
+				success: result.exitCode === 0,
+				output: truncate(output, MAX_RESULT),
+				exitCode: result.exitCode
 			};
 		} catch (e) {
 			return {
@@ -83,6 +103,56 @@ export const executeUnipileCode = createTool({
 				error: `Fetch failed: ${e instanceof Error ? e.message : String(e)}`
 			};
 		}
+	}
+});
+
+export const findSavedScripts = createTool({
+	description:
+		'Search saved Unipile SDK scripts by keyword. Returns matching scripts with slug, title, description, and tags. Check here first before writing new scripts.',
+	inputSchema: z.object({
+		query: z.string().describe('Keyword to search across slug, title, description, and tags')
+	}),
+	execute: async (ctx: ToolCtx, input): Promise<Record<string, unknown>> => {
+		if (!ctx.userId) return { success: false, error: 'No userId' };
+		const results: { slug: string; title: string; description: string; tags: string[] }[] =
+			await ctx.runQuery(internal.todo.scripts.findScripts, {
+				userId: ctx.userId,
+				query: input.query
+			});
+		return {
+			success: true,
+			scripts: results.map((s) => ({
+				slug: s.slug,
+				title: s.title,
+				description: s.description,
+				tags: s.tags
+			}))
+		};
+	}
+});
+
+export const saveScript = createTool({
+	description:
+		'Save a working Unipile SDK script for reuse. Scripts are saved per user and appear in /scripts/ in future sessions. Use a descriptive slug (kebab-case) and include tags for searchability.',
+	inputSchema: z.object({
+		slug: z.string().describe('Unique kebab-case identifier (e.g. "list-linkedin-chats")'),
+		title: z.string().describe('Human-readable title'),
+		description: z.string().describe('What the script does'),
+		code: z.string().describe('The TypeScript code to save'),
+		tags: z.array(z.string()).describe('Tags for search (e.g. ["messaging", "linkedin", "chats"])')
+	}),
+	execute: async (ctx: ToolCtx, input): Promise<Record<string, unknown>> => {
+		if (!ctx.userId) return { success: false, error: 'No userId' };
+		await ctx.runMutation(internal.todo.scripts.saveScript, {
+			userId: ctx.userId,
+			slug: input.slug,
+			title: input.title,
+			description: input.description,
+			code: input.code,
+			tags: input.tags,
+			skipIfExists: true
+		});
+		return { success: true, slug: input.slug };
 	}
 });
 
@@ -297,7 +367,9 @@ You can ONLY modify YOUR OWN task using these tools:
 - updateMyNotes: Update your task's notes (2-4 bullet points)
 - moveMyTask: Move your task between columns
 - setMyTaskUI: Set interactive UI on your task
-- executeUnipileCode: Execute Unipile SDK code for messaging, email, and contacts
+- bash: Run shell commands to explore SDK source, write scripts, and execute them
+- findSavedScripts: Search your saved Unipile SDK scripts
+- saveScript: Save a working script for future reuse
 - createTask: Create sub-tasks (they get their own dedicated agents)
 - notifyTask: Send a notification to another task's agent
 
@@ -316,7 +388,7 @@ todo -> working-on -> prepared -> done
 1. Analyze the task title, notes, and the other tasks on the board for context
 2. If the task is unclear or missing key info, use createTask to ask the user what you need (e.g. "Specify budget for X")
 3. Move to "working-on" using moveMyTask and begin — update notes to say what Coda is doing
-4. If Unipile work is needed, use executeUnipileCode
+4. If Unipile work is needed, use findSavedScripts first, then the bash tool to explore the SDK and execute scripts
 5. Record results using updateMyNotes
 6. Move to "prepared" when done — notes must clearly state what the user needs to review or decide
 7. Move to "done" only after successful execution
@@ -343,7 +415,9 @@ When receiving a notification:
 ## Tool Usage
 
 - createTask: Use ONLY to ask the user for missing context or clarification. Do NOT use it to break tasks into execution steps — that is your job, not the user's.
-- executeUnipileCode: Write and execute TypeScript code that uses the Unipile SDK. See SDK reference below.
+- bash: Run shell commands in a sandboxed virtual FS. See "Bash Shell Reference" below.
+- findSavedScripts: Search previously saved scripts. Always check here FIRST before writing new SDK code.
+- saveScript: Save a working script after successful execution for future reuse.
 - updateMyNotes: Use to record short text summaries (2-4 bullet points)
 - setMyTaskUI: Use to present structured interactive content. See "Interactive UI Reference" below. You can use both updateMyNotes (for a brief summary) and setMyTaskUI (for the interactive content) together.
 - moveMyTask: Move your task between columns
@@ -434,94 +508,58 @@ Example — product comparison:
 
 ---
 
-## Unipile SDK Reference (for executeUnipileCode)
+## Bash Shell Reference
 
-### Available Globals
+### Virtual Filesystem Layout
 
-The \`unipile\` object is a pre-configured SDK client with the following resources:
+Your bash session has three mount points:
+- \`/sdk/\` — Read-only Unipile Node SDK TypeScript source (resources, types, schemas)
+- \`/scripts/\` — Your saved scripts (pre-loaded from previous sessions)
+- \`/workspace/\` — Scratch space for writing new scripts
 
-#### \`unipile.account\`
-- \`getAll(input?: { limit?: number; cursor?: string })\` — List all connected accounts
-- \`getOne(accountId: string)\` — Get a single account by ID
+### Workflow for Unipile Tasks
 
-#### \`unipile.messaging\`
-- \`getAllChats(input?: { limit?: number; cursor?: string; account_id?: string; unread?: boolean; before?: string; after?: string })\` — List chats
-- \`getChat(chatId: string)\` — Get a single chat
-- \`getAllMessagesFromChat(input: { chat_id: string; limit?: number; cursor?: string; before?: string; after?: string })\` — List messages in a chat
-- \`getMessage(messageId: string)\` — Get a single message
-- \`getAllMessages(input?: { account_id?: string; limit?: number; cursor?: string })\` — List all messages
-- \`getAllAttendees(input?: { account_id?: string; limit?: number; cursor?: string })\` — List attendees
-- \`getAttendee(attendeeId: string)\` — Get a single attendee
-- \`sendMessage(input: { chat_id: string; text: string })\` — Send a message to a chat
-- \`startNewChat(input: { account_id: string; text: string; attendees_ids: string[] })\` — Start a new chat
+1. **Check saved scripts first**: Use findSavedScripts to see if a relevant script already exists
+2. **If found**: Run it directly: \`execute-ts /scripts/slug-name.ts\`
+3. **If not found**: Explore the SDK to discover the right methods:
+   - \`grep -rn 'methodName' /sdk/resources/\` — find method definitions
+   - \`cat /sdk/resources/messaging.resource.ts\` — read a resource file
+   - \`cat /sdk/types/input/input-messaging.ts\` — read input types
+   - \`ls /sdk/resources/\` — list available resource files
+   - \`ls /sdk/types/\` — list type directories
+4. **Write a script**: Use heredoc: cat > /workspace/script.ts << 'EOF'
+5. **Run it**: \`execute-ts /workspace/script.ts\`
+6. **Save it**: If the script works, use saveScript to persist it for reuse
 
-#### \`unipile.email\`
-- \`getAll(input?: { account_id?: string; role?: string; folder?: string; from?: string; to?: string; limit?: number; cursor?: string })\` — List emails
-- \`getOne(emailId: string)\` — Get a single email
-- \`getAllFolders(input?: { account_id?: string })\` — List email folders
-- \`send(input: { account_id: string; body: string; to: { email: string; display_name?: string }[]; subject?: string; cc?: object[]; bcc?: object[] })\` — Send an email
+### Key SDK Paths
 
-#### \`unipile.users\`
-- \`getProfile(input: { account_id: string; identifier: string })\` — Get a user profile
-- \`getOwnProfile(accountId: string)\` — Get own profile
-- \`getAllRelations(input: { account_id: string; limit?: number; cursor?: string })\` — List relations
-- \`getAllPosts(input: { account_id: string; identifier: string; limit?: number; cursor?: string })\` — List posts
-- \`getPost(input: { account_id: string; post_id: string })\` — Get a single post
+- \`/sdk/resources/\` — Resource classes (account, messaging, email, users, webhook)
+- \`/sdk/types/input/\` — Input parameter types for each resource
+- \`/sdk/types/output.ts\` — Response/output types
+- \`/sdk/schemas/\` — Validation schemas
+- \`/sdk/client.ts\` — Client class definition
 
-### Other Globals
-- \`USER_ACCOUNT_IDS\` — Frozen array of the current user's Unipile account IDs. Use these instead of hardcoded IDs. The SDK facade is scoped to these accounts — passing a foreign account_id will throw "Access denied".
-- \`console.log(...args)\` — Output results (captured and returned)
+### execute-ts Rules
+
+Scripts run in a sandboxed VM with these globals:
+- \`unipile\` — Pre-configured SDK client (account, messaging, email, users, webhook)
+- \`USER_ACCOUNT_IDS\` — Frozen array of the user's allowed Unipile account IDs
+- \`console.log()\` — Output results (captured and returned)
 - \`fetch\`, \`JSON\`, \`Date\`, \`Promise\`, \`Buffer\`, \`URL\`, \`Headers\`, \`URLSearchParams\`, \`setTimeout\`, \`AbortController\`, \`TextEncoder\`, \`TextDecoder\`, \`FormData\`, \`Blob\`
 
-### Rules
-1. Do NOT use \`import\` or \`require\` — only the globals listed above are available
+Rules:
+1. No \`import\` or \`require\` — only the globals above
 2. Use \`console.log()\` to output results
-3. Use top-level await freely (the script is wrapped in an async IIFE)
-4. SDK methods return parsed data directly — no \`.json()\` call needed
-5. Handle errors with try/catch and log useful error messages
-6. The script runs with a 15-second timeout
-
-### Examples
-
-**List connected accounts:**
-\`\`\`typescript
-const data = await unipile.account.getAll();
-console.log(JSON.stringify(data, null, 2));
-\`\`\`
-
-**Get all messaging chats:**
-\`\`\`typescript
-const data = await unipile.messaging.getAllChats({ limit: 20 });
-console.log(JSON.stringify(data, null, 2));
-\`\`\`
-
-**Send a message to a chat:**
-\`\`\`typescript
-const data = await unipile.messaging.sendMessage({ chat_id: 'CHAT_ID', text: 'Hello!' });
-console.log(JSON.stringify(data, null, 2));
-\`\`\`
-
-**Send an email:**
-\`\`\`typescript
-const accountId = USER_ACCOUNT_IDS[0];
-const data = await unipile.email.send({
-  account_id: accountId,
-  to: [{ email: 'recipient@example.com', display_name: 'Recipient' }],
-  subject: 'Test Email',
-  body: '<p>Hello from Promus!</p>'
-});
-console.log(JSON.stringify(data, null, 2));
-\`\`\`
-
-**List emails for a specific account:**
-\`\`\`typescript
-const data = await unipile.email.getAll({ account_id: USER_ACCOUNT_IDS[0], limit: 10 });
-console.log(JSON.stringify(data, null, 2));
-\`\`\``,
+3. Top-level await is supported (wrapped in async IIFE)
+4. SDK methods return parsed data — no \`.json()\` needed
+5. 15-second execution timeout
+6. Always use \`USER_ACCOUNT_IDS\` for account IDs — never hardcode them`,
 
 	tools: {
 		createTask,
-		executeUnipileCode,
+		bash,
+		findSavedScripts,
+		saveScript,
 		updateMyNotes,
 		moveMyTask,
 		setMyTaskUI,
@@ -534,5 +572,5 @@ console.log(JSON.stringify(data, null, 2));
 		recentMessages: 20
 	},
 
-	maxSteps: 10
+	maxSteps: 12
 });

@@ -36,7 +36,7 @@
 				</div>
 				<div>
 					<p class="text-base font-semibold text-foreground">Convex</p>
-					<p class="text-xs text-muted-foreground">Real-time backend &amp; agent orchestration</p>
+					<p class="text-xs text-muted-foreground">Real-time backend &amp; Coda orchestration</p>
 				</div>
 			</div>
 

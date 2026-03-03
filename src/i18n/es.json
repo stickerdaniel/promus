@@ -589,7 +589,7 @@
 		"cta": "Empezar",
 		"cta_demo": "Solicitar una demo",
 		"cta_sourcecode": "Ver código fuente",
-		"description": "Un agente de IA que completa tus tareas. Conectado a todas tus herramientas profesionales.",
+		"description": "Coda completa tus tareas. Conectado a todas tus herramientas profesionales.",
 		"section_label": "Inicio",
 		"tagline": "Tu lista de tareas acaba de crecer 8 brazos.",
 		"title": "Promus"
@@ -724,7 +724,7 @@
 		},
 		"home": {
 			"description": "Añade una tarea. Promus investiga, redacta y ejecuta — conectado a tu email, calendario y mensajes.",
-			"title": "El agente de IA que hace tus tareas"
+			"title": "Coda hace tus tareas"
 		},
 		"pricing": {
 			"description": "Elige un plan y prueba el flujo de facturación integrado.",
@@ -761,8 +761,8 @@
 		},
 		"current_plan": "Plan Actual",
 		"current_plan_badge": "(Plan Actual)",
-		"description": "Precios simples para una lista de tareas más inteligente. Prueba el agente IA gratis, mejora cuando necesites más.",
-		"description_autumn": "Precios simples para una lista de tareas más inteligente. Prueba el agente IA gratis, mejora cuando necesites más.",
+		"description": "Precios simples para una lista de tareas más inteligente. Prueba Coda gratis, mejora cuando necesites más.",
+		"description_autumn": "Precios simples para una lista de tareas más inteligente. Prueba Coda gratis, mejora cuando necesites más.",
 		"features": {
 			"enterprise": {
 				"0": "Límites de mensajes personalizados",
@@ -1133,13 +1133,13 @@
 		},
 		"cta": "Empezar gratis",
 		"detail": {
-			"agent_draft_title": "Borrador del agente",
-			"agent_feedback_placeholder": "Dile al agente qué cambiar...",
-			"agent_logs": "Registros del agente",
+			"agent_draft_title": "Borrador de Coda",
+			"agent_feedback_placeholder": "Dile a Coda qué cambiar...",
+			"agent_logs": "Registros de Coda",
 			"agent_reject": "Rechazar",
 			"agent_send": "Enviar",
 			"agent_status_awaiting": "Esperando tu aprobación",
-			"agent_status_done": "Agente completado",
+			"agent_status_done": "Coda completado",
 			"agent_status_working": "Coda está trabajando...",
 			"agent_submit_feedback": "Enviar comentarios",
 			"cancel": "Cancelar",

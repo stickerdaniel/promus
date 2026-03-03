@@ -363,6 +363,12 @@
 			"name": "motionCore",
 			"url": "https://github.com/motion-core/motion-core",
 			"branch": "master"
+		},
+		{
+			"type": "local",
+			"name": "justBash",
+			"path": "docs/references/just-bash/src",
+			"specialNotes": "Virtual bash shell for JS/TS. Bash class, InMemoryFs, MountableFs, OverlayFs, defineCommand. Check fs/ for filesystem impls, commands/ for builtins, custom-commands.ts for defineCommand API."
 		}
 	],
 	"model": "claude-haiku-4.5",

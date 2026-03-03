@@ -11,7 +11,7 @@
 			</h2>
 			<div class="w-12 h-1 bg-primary rounded-full my-8"></div>
 			<p class="text-lg text-muted-foreground font-light max-w-[360px]">
-				Give feedback. The agent learns your tone, your preferences, your way of working.
+				Give feedback. Coda learns your tone, your preferences, your way of working.
 			</p>
 		</div>
 
@@ -43,7 +43,7 @@
 					<div class="size-14 rounded-2xl bg-primary flex items-center justify-center shadow-sm">
 						<span class="text-primary-foreground font-bold text-xl">P</span>
 					</div>
-					<span class="text-xs font-medium text-foreground whitespace-nowrap">Agent output</span>
+					<span class="text-xs font-medium text-foreground whitespace-nowrap">Coda output</span>
 				</div>
 
 				<!-- Right: Review -->

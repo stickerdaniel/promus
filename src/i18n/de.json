@@ -589,7 +589,7 @@
 		"cta": "Jetzt starten",
 		"cta_demo": "Demo anfordern",
 		"cta_sourcecode": "Quellcode ansehen",
-		"description": "Ein KI-Agent, der deine Todos erledigt. Verbunden mit all deinen professionellen Tools.",
+		"description": "Coda erledigt deine Todos. Verbunden mit all deinen professionellen Tools.",
 		"section_label": "Start",
 		"tagline": "Deine Todo-Liste hat gerade 8 Arme bekommen.",
 		"title": "Promus"
@@ -724,7 +724,7 @@
 		},
 		"home": {
 			"description": "Füge eine Aufgabe hinzu. Promus recherchiert, formuliert und erledigt — verbunden mit deiner E-Mail, deinem Kalender und deinen Nachrichten.",
-			"title": "Der KI-Agent, der deine Todos erledigt"
+			"title": "Coda erledigt deine Todos"
 		},
 		"pricing": {
 			"description": "Wähle einen Plan und teste den integrierten Abrechnungsablauf.",
@@ -761,8 +761,8 @@
 		},
 		"current_plan": "Aktueller Plan",
 		"current_plan_badge": "(Aktueller Plan)",
-		"description": "Einfache Preise für eine smartere Todo-Liste. Teste den KI-Agent kostenlos, upgrade wenn du mehr brauchst.",
-		"description_autumn": "Einfache Preise für eine smartere Todo-Liste. Teste den KI-Agent kostenlos, upgrade wenn du mehr brauchst.",
+		"description": "Einfache Preise für eine smartere Todo-Liste. Teste Coda kostenlos, upgrade wenn du mehr brauchst.",
+		"description_autumn": "Einfache Preise für eine smartere Todo-Liste. Teste Coda kostenlos, upgrade wenn du mehr brauchst.",
 		"features": {
 			"enterprise": {
 				"0": "Individuelle Nachrichtenlimits",
@@ -1133,13 +1133,13 @@
 		},
 		"cta": "Kostenlos starten",
 		"detail": {
-			"agent_draft_title": "Agent-Entwurf",
-			"agent_feedback_placeholder": "Sag dem Agent, was er ändern soll...",
-			"agent_logs": "Agent-Protokolle",
+			"agent_draft_title": "Coda-Entwurf",
+			"agent_feedback_placeholder": "Sag Coda, was geändert werden soll...",
+			"agent_logs": "Coda-Protokolle",
 			"agent_reject": "Ablehnen",
 			"agent_send": "Senden",
 			"agent_status_awaiting": "Wartet auf deine Freigabe",
-			"agent_status_done": "Agent abgeschlossen",
+			"agent_status_done": "Coda abgeschlossen",
 			"agent_status_working": "Coda arbeitet...",
 			"agent_submit_feedback": "Feedback senden",
 			"cancel": "Abbrechen",

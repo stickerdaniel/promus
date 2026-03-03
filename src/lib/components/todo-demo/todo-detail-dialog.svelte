@@ -138,6 +138,9 @@
 						bind:value={editNotes}
 						placeholder={$t('todo_demo.detail.notes_placeholder')}
 						rows={3}
+						onfocus={() => {
+							editingNotes = true;
+						}}
 						onblur={async () => {
 							if (!editNotes) return;
 							editingNotes = false;
@@ -238,7 +241,7 @@
 				<Separator />
 				<div class="flex items-center gap-2">
 					<Logo class="size-4 text-primary" />
-					<span class="text-sm font-medium">Agent needs approval</span>
+					<span class="text-sm font-medium">Coda needs approval</span>
 				</div>
 				{#if task.agentDraft}
 					<div class="max-h-40 overflow-y-auto rounded-md border bg-muted/30 p-3 text-sm">

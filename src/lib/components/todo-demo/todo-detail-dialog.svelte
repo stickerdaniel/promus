@@ -226,7 +226,7 @@
 		{#if task.agentStatus === 'working'}
 			<div class="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">
 				<Logo class="size-4 text-primary agent-working" />
-				<span class="text-sm text-muted-foreground">Agent is working...</span>
+				<span class="text-sm text-muted-foreground">Coda is working...</span>
 			</div>
 		{:else if task.agentStatus === 'done' && task.agentSummary}
 			<div class="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">

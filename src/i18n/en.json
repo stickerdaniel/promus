@@ -860,6 +860,24 @@
 			"trigger_mobile": "Search..."
 		}
 	},
+	"sidebar": {
+		"connections": {
+			"llm_providers": "LLM Providers",
+			"connections": "Connections",
+			"connect": "Connect",
+			"connected": "Connected",
+			"connected_since": "Connected since {date}",
+			"remove": "Remove connection",
+			"linkedin": "LinkedIn",
+			"gmail": "Gmail",
+			"outlook": "Outlook",
+			"whatsapp": "WhatsApp",
+			"instagram": "Instagram",
+			"messenger": "Messenger",
+			"telegram": "Telegram",
+			"twitter": "X (Twitter)"
+		}
+	},
 	"settings": {
 		"account": {
 			"avatar": {
@@ -912,6 +930,24 @@
 			"load_failed": "Failed to load accounts",
 			"loading": "Loading accounts...",
 			"no_accounts": "No accounts connected yet.",
+			"openai_connect": "Connect ChatGPT",
+			"openai_connect_failed": "Failed to start ChatGPT authorization",
+			"openai_connected": "Connected",
+			"openai_connected_as": "Connected as {email}",
+			"openai_connected_date": "Connected {date}",
+			"openai_copy_code": "Copy code",
+			"openai_description": "Connect your ChatGPT Plus or Pro account to use AI features at no extra cost.",
+			"openai_device_code_description": "Enter the code below at OpenAI to authorize access.",
+			"openai_device_code_title": "Connect your ChatGPT account",
+			"openai_disconnect": "Disconnect ChatGPT",
+			"openai_disconnect_confirm": "Disconnect your ChatGPT account? You can reconnect at any time.",
+			"openai_disconnect_failed": "Failed to disconnect ChatGPT account",
+			"openai_disconnected": "ChatGPT account disconnected",
+			"openai_expired": "Expired",
+			"openai_open_openai": "Open OpenAI",
+			"openai_timeout": "Authorization timed out. Please try again.",
+			"openai_title": "ChatGPT / OpenAI",
+			"openai_waiting": "Waiting for authorization...",
 			"status_connecting": "Connecting",
 			"status_error": "Error",
 			"status_ok": "Connected",
@@ -1104,7 +1140,7 @@
 			"agent_send": "Send",
 			"agent_status_awaiting": "Awaiting your approval",
 			"agent_status_done": "Agent completed",
-			"agent_status_working": "Agent is working...",
+			"agent_status_working": "Coda is working...",
 			"agent_submit_feedback": "Submit Feedback",
 			"cancel": "Cancel",
 			"delete": "Delete",

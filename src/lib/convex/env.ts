@@ -109,10 +109,14 @@ export const unipileConfig = {
 	apiKey: process.env.UNIPILE_API_KEY
 };
 
+/** OpenAI OAuth — always enabled (uses shared public client ID, no server config needed) */
+export const openaiOAuth = {
+	enabled: true,
+	clientId: 'app_EMoamEEZ73f0CkXaXp7hrann'
+};
+
 /**
- * Support LLM provider config
- * SUPPORT_LLM_PROVIDER: 'bedrock' (default) | 'openrouter'
- * When 'openrouter': requires OPENROUTER_API_KEY
- * When 'bedrock': requires AWS_BEARER_TOKEN_BEDROCK, optional AWS_REGION
+ * Support LLM provider: OpenRouter (requires OPENROUTER_API_KEY)
+ * Task agent: user's connected ChatGPT Codex subscription
  */
-export const supportLlmProvider = process.env.SUPPORT_LLM_PROVIDER ?? 'bedrock';
+export const supportLlmProvider = 'openrouter';

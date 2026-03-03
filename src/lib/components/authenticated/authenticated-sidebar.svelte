@@ -3,16 +3,17 @@
 	import * as Sidebar from '$lib/components/ui/sidebar/index.js';
 	import * as DropdownMenu from '$lib/components/ui/dropdown-menu';
 	import { resolve } from '$app/paths';
-	import type { ComponentProps } from 'svelte';
+	import type { ComponentProps, Snippet } from 'svelte';
 	import { T } from '@tolgee/svelte';
 	import type { SidebarConfig, User } from './types';
 
 	interface Props extends ComponentProps<typeof Sidebar.Root> {
 		config: SidebarConfig;
 		user?: User;
+		connectionSlot?: Snippet;
 	}
 
-	let { config, user, ...restProps }: Props = $props();
+	let { config, user, connectionSlot, ...restProps }: Props = $props();
 </script>
 
 <Sidebar.Root collapsible="offcanvas" {...restProps}>
@@ -87,6 +88,9 @@
 				</Sidebar.Menu>
 			</Sidebar.GroupContent>
 		</Sidebar.Group>
+		{#if connectionSlot}
+			{@render connectionSlot()}
+		{/if}
 	</Sidebar.Content>
 
 	<Sidebar.Footer>

@@ -9,6 +9,7 @@
 
 	interface Props {
 		children?: Snippet;
+		connectionSlot?: Snippet;
 		sidebarConfig: SidebarConfig;
 		user?: User;
 		routePrefix: string;
@@ -18,6 +19,7 @@
 
 	let {
 		children,
+		connectionSlot,
 		sidebarConfig,
 		user,
 		routePrefix,
@@ -43,7 +45,7 @@
 		style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
 		class="h-svh overflow-hidden"
 	>
-		<AuthenticatedSidebar variant="inset" config={sidebarConfig} {user} />
+		<AuthenticatedSidebar variant="inset" config={sidebarConfig} {user} {connectionSlot} />
 		<Sidebar.Inset class={fullControl ? 'flex flex-col overflow-hidden' : ''}>
 			<AuthenticatedHeader {routePrefix} {rootLabel} />
 

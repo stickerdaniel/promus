@@ -212,6 +212,18 @@ export default defineSchema({
 		.index('by_storageId', ['storageId'])
 		.index('by_url', ['url']),
 
+	// OpenAI OAuth connections — stores tokens for ChatGPT Codex API access
+	openaiConnections: defineTable({
+		userId: v.string(),
+		accessToken: v.string(),
+		refreshToken: v.string(),
+		expiresAt: v.number(), // ms timestamp
+		accountId: v.optional(v.string()), // ChatGPT account ID from JWT
+		email: v.optional(v.string()), // from id_token claims
+		connectedAt: v.number(),
+		updatedAt: v.number()
+	}).index('by_user', ['userId']),
+
 	// Pending Unipile OAuth auth flows — nonce-based correlation for webhook completion
 	pendingUnipileAuth: defineTable({
 		nonce: v.string(), // crypto.randomUUID, used as `name` in Unipile API

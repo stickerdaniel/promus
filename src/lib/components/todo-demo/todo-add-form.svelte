@@ -36,12 +36,7 @@
 
 {#if editing}
 	<form onsubmit={handleSubmit} class="grid gap-2 pt-2">
-		<Input
-			bind:value={title}
-			placeholder={$t('todo_demo.add_placeholder')}
-			class="h-8 text-sm"
-			autofocus
-		/>
+		<Input bind:value={title} placeholder={$t('todo_demo.add_placeholder')} class="h-8" autofocus />
 		<div class="flex gap-2">
 			<Button type="submit" size="sm" class="h-7 text-xs">
 				{$t('todo_demo.add_card')}

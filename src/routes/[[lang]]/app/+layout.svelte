@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { AuthenticatedLayout, getAppSidebarConfig } from '$lib/components/authenticated';
+	import SidebarConnections from '$lib/components/authenticated/sidebar-connections.svelte';
 	import { page } from '$app/state';
 	import type { LayoutData } from './$types';
 	import type { Snippet } from 'svelte';
@@ -33,5 +34,8 @@
 	routePrefix="app"
 	rootLabel="App"
 >
+	{#snippet connectionSlot()}
+		<SidebarConnections />
+	{/snippet}
 	{@render children?.()}
 </AuthenticatedLayout>

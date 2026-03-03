@@ -8,6 +8,7 @@
 	import ProviderGoogle from './provider-google.svelte';
 	import ProviderMail from './provider-mail.svelte';
 	import ProviderOutlook from './provider-outlook.svelte';
+	import ProviderChatgpt from './provider-chatgpt.svelte';
 	import LinkIcon from '@lucide/svelte/icons/link';
 
 	let { type, class: className = 'size-full' }: { type: string; class?: string } = $props();
@@ -25,7 +26,8 @@
 		MAIL: ProviderMail,
 		IMAP: ProviderMail,
 		EXCHANGE: ProviderOutlook,
-		OUTLOOK: ProviderOutlook
+		OUTLOOK: ProviderOutlook,
+		CHATGPT: ProviderChatgpt
 	};
 
 	let Icon = $derived(icons[type.toUpperCase()]);

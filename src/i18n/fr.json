@@ -860,6 +860,24 @@
 			"trigger_mobile": "Rechercher..."
 		}
 	},
+	"sidebar": {
+		"connections": {
+			"llm_providers": "Fournisseurs IA",
+			"connections": "Connexions",
+			"connect": "Connecter",
+			"connected": "Connecté",
+			"connected_since": "Connecté depuis {date}",
+			"remove": "Supprimer la connexion",
+			"linkedin": "LinkedIn",
+			"gmail": "Gmail",
+			"outlook": "Outlook",
+			"whatsapp": "WhatsApp",
+			"instagram": "Instagram",
+			"messenger": "Messenger",
+			"telegram": "Telegram",
+			"twitter": "X (Twitter)"
+		}
+	},
 	"settings": {
 		"account": {
 			"avatar": {
@@ -912,6 +930,24 @@
 			"load_failed": "Impossible de charger les comptes",
 			"loading": "Chargement des comptes...",
 			"no_accounts": "Aucun compte connecté pour le moment.",
+			"openai_connect": "Connecter ChatGPT",
+			"openai_connect_failed": "Impossible de démarrer l'autorisation ChatGPT",
+			"openai_connected": "Connecté",
+			"openai_connected_as": "Connecté en tant que {email}",
+			"openai_connected_date": "Connecté le {date}",
+			"openai_copy_code": "Copier le code",
+			"openai_description": "Connecte ton compte ChatGPT Plus ou Pro pour utiliser les fonctionnalités IA sans frais supplémentaires.",
+			"openai_device_code_description": "Entre le code ci-dessous sur OpenAI pour autoriser l'accès.",
+			"openai_device_code_title": "Connecter ton compte ChatGPT",
+			"openai_disconnect": "Déconnecter ChatGPT",
+			"openai_disconnect_confirm": "Déconnecter ton compte ChatGPT ? Tu peux te reconnecter à tout moment.",
+			"openai_disconnect_failed": "Impossible de déconnecter le compte ChatGPT",
+			"openai_disconnected": "Compte ChatGPT déconnecté",
+			"openai_expired": "Expiré",
+			"openai_open_openai": "Ouvrir OpenAI",
+			"openai_timeout": "L'autorisation a expiré. Veuillez réessayer.",
+			"openai_title": "ChatGPT / OpenAI",
+			"openai_waiting": "En attente d'autorisation...",
 			"status_connecting": "Connexion en cours",
 			"status_error": "Erreur",
 			"status_ok": "Connecté",
@@ -1104,7 +1140,7 @@
 			"agent_send": "Envoyer",
 			"agent_status_awaiting": "En attente de ton approbation",
 			"agent_status_done": "Agent terminé",
-			"agent_status_working": "L'agent travaille...",
+			"agent_status_working": "Coda travaille...",
 			"agent_submit_feedback": "Envoyer le retour",
 			"cancel": "Annuler",
 			"delete": "Supprimer",

@@ -1,7 +1,7 @@
 import { Agent, createTool } from '@convex-dev/agent';
 import { z } from 'zod';
 import { components, internal } from '../_generated/api';
-import { getTaskLanguageModel } from '../support/llmProvider';
+import { getSupportLanguageModel } from '../support/llmProvider';
 import type { ToolCtx } from '@convex-dev/agent';
 
 const MAX_RESULT = 4096;
@@ -25,14 +25,14 @@ async function resolveOwnTaskId(ctx: ToolCtx): Promise<string | null> {
 export const executeUnipileCode = createTool({
 	description:
 		'Execute TypeScript code that uses the Unipile SDK. Write code that uses the `unipile` global object to interact with messaging, email, and contact APIs. The code runs in a sandboxed VM with a 15-second timeout.',
-	args: z.object({
+	inputSchema: z.object({
 		code: z
 			.string()
 			.describe(
 				'TypeScript code to execute. Has access to `unipile` global and `console.log()` for output. No imports allowed.'
 			)
 	}),
-	handler: async (ctx: ToolCtx, args) => {
+	execute: async (ctx: ToolCtx, input) => {
 		if (!ctx.userId) {
 			return { success: false, error: 'No userId — cannot resolve account access' };
 		}
@@ -62,7 +62,7 @@ export const executeUnipileCode = createTool({
 					'Content-Type': 'application/json',
 					'x-internal-key': internalKey
 				},
-				body: JSON.stringify({ code: args.code, allowedAccountIds })
+				body: JSON.stringify({ code: input.code, allowedAccountIds })
 			});
 
 			if (!response.ok) {
@@ -89,16 +89,16 @@ export const executeUnipileCode = createTool({
 export const updateMyNotes = createTool({
 	description:
 		'Update notes on YOUR task (the task you are the dedicated agent for). Use for short text summaries (2-4 bullet points).',
-	args: z.object({
+	inputSchema: z.object({
 		notes: z.string().describe('Notes content to set on your task')
 	}),
-	handler: async (ctx: ToolCtx, args) => {
+	execute: async (ctx: ToolCtx, input) => {
 		const taskId = await resolveOwnTaskId(ctx);
 		if (!taskId) return { success: false, error: 'Could not resolve own task' };
 		await ctx.runMutation(internal.todos.updateTaskNotesInternal, {
 			userId: ctx.userId!,
 			taskId,
-			notes: args.notes
+			notes: input.notes
 		});
 		return { success: true };
 	}
@@ -107,7 +107,7 @@ export const updateMyNotes = createTool({
 export const createTask = createTool({
 	description:
 		'Create a new sub-task or clarifying question. The new task gets its own dedicated agent that starts working on it immediately. Use notificationMessage to give the new agent context about what you need.',
-	args: z.object({
+	inputSchema: z.object({
 		title: z.string().describe('Title for the new task'),
 		notes: z.string().optional().describe('Optional notes or context for the task'),
 		notificationMessage: z
@@ -117,21 +117,21 @@ export const createTask = createTool({
 				'Optional message to the new task agent explaining what you need from it and why you created it'
 			)
 	}),
-	handler: async (ctx: ToolCtx, args) => {
+	execute: async (ctx: ToolCtx, input) => {
 		if (!ctx.userId) return { success: false as const, error: 'No userId' };
 		const taskId: string = await ctx.runMutation(internal.todos.addTaskInternal, {
 			userId: ctx.userId,
-			title: args.title,
-			notes: args.notes
+			title: input.title,
+			notes: input.notes
 		});
 		// Auto-trigger the new task's agent
 		await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNewTask, {
 			userId: ctx.userId,
 			taskId,
-			taskTitle: args.title,
-			taskNotes: args.notes,
+			taskTitle: input.title,
+			taskNotes: input.notes,
 			taskColumn: 'todo',
-			parentNotification: args.notificationMessage
+			parentNotification: input.notificationMessage
 		});
 		return { success: true as const, taskId };
 	}
@@ -140,18 +140,18 @@ export const createTask = createTool({
 export const moveMyTask = createTool({
 	description:
 		'Move YOUR task to a different column (todo, working-on, prepared, done). You can only move your own task.',
-	args: z.object({
+	inputSchema: z.object({
 		columnId: z
 			.enum(['todo', 'working-on', 'prepared', 'done'])
 			.describe('Target column to move your task to')
 	}),
-	handler: async (ctx: ToolCtx, args) => {
+	execute: async (ctx: ToolCtx, input) => {
 		const taskId = await resolveOwnTaskId(ctx);
 		if (!taskId) return { success: false, error: 'Could not resolve own task' };
 		await ctx.runMutation(internal.todos.moveTaskInternal, {
 			userId: ctx.userId!,
 			taskId,
-			columnId: args.columnId
+			columnId: input.columnId
 		});
 		return { success: true };
 	}
@@ -160,25 +160,25 @@ export const moveMyTask = createTool({
 export const setMyTaskUI = createTool({
 	description:
 		'Set interactive UI on YOUR task. Outputs a json-render spec that renders as real UI components (cards, tables, buttons, inputs, etc.). Use for structured interactive content like product comparisons, email drafts, data tables, or any rich visual output. Replaces any existing UI on the task.',
-	args: z.object({
+	inputSchema: z.object({
 		spec: z
 			.string()
 			.describe(
 				'JSON-stringified json-render spec object with root, elements, and optional state fields'
 			)
 	}),
-	handler: async (ctx: ToolCtx, args) => {
+	execute: async (ctx: ToolCtx, input) => {
 		const taskId = await resolveOwnTaskId(ctx);
 		if (!taskId) return { success: false, error: 'Could not resolve own task' };
 		try {
-			JSON.parse(args.spec);
+			JSON.parse(input.spec);
 		} catch {
 			return { success: false, error: 'Invalid JSON in spec' };
 		}
 		await ctx.runMutation(internal.todos.updateTaskSpecInternal, {
 			userId: ctx.userId!,
 			taskId,
-			agentSpec: args.spec
+			agentSpec: input.spec
 		});
 		return { success: true };
 	}
@@ -186,7 +186,7 @@ export const setMyTaskUI = createTool({
 
 export const notifyTask = createTool({
 	description: `Send a notification to another task's agent. Use this when your work affects or is relevant to another task. The other task's agent will wake up, read your message, and independently decide what to do. You CANNOT modify other tasks directly — you can only notify them. Include enough context so the receiving agent can act on its own.`,
-	args: z.object({
+	inputSchema: z.object({
 		taskId: z.string().describe('The ID of the task to notify'),
 		message: z
 			.string()
@@ -198,7 +198,7 @@ export const notifyTask = createTool({
 			.default('normal')
 			.describe('Notification priority. Use "high" only for blocking issues.')
 	}),
-	handler: async (ctx: ToolCtx, args) => {
+	execute: async (ctx: ToolCtx, input) => {
 		if (!ctx.userId || !ctx.threadId) return { success: false, error: 'Missing context' };
 
 		// Resolve sender's taskId
@@ -221,10 +221,10 @@ export const notifyTask = createTool({
 		// Look up the target task
 		const targetInfo = await ctx.runQuery(internal.todos.getTaskThreadInfo, {
 			userId: ctx.userId,
-			taskId: args.taskId
+			taskId: input.taskId
 		});
 		if (!targetInfo) {
-			return { success: false, error: `Task ${args.taskId} not found` };
+			return { success: false, error: `Task ${input.taskId} not found` };
 		}
 
 		// Determine notification depth from any pending notifications on sender's task
@@ -247,9 +247,9 @@ export const notifyTask = createTool({
 		await ctx.runMutation(internal.todo.notifications.createNotification, {
 			userId: ctx.userId,
 			fromTaskId: senderTaskId ?? 'unknown',
-			toTaskId: args.taskId,
-			message: args.message,
-			priority: args.priority,
+			toTaskId: input.taskId,
+			message: input.message,
+			priority: input.priority,
 			depth: newDepth
 		});
 
@@ -258,36 +258,36 @@ export const notifyTask = createTool({
 			await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNotification, {
 				userId: ctx.userId,
 				threadId: targetInfo.threadId,
-				taskId: args.taskId,
+				taskId: input.taskId,
 				taskTitle: targetInfo.title,
 				fromTaskId: senderTaskId ?? 'unknown',
-				message: args.message,
-				priority: args.priority
+				message: input.message,
+				priority: input.priority
 			});
 		} else {
 			// Target has no thread yet — create one and trigger
 			await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNewTask, {
 				userId: ctx.userId,
-				taskId: args.taskId,
+				taskId: input.taskId,
 				taskTitle: targetInfo.title,
 				taskNotes: targetInfo.notes,
 				taskColumn: targetInfo.columnId,
 				incomingNotification: {
 					fromTaskId: senderTaskId ?? 'unknown',
-					message: args.message,
-					priority: args.priority
+					message: input.message,
+					priority: input.priority
 				}
 			});
 		}
 
-		return { success: true, notified: args.taskId };
+		return { success: true, notified: input.taskId };
 	}
 });
 
 export const todoAgent = new Agent(components.agent, {
 	name: 'Task Assistant',
 
-	languageModel: getTaskLanguageModel() as any,
+	languageModel: getSupportLanguageModel() as any,
 
 	instructions: `You are the dedicated agent for ONE specific task. You own this task and are solely responsible for it.
 
@@ -528,9 +528,7 @@ console.log(JSON.stringify(data, null, 2));
 		notifyTask
 	},
 
-	callSettings: {
-		temperature: 0.7
-	},
+	callSettings: {},
 
 	contextOptions: {
 		recentMessages: 20

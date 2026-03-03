@@ -860,6 +860,24 @@
 			"trigger_mobile": "Buscar..."
 		}
 	},
+	"sidebar": {
+		"connections": {
+			"llm_providers": "Proveedores de IA",
+			"connections": "Conexiones",
+			"connect": "Conectar",
+			"connected": "Conectado",
+			"connected_since": "Conectado desde {date}",
+			"remove": "Eliminar conexión",
+			"linkedin": "LinkedIn",
+			"gmail": "Gmail",
+			"outlook": "Outlook",
+			"whatsapp": "WhatsApp",
+			"instagram": "Instagram",
+			"messenger": "Messenger",
+			"telegram": "Telegram",
+			"twitter": "X (Twitter)"
+		}
+	},
 	"settings": {
 		"account": {
 			"avatar": {
@@ -912,6 +930,24 @@
 			"load_failed": "No se pudieron cargar las cuentas",
 			"loading": "Cargando cuentas...",
 			"no_accounts": "Aún no hay cuentas conectadas.",
+			"openai_connect": "Conectar ChatGPT",
+			"openai_connect_failed": "No se pudo iniciar la autorización de ChatGPT",
+			"openai_connected": "Conectado",
+			"openai_connected_as": "Conectado como {email}",
+			"openai_connected_date": "Conectado el {date}",
+			"openai_copy_code": "Copiar código",
+			"openai_description": "Conecta tu cuenta de ChatGPT Plus o Pro para usar funciones de IA sin costo adicional.",
+			"openai_device_code_description": "Ingresa el siguiente código en OpenAI para autorizar el acceso.",
+			"openai_device_code_title": "Conectar tu cuenta de ChatGPT",
+			"openai_disconnect": "Desconectar ChatGPT",
+			"openai_disconnect_confirm": "¿Desconectar tu cuenta de ChatGPT? Puedes reconectarte en cualquier momento.",
+			"openai_disconnect_failed": "No se pudo desconectar la cuenta de ChatGPT",
+			"openai_disconnected": "Cuenta de ChatGPT desconectada",
+			"openai_expired": "Expirado",
+			"openai_open_openai": "Abrir OpenAI",
+			"openai_timeout": "La autorización expiró. Por favor inténtalo de nuevo.",
+			"openai_title": "ChatGPT / OpenAI",
+			"openai_waiting": "Esperando autorización...",
 			"status_connecting": "Conectando",
 			"status_error": "Error",
 			"status_ok": "Conectado",
@@ -1104,7 +1140,7 @@
 			"agent_send": "Enviar",
 			"agent_status_awaiting": "Esperando tu aprobación",
 			"agent_status_done": "Agente completado",
-			"agent_status_working": "El agente está trabajando...",
+			"agent_status_working": "Coda está trabajando...",
 			"agent_submit_feedback": "Enviar comentarios",
 			"cancel": "Cancelar",
 			"delete": "Eliminar",

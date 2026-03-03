@@ -6,6 +6,7 @@ import { paginationOptsValidator } from 'convex/server';
 import { listUIMessages, syncStreams } from '@convex-dev/agent';
 import { vStreamArgs } from '@convex-dev/agent/validators';
 import { authedMutation } from '../functions';
+import { getTaskLanguageModelForUser } from '../support/llmProvider';
 
 /**
  * Send a user message to a todo task thread
@@ -42,10 +43,17 @@ export const createAIResponse = internalAction({
 		userId: v.optional(v.string())
 	},
 	handler: async (ctx, args) => {
+		if (!args.userId) throw new Error('userId is required for AI responses');
+		const model = await getTaskLanguageModelForUser(ctx, args.userId);
+
 		const result = await todoAgent.streamText(
 			ctx,
 			{ threadId: args.threadId, userId: args.userId },
-			{ promptMessageId: args.promptMessageId },
+			{
+				promptMessageId: args.promptMessageId,
+				model,
+				providerOptions: { openai: { store: false } }
+			},
 			{
 				saveStreamDeltas: {
 					chunking: 'line',
@@ -207,10 +215,15 @@ export const triggerAgentForNewTask = internalAction({
 		});
 
 		// 6. Run the agent with streaming
+		const model = await getTaskLanguageModelForUser(ctx, args.userId);
 		const result = await todoAgent.streamText(
 			ctx,
 			{ threadId, userId: args.userId },
-			{ promptMessageId: messageId },
+			{
+				promptMessageId: messageId,
+				model,
+				providerOptions: { openai: { store: false } }
+			},
 			{
 				saveStreamDeltas: {
 					chunking: 'line',
@@ -286,10 +299,15 @@ export const triggerAgentForTaskUpdate = internalAction({
 		});
 
 		// 3. Run agent
+		const model = await getTaskLanguageModelForUser(ctx, args.userId);
 		const result = await todoAgent.streamText(
 			ctx,
 			{ threadId: args.threadId, userId: args.userId },
-			{ promptMessageId: messageId },
+			{
+				promptMessageId: messageId,
+				model,
+				providerOptions: { openai: { store: false } }
+			},
 			{
 				saveStreamDeltas: {
 					chunking: 'line',
@@ -414,10 +432,15 @@ export const triggerAgentForNotification = internalAction({
 			skipEmbeddings: true
 		});
 
+		const model = await getTaskLanguageModelForUser(ctx, args.userId);
 		const result = await todoAgent.streamText(
 			ctx,
 			{ threadId: args.threadId, userId: args.userId },
-			{ promptMessageId: messageId },
+			{
+				promptMessageId: messageId,
+				model,
+				providerOptions: { openai: { store: false } }
+			},
 			{
 				saveStreamDeltas: {
 					chunking: 'line',

@@ -104,7 +104,7 @@ export const createAIResponse = internalAction({
 			{
 				promptMessageId: args.promptMessageId,
 				model,
-				providerOptions: { openai: { store: false } }
+				providerOptions: { openai: { store: false, reasoningEffort: 'medium' } }
 			},
 			{
 				saveStreamDeltas: {
@@ -287,7 +287,7 @@ export const triggerAgentForNewTask = internalAction({
 			{
 				promptMessageId: messageId,
 				model,
-				providerOptions: { openai: { store: false } }
+				providerOptions: { openai: { store: false, reasoningEffort: 'medium' } }
 			},
 			{
 				saveStreamDeltas: {
@@ -381,7 +381,7 @@ export const triggerAgentForTaskUpdate = internalAction({
 			{
 				promptMessageId: messageId,
 				model,
-				providerOptions: { openai: { store: false } }
+				providerOptions: { openai: { store: false, reasoningEffort: 'medium' } }
 			},
 			{
 				saveStreamDeltas: {
@@ -524,7 +524,7 @@ export const triggerAgentForNotification = internalAction({
 			{
 				promptMessageId: messageId,
 				model,
-				providerOptions: { openai: { store: false } }
+				providerOptions: { openai: { store: false, reasoningEffort: 'medium' } }
 			},
 			{
 				saveStreamDeltas: {

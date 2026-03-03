@@ -432,6 +432,45 @@ Planner only via W&B Weave.
 | `src/routes/api/sandbox/execute/+server.ts` | Slim endpoint for code execution     |
 | `docs/references/unipile-node-sdk/`         | Unipile SDK source (reference)       |
 
+### Debugging Agent Runs
+
+Agent threads and messages are stored in the Convex Agent component. Use these commands to inspect what the agent actually did:
+
+```bash
+# 1. List all threads (find the thread ID for your task)
+bun convex run --component agent threads:listThreadsByUserId '{"userId": "jh73e6v7bg5syfq0t4na54kfhh820p82"}'
+
+# 2. Get all messages in a thread (tool calls + results)
+bun convex run --component agent messages:listMessagesByThreadId \
+  '{"threadId": "<THREAD_ID>", "order": "asc", "paginationOpts": {"cursor": null, "numItems": 100}}'
+
+# 3. Parse messages into readable tool-call/result trace
+cat /tmp/thread.json | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+for i, msg in enumerate(data.get('page', [])):
+    message = msg.get('message', {})
+    content = message.get('content', '')
+    if isinstance(content, list):
+        for part in content:
+            if part.get('type') == 'tool-call':
+                args = part.get('args', {})
+                name = part.get('toolName', '')
+                cmd = args.get('command', '') if name == 'bash' else json.dumps(args)[:200]
+                print(f'msg[{i}] {name}: {cmd[:200]}')
+            elif part.get('type') == 'tool-result':
+                out = part.get('output', {})
+                val = out.get('value', {}) if isinstance(out, dict) else {}
+                print(f'  => exit={val.get(\"exitCode\",\"?\")} success={val.get(\"success\",\"?\")} output_len={len(str(val.get(\"output\",\"\")))}')
+    text = msg.get('text', '')
+    if text:
+        print(f'  FINAL: {text[:200]}')
+    print()
+"
+```
+
+Key fields in each message: `message.content` is an array of `tool-call` (with `toolName` + `args`) and `tool-result` (with `output.value`). The `text` field holds the agent's final summary.
+
 ## Plan Mode
 
 - Make the plan extremely concise. Sacrifice grammar for the sake of concision.

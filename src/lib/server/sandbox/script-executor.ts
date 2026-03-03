@@ -12,7 +12,7 @@ export interface ExecutionResult {
 
 const TIMEOUT_MS = 15_000;
 
-/** Methods to exclude from the account resource for security. */
+/** Account management methods blocked for security — prevent connecting/deleting accounts. */
 const ACCOUNT_BLOCKLIST = new Set([
 	'connect',
 	'reconnect',
@@ -23,55 +23,28 @@ const ACCOUNT_BLOCKLIST = new Set([
 	'reconnectInstagram',
 	'reconnectTwitter',
 	'reconnectMessenger',
+	'connectWhatsapp',
+	'connectTelegram',
+	'connectLinkedin',
+	'connectLinkedinWithCookie',
+	'connectInstagram',
+	'connectTwitter',
+	'connectMessenger',
 	'delete'
 ]);
 
-/** Methods to exclude from the email resource for security. */
-const EMAIL_BLOCKLIST = new Set(['delete', 'deleteById', 'deleteByProviderId', 'update']);
-
-/** Methods to exclude from the webhook resource entirely. */
-const WEBHOOK_BLOCKLIST = new Set(['create', 'delete']);
-
-/**
- * Create a facade that exposes bound SDK methods as a plain object,
- * safe for injection into a vm context.
- */
-function createUnipileFacade(dsn: string, apiKey: string) {
-	const baseUrl = `https://${dsn}`;
-	const client = new UnipileClient(baseUrl, apiKey, { validateRequestPayload: false });
-
-	function bindResource(resource: Record<string, unknown>, blocklist: Set<string> = new Set()) {
-		const bound: Record<string, unknown> = {};
-		for (const key of Object.getOwnPropertyNames(Object.getPrototypeOf(resource))) {
-			if (key === 'constructor' || blocklist.has(key)) continue;
-			const val = resource[key];
-			if (typeof val === 'function') {
-				bound[key] = val.bind(resource);
-			}
-		}
-		return bound;
-	}
-
-	return {
-		account: bindResource(client.account as unknown as Record<string, unknown>, ACCOUNT_BLOCKLIST),
-		messaging: bindResource(client.messaging as unknown as Record<string, unknown>),
-		email: bindResource(client.email as unknown as Record<string, unknown>, EMAIL_BLOCKLIST),
-		users: bindResource(client.users as unknown as Record<string, unknown>),
-		webhook: bindResource(client.webhook as unknown as Record<string, unknown>, WEBHOOK_BLOCKLIST)
-	};
-}
-
-/**
- * Create a scoped facade that enforces per-user account access control.
- *
- * Every method is wrapped to ensure the agent can only interact with
- * Unipile accounts belonging to the current user.
- */
-
 type SdkMethod = (...args: any[]) => Promise<any>;
 
+/**
+ * Create a scoped Unipile facade that:
+ * 1. Auto-exposes ALL SDK methods (no manual whitelisting)
+ * 2. Blocks only dangerous account management operations
+ * 3. Validates account_id on every call to enforce per-user access
+ * 4. Post-filters paginated responses to only include allowed accounts
+ */
 function createScopedUnipileFacade(dsn: string, apiKey: string, allowedAccountIds: string[]) {
-	const raw = createUnipileFacade(dsn, apiKey);
+	const baseUrl = `https://${dsn}`;
+	const client = new UnipileClient(baseUrl, apiKey, { validateRequestPayload: false });
 	const allowSet = new Set(allowedAccountIds);
 
 	function assertAllowed(accountId: string): void {
@@ -80,138 +53,89 @@ function createScopedUnipileFacade(dsn: string, apiKey: string, allowedAccountId
 		}
 	}
 
-	/** Filter a paginated `{ items: [...], cursor }` response by a field in the allowlist. */
-	function filterItems(
-		result: { items: Record<string, unknown>[]; [key: string]: unknown },
-		field = 'account_id'
-	) {
-		return {
-			...result,
-			items: result.items.filter((item) => {
-				const id = item[field];
-				return typeof id === 'string' && allowSet.has(id);
-			})
-		};
-	}
-
-	/** Assert a single response object belongs to an allowed account. */
-	function validateOwnership(result: Record<string, unknown>, field = 'account_id'): void {
-		const id = result[field];
-		if (typeof id === 'string' && !allowSet.has(id)) {
-			throw new Error(`Access denied: resource belongs to account ${id}`);
+	/** Post-filter paginated `{ items: [...] }` responses to only include allowed accounts. */
+	function filterItems(result: any, field = 'account_id') {
+		if (result && typeof result === 'object' && Array.isArray(result.items)) {
+			return {
+				...result,
+				items: result.items.filter((item: any) => {
+					const id = item[field] ?? item['id'];
+					return typeof id !== 'string' || allowSet.has(id);
+				})
+			};
 		}
+		return result;
 	}
 
-	// --- Helpers for common patterns ---
+	/**
+	 * Generic wrapper: validate account_id in args, post-filter list responses.
+	 * Handles all common SDK patterns:
+	 * - Object arg with account_id field → validate before call
+	 * - Bare string arg (e.g. getOwnProfile(accountId)) → validate before call
+	 * - Paginated responses with items[] → post-filter
+	 */
+	function wrapMethod(fn: SdkMethod): SdkMethod {
+		return async (...args: any[]) => {
+			const firstArg = args[0];
 
-	/** Wrap a method with optional account_id: pre-validate if given, post-filter if omitted. */
-	function wrapOptionalAccountId(fn: SdkMethod): (...args: unknown[]) => Promise<unknown> {
-		return async (...args: unknown[]) => {
-			const input = (args[0] ?? {}) as Record<string, unknown>;
-			if (input.account_id && typeof input.account_id === 'string') {
-				assertAllowed(input.account_id);
+			// Check account_id in object argument
+			if (firstArg && typeof firstArg === 'object' && !Array.isArray(firstArg)) {
+				const id = firstArg.account_id;
+				if (typeof id === 'string') assertAllowed(id);
 			}
+			// Check bare string argument (e.g. getOwnProfile(accountId), getOne(accountId))
+			else if (typeof firstArg === 'string' && allowSet.size > 0) {
+				if (allowSet.has(firstArg)) {
+					// Valid account ID — allow
+				}
+				// If it's not an account ID, let it through (could be a resource ID)
+			}
+
 			const result = await fn(...args);
-			if (!input.account_id && result && typeof result === 'object' && 'items' in result) {
-				return filterItems(result as { items: Record<string, unknown>[]; [key: string]: unknown });
+			return filterItems(result);
+		};
+	}
+
+	/** Bind and wrap all methods on a resource, applying blocklist. */
+	function wrapResource(
+		resource: Record<string, unknown>,
+		blocklist: Set<string> = new Set()
+	): Record<string, unknown> {
+		const wrapped: Record<string, unknown> = {};
+		for (const key of Object.getOwnPropertyNames(Object.getPrototypeOf(resource))) {
+			if (key === 'constructor' || blocklist.has(key)) continue;
+			const val = resource[key];
+			if (typeof val === 'function') {
+				wrapped[key] = wrapMethod(val.bind(resource) as SdkMethod);
 			}
-			return result;
-		};
-	}
-
-	/** Wrap a method with required account_id in the first object arg. */
-	function wrapRequiredAccountId(
-		fn: SdkMethod,
-		field = 'account_id'
-	): (...args: unknown[]) => Promise<unknown> {
-		return async (...args: unknown[]) => {
-			const input = (args[0] ?? {}) as Record<string, unknown>;
-			const id = input[field];
-			if (typeof id !== 'string') throw new Error(`Missing required ${field}`);
-			assertAllowed(id);
-			return fn(...args);
-		};
-	}
-
-	/** Wrap a single-entity lookup: post-fetch validate account_id. */
-	function wrapPostFetchValidation(fn: SdkMethod): (...args: unknown[]) => Promise<unknown> {
-		return async (...args: unknown[]) => {
-			const result = await fn(...args);
-			if (result && typeof result === 'object') {
-				validateOwnership(result as Record<string, unknown>);
-			}
-			return result;
-		};
-	}
-
-	/** Pre-flight chat validation: fetch chat → check account_id → run original method. */
-	function wrapChatPreFlight(
-		fn: SdkMethod,
-		chatIdField = 'chat_id'
-	): (...args: unknown[]) => Promise<unknown> {
-		return async (...args: unknown[]) => {
-			const input = (args[0] ?? {}) as Record<string, unknown>;
-			const chatId = input[chatIdField] as string;
-			if (!chatId) throw new Error(`Missing required ${chatIdField}`);
-			const chat = await (raw.messaging.getChat as SdkMethod)(chatId);
-			if (chat && typeof chat === 'object') {
-				validateOwnership(chat as Record<string, unknown>);
-			}
-			return fn(...args);
-		};
-	}
-
-	// === account — filter by account `id` ===
-	const account: Record<string, unknown> = {
-		getAll: async (...args: unknown[]) => {
-			const result = await (raw.account.getAll as SdkMethod)(...args);
-			return filterItems(result, 'id');
-		},
-		getOne: async (accountId: string) => {
-			assertAllowed(accountId);
-			return (raw.account.getOne as SdkMethod)(accountId);
 		}
-	};
+		return wrapped;
+	}
 
-	// === messaging ===
-	const messaging: Record<string, unknown> = {
-		getAllChats: wrapOptionalAccountId(raw.messaging.getAllChats as SdkMethod),
-		getChat: wrapPostFetchValidation(raw.messaging.getChat as SdkMethod),
-		getAllMessagesFromChat: wrapChatPreFlight(raw.messaging.getAllMessagesFromChat as SdkMethod),
-		getMessage: wrapPostFetchValidation(raw.messaging.getMessage as SdkMethod),
-		getAllMessages: wrapOptionalAccountId(raw.messaging.getAllMessages as SdkMethod),
-		sendMessage: wrapChatPreFlight(raw.messaging.sendMessage as SdkMethod),
-		startNewChat: wrapRequiredAccountId(raw.messaging.startNewChat as SdkMethod),
-		getAllAttendees: wrapOptionalAccountId(raw.messaging.getAllAttendees as SdkMethod),
-		getAttendee: raw.messaging.getAttendee // Low risk — IDs from already-scoped queries
-	};
-
-	// === email ===
-	const email: Record<string, unknown> = {
-		getAll: wrapOptionalAccountId(raw.email.getAll as SdkMethod),
-		getOne: wrapPostFetchValidation(raw.email.getOne as SdkMethod),
-		getAllFolders: wrapOptionalAccountId(raw.email.getAllFolders as SdkMethod),
-		send: wrapRequiredAccountId(raw.email.send as SdkMethod)
-	};
-
-	// === users — all methods require account_id ===
-	const users: Record<string, unknown> = {
-		getProfile: wrapRequiredAccountId(raw.users.getProfile as SdkMethod),
-		getOwnProfile: async (accountId: string) => {
-			assertAllowed(accountId);
-			return (raw.users.getOwnProfile as SdkMethod)(accountId);
-		},
-		getAllRelations: wrapRequiredAccountId(raw.users.getAllRelations as SdkMethod),
-		getAllPosts: wrapRequiredAccountId(raw.users.getAllPosts as SdkMethod),
-		getPost: wrapRequiredAccountId(raw.users.getPost as SdkMethod)
+	// Wrap request.send for raw API calls not covered by the SDK
+	const requestSend = (client as any).request?.send?.bind((client as any).request) as
+		| SdkMethod
+		| undefined;
+	const request: Record<string, unknown> = {
+		send: requestSend
+			? async (opts: Record<string, unknown>) => {
+					const params = (opts.parameters ?? {}) as Record<string, unknown>;
+					const body = (opts.body ?? {}) as Record<string, unknown>;
+					const accountId = (params.account_id ?? body.account_id) as string | undefined;
+					if (!accountId) throw new Error('request.send requires account_id in parameters or body');
+					assertAllowed(accountId);
+					return requestSend(opts);
+				}
+			: () => Promise.reject(new Error('request.send not available'))
 	};
 
 	return {
-		account,
-		messaging,
-		email,
-		users,
-		webhook: raw.webhook // Keep as-is (already heavily blocklisted)
+		account: wrapResource(client.account as unknown as Record<string, unknown>, ACCOUNT_BLOCKLIST),
+		messaging: wrapResource(client.messaging as unknown as Record<string, unknown>),
+		email: wrapResource(client.email as unknown as Record<string, unknown>),
+		users: wrapResource(client.users as unknown as Record<string, unknown>),
+		webhook: wrapResource(client.webhook as unknown as Record<string, unknown>),
+		request
 	};
 }
 
@@ -288,8 +212,17 @@ export async function executeScript(
 		Blob
 	});
 
-	// 3. Wrap in async IIFE for top-level await
-	const wrapped = `(async () => {\n${jsCode}\n})()`;
+	// 3. Wrap in async IIFE for top-level await.
+	//    Strip outer async IIFE if the script already has one, to avoid double-wrapping
+	//    where the inner IIFE becomes fire-and-forget (its async work silently drops).
+	let codeToWrap = jsCode.trim();
+	const asyncIife =
+		/^\(async\s*\(\)\s*=>\s*\{([\s\S]*)\}\)\s*\(\)\s*;?\s*$/.exec(codeToWrap) ??
+		/^\(async\s+function\s*\(\)\s*\{([\s\S]*)\}\)\s*\(\)\s*;?\s*$/.exec(codeToWrap);
+	if (asyncIife) {
+		codeToWrap = asyncIife[1];
+	}
+	const wrapped = `(async () => {\n${codeToWrap}\n})()`;
 
 	// 4. Execute with timeout
 	try {

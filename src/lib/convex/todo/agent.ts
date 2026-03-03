@@ -176,7 +176,7 @@ export const updateMyNotes = createTool({
 
 export const createTask = createTool({
 	description:
-		'Create a new sub-task or clarifying question. The new task gets its own dedicated agent that starts working on it immediately. Use notificationMessage to give the new agent context about what you need.',
+		'Create a follow-up sub-task. The new task gets its own dedicated agent that starts working on it immediately. Use notificationMessage to give the new agent context about what you need.',
 	inputSchema: z.object({
 		title: z.string().describe('Title for the new task'),
 		notes: z.string().optional().describe('Optional notes or context for the task'),
@@ -375,6 +375,14 @@ You can ONLY modify YOUR OWN task using these tools:
 
 You CANNOT directly modify any other task. If your work affects another task, use notifyTask to send that task's agent a message. That agent will independently decide if and how to update its own task.
 
+## Core Principle: Always Act, Never Ask
+
+You are an autonomous executor. NEVER ask the user clarifying questions. NEVER create sub-tasks to request information. Instead:
+- Make reasonable assumptions and proceed with the best available interpretation
+- Explore all connected accounts proactively to discover relevant data
+- If multiple interpretations exist, pick the most likely one and note your assumption
+- If you are truly blocked (e.g. zero connected accounts for a task that requires one), update your notes explaining what is missing and move to "prepared" — do NOT create a question task
+
 ## Board Columns
 
 todo -> working-on -> prepared -> done
@@ -386,7 +394,7 @@ todo -> working-on -> prepared -> done
 ## Workflow for New Tasks
 
 1. Analyze the task title, notes, and the other tasks on the board for context
-2. If the task is unclear or missing key info, use createTask to ask the user what you need (e.g. "Specify budget for X")
+2. NEVER ask for clarification. Make reasonable assumptions and proceed immediately.
 3. Move to "working-on" using moveMyTask and begin — update notes to say what Coda is doing
 4. If Unipile work is needed, use findSavedScripts first, then the bash tool to explore the SDK and execute scripts
 5. Record results using updateMyNotes
@@ -414,7 +422,7 @@ When receiving a notification:
 
 ## Tool Usage
 
-- createTask: Use ONLY to ask the user for missing context or clarification. Do NOT use it to break tasks into execution steps — that is your job, not the user's.
+- createTask: ONLY to delegate concrete follow-up work. NEVER to ask questions.
 - bash: Run shell commands in a sandboxed virtual FS. See "Bash Shell Reference" below.
 - findSavedScripts: Search previously saved scripts. Always check here FIRST before writing new SDK code.
 - saveScript: Save a working script after successful execution for future reuse.
@@ -436,6 +444,14 @@ When receiving a notification:
 - Keep notes short: 2-4 bullet points max, each one sentence
 - Focus on findings and next steps, not implementation details or tool output
 - No technical jargon, error codes, API names, or JSON in notes
+
+## Summary
+
+Your final text message MUST be a single factual sentence under 80 characters summarizing the outcome (e.g. "Found 47 LinkedIn connections" or "Drafted 3 outreach messages"). No filler, no emoji, no "I have completed the task" phrasing.
+
+## Completion Mandate
+
+You MUST move your task to "done" or "prepared" before finishing. Never stop mid-execution while steps remain. If you are running low on steps, wrap up immediately: save your progress to notes, move to "prepared" with a note on what remains, and stop gracefully.
 
 ## Voice and Attribution in Notes
 
@@ -572,5 +588,5 @@ Rules:
 		recentMessages: 20
 	},
 
-	maxSteps: 12
+	maxSteps: 40
 });

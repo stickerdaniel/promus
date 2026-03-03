@@ -237,9 +237,9 @@
 				<span class="text-sm text-muted-foreground">Coda is working...</span>
 			</div>
 		{:else if task.agentStatus === 'done' && task.agentSummary}
-			<div class="flex items-center gap-2 rounded-md border bg-muted/30 px-3 py-2">
-				<Logo class="size-4 text-primary" />
-				<span class="text-sm text-muted-foreground">{task.agentSummary}</span>
+			<div class="flex items-start gap-2 rounded-md border bg-muted/30 px-3 py-2">
+				<Logo class="mt-0.5 size-4 shrink-0 text-primary" />
+				<Markdown content={task.agentSummary} class="prose-sm text-sm text-muted-foreground" />
 			</div>
 		{:else if task.agentStatus === 'awaiting_approval'}
 			<div class="grid gap-3">

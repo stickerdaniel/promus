@@ -266,7 +266,7 @@ export const saveBoard = authedMutation({
 							threadId: oldTask.threadId,
 							taskId: task.id,
 							taskTitle: task.title,
-							prompt: `User moved your task "${task.title}" from "${oldTask.columnId}" to "${task.columnId}". React accordingly — update your notes if needed.`
+							prompt: `User moved your task "${task.title}" from "${oldTask.columnId}" to "${task.columnId}". ${task.columnId === 'working-on' ? 'The user wants you to resume or retry execution. Do the actual work NOW — use the bash tool to execute scripts, not just update notes.' : 'React accordingly.'}`
 						});
 					} else if (notesChanged) {
 						await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForTaskUpdate, {

@@ -8,6 +8,58 @@ import { vStreamArgs } from '@convex-dev/agent/validators';
 import { authedMutation } from '../functions';
 import { getTaskLanguageModelForUser } from '../support/llmProvider';
 
+/** Extract debug info from a streamText result after consumeStream(). */
+async function extractAgentDebug(
+	result: any,
+	context: { taskId: string; trigger: string }
+): Promise<string> {
+	try {
+		const steps = await result.steps;
+		const finishReason = await result.finishReason;
+		const usage = await result.usage;
+		const text = (await result.text) || '';
+
+		const stepCount = Array.isArray(steps) ? steps.length : 0;
+		const toolSummaries: string[] = [];
+
+		if (Array.isArray(steps)) {
+			for (const [i, step] of steps.entries()) {
+				const calls = step.toolCalls ?? [];
+				const results = step.toolResults ?? [];
+				for (const [j, tc] of calls.entries()) {
+					const toolResult = results[j];
+					let resultPreview = '';
+					if (toolResult?.result) {
+						const r = toolResult.result;
+						const str = typeof r === 'string' ? r : JSON.stringify(r);
+						resultPreview = str.length > 300 ? str.slice(0, 300) + '...' : str;
+					}
+					toolSummaries.push(
+						`  step${i}/${tc.toolName}(${JSON.stringify(tc.args).slice(0, 200)}) => ${resultPreview || '(empty)'}`
+					);
+				}
+				if (calls.length === 0 && step.text) {
+					toolSummaries.push(`  step${i}/text: ${step.text.slice(0, 200)}`);
+				}
+			}
+		}
+
+		const debug = [
+			`[agent-debug] task=${context.taskId} trigger=${context.trigger}`,
+			`  steps=${stepCount} finishReason=${finishReason ?? 'unknown'} tokens=${usage?.totalTokens ?? '?'}`,
+			`  finalText=${text.slice(0, 150)}`,
+			...toolSummaries
+		].join('\n');
+
+		console.log(debug);
+		return debug;
+	} catch (e) {
+		const fallback = `[agent-debug] task=${context.taskId} extraction failed: ${e}`;
+		console.log(fallback);
+		return fallback;
+	}
+}
+
 /**
  * Send a user message to a todo task thread
  */
@@ -124,7 +176,7 @@ async function buildBoardContext(
 	const accountLine =
 		userAccountIds.length > 0
 			? `Your Unipile account IDs: ${userAccountIds.join(', ')}`
-			: 'No Unipile accounts connected. If this task requires messaging or email, create a clarifying sub-task asking the user to connect an account.';
+			: 'No Unipile accounts connected. If this task requires messaging or email, update your notes explaining that a connected account is needed, then move to "prepared".';
 
 	return { otherTasks, accountLine, savedScriptCount };
 }
@@ -215,7 +267,7 @@ export const triggerAgentForNewTask = internalAction({
 				? `Other tasks on the board (for awareness — you can notify them but NOT modify them):\n${otherTasks.join('\n')}`
 				: null,
 			'',
-			'Analyze this task and take appropriate action. If it is vague or missing key details, use createTask to ask the user for the missing info. If it involves Unipile operations, use findSavedScripts first, then the bash tool to explore the SDK and execute scripts. Update your task notes with your findings using updateMyNotes.'
+			'Analyze this task and take action immediately. Do NOT ask questions or create clarifying sub-tasks — make reasonable assumptions and proceed. If it involves Unipile operations, use findSavedScripts first, then the bash tool to explore the SDK and execute scripts. Update your task notes with your findings using updateMyNotes.'
 		);
 
 		const prompt = promptParts.filter(Boolean).join('\n');
@@ -247,21 +299,27 @@ export const triggerAgentForNewTask = internalAction({
 
 		await result.consumeStream();
 
-		// 7. Update task with agent summary
+		// 7. Debug logging
+		const debug = await extractAgentDebug(result, {
+			taskId: args.taskId,
+			trigger: 'newTask'
+		});
+
+		// 8. Update task with agent summary
 		const summary = (await result.text) || 'Coda completed analysis.';
 
 		await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
 			userId: args.userId,
 			taskId: args.taskId,
-			agentLogs: summary.slice(0, 2000)
+			agentLogs: `${debug}\n\n${summary}`.slice(0, 4000)
 		});
 
-		// 8. Mark task as done with summary
+		// 9. Mark task as done with summary
 		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
 			userId: args.userId,
 			taskId: args.taskId,
 			agentStatus: 'done',
-			agentSummary: summary.slice(0, 200)
+			agentSummary: summary.slice(0, 120)
 		});
 	}
 });
@@ -335,21 +393,27 @@ export const triggerAgentForTaskUpdate = internalAction({
 
 		await result.consumeStream();
 
-		// 4. Update agent logs
+		// 4. Debug logging
+		const debug = await extractAgentDebug(result, {
+			taskId: args.taskId,
+			trigger: 'taskUpdate'
+		});
+
+		// 5. Update agent logs
 		const summary = (await result.text) || 'Coda processed update.';
 
 		await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
 			userId: args.userId,
 			taskId: args.taskId,
-			agentLogs: summary.slice(0, 2000)
+			agentLogs: `${debug}\n\n${summary}`.slice(0, 4000)
 		});
 
-		// 5. Mark task as done
+		// 6. Mark task as done
 		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
 			userId: args.userId,
 			taskId: args.taskId,
 			agentStatus: 'done',
-			agentSummary: summary.slice(0, 200)
+			agentSummary: summary.slice(0, 120)
 		});
 	}
 });
@@ -478,20 +542,26 @@ export const triggerAgentForNotification = internalAction({
 			taskId: args.taskId
 		});
 
-		// 7. Update agent logs and status
+		// 7. Debug logging
+		const debug = await extractAgentDebug(result, {
+			taskId: args.taskId,
+			trigger: 'notification'
+		});
+
+		// 8. Update agent logs and status
 		const summary = (await result.text) || 'Coda processed notification.';
 
 		await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
 			userId: args.userId,
 			taskId: args.taskId,
-			agentLogs: summary.slice(0, 2000)
+			agentLogs: `${debug}\n\n${summary}`.slice(0, 4000)
 		});
 
 		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
 			userId: args.userId,
 			taskId: args.taskId,
 			agentStatus: 'done',
-			agentSummary: summary.slice(0, 200)
+			agentSummary: summary.slice(0, 120)
 		});
 	}
 });

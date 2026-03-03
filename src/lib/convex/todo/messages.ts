@@ -245,13 +245,10 @@ export const triggerAgentForNewTask = internalAction({
 			}
 		);
 
-		const response = await result.consumeStream();
+		await result.consumeStream();
 
 		// 7. Update task with agent summary
-		const summary =
-			typeof response === 'object' && response !== null && 'text' in response
-				? String((response as { text: string }).text)
-				: 'Coda completed analysis.';
+		const summary = (await result.text) || 'Coda completed analysis.';
 
 		await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
 			userId: args.userId,
@@ -336,13 +333,10 @@ export const triggerAgentForTaskUpdate = internalAction({
 			}
 		);
 
-		const response = await result.consumeStream();
+		await result.consumeStream();
 
 		// 4. Update agent logs
-		const summary =
-			typeof response === 'object' && response !== null && 'text' in response
-				? String((response as { text: string }).text)
-				: 'Coda processed update.';
+		const summary = (await result.text) || 'Coda processed update.';
 
 		await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
 			userId: args.userId,
@@ -476,7 +470,7 @@ export const triggerAgentForNotification = internalAction({
 			}
 		);
 
-		const response = await result.consumeStream();
+		await result.consumeStream();
 
 		// 6. Clear pending notifications
 		await ctx.runMutation(internal.todo.notifications.clearPendingNotifications, {
@@ -485,10 +479,7 @@ export const triggerAgentForNotification = internalAction({
 		});
 
 		// 7. Update agent logs and status
-		const summary =
-			typeof response === 'object' && response !== null && 'text' in response
-				? String((response as { text: string }).text)
-				: 'Coda processed notification.';
+		const summary = (await result.text) || 'Coda processed notification.';
 
 		await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
 			userId: args.userId,

@@ -37,7 +37,7 @@
 
 	const UNIPILE_PROVIDERS = [
 		{ type: 'LINKEDIN', labelKey: 'sidebar.connections.linkedin' },
-		{ type: 'GOOGLE', labelKey: 'sidebar.connections.gmail' },
+		{ type: 'GOOGLE_OAUTH', labelKey: 'sidebar.connections.gmail' },
 		{ type: 'OUTLOOK', labelKey: 'sidebar.connections.outlook' },
 		{ type: 'WHATSAPP', labelKey: 'sidebar.connections.whatsapp' },
 		{ type: 'INSTAGRAM', labelKey: 'sidebar.connections.instagram' },

@@ -516,11 +516,13 @@ Your bash session has three mount points:
 - \`/sdk/types/output.ts\` — Response/output types
 - \`/sdk/schemas/\` — Validation schemas
 - \`/sdk/client.ts\` — Client class definition
+- \`/sdk/README.md\` — Examples including raw Voyager API calls for actions not covered by SDK methods
 
 ### execute-ts Rules
 
 Scripts run in a sandboxed VM with these globals:
-- \`unipile\` — Pre-configured SDK client (account, messaging, email, users, webhook)
+- \`unipile\` — Pre-configured SDK client (account, messaging, email, users, webhook, request)
+  - If an SDK method doesn't exist for an action, use \`unipile.request.send()\` to proxy raw LinkedIn Voyager API calls. See \`/sdk/README.md\` "Endpoint Not Packaged in SDK" for the pattern.
 - \`USER_ACCOUNT_IDS\` — Frozen array of the user's allowed Unipile account IDs
 - \`console.log()\` — Output results (captured and returned)
 - \`fetch\`, \`JSON\`, \`Date\`, \`Promise\`, \`Buffer\`, \`URL\`, \`Headers\`, \`URLSearchParams\`, \`setTimeout\`, \`AbortController\`, \`TextEncoder\`, \`TextDecoder\`, \`FormData\`, \`Blob\`

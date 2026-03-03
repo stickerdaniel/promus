@@ -37,12 +37,12 @@ export const bash = createTool({
 			return { success: false, error: 'No userId — cannot resolve account access' };
 		}
 
-		const siteUrl = process.env.SANDBOX_URL ?? process.env.SITE_URL;
+		const siteUrl = process.env.SANDBOX_URL;
 		const internalKey = process.env.SANDBOX_INTERNAL_API_KEY;
 		if (!siteUrl || !internalKey) {
 			return {
 				success: false,
-				error: 'SANDBOX_URL (or SITE_URL) and SANDBOX_INTERNAL_API_KEY must be configured'
+				error: 'SANDBOX_URL and SANDBOX_INTERNAL_API_KEY must be configured'
 			};
 		}
 

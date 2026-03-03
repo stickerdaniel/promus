@@ -1,6 +1,6 @@
-import { Bash, defineCommand, InMemoryFs, MountableFs, OverlayFs } from 'just-bash';
-import { join } from 'node:path';
+import { Bash, defineCommand, InMemoryFs } from 'just-bash';
 import { executeScript } from './script-executor.js';
+import { sdkFiles } from './sdk-bundle.js';
 
 export interface ShellSessionConfig {
 	allowedAccountIds: string[];
@@ -35,11 +35,6 @@ function startCleanup() {
 			cleanupTimer = null;
 		}
 	}, CLEANUP_INTERVAL_MS);
-}
-
-/** Resolve the SDK source path relative to the project root. */
-function getSdkSourcePath(): string {
-	return join(process.cwd(), 'docs', 'references', 'unipile-node-sdk', 'src');
 }
 
 /**
@@ -82,21 +77,16 @@ function buildExecuteTsCommand(config: ShellSessionConfig) {
 	});
 }
 
-/** Create a new just-bash session with the SDK mounted read-only. */
+/** Create a new just-bash session with bundled SDK files. */
 function createSession(config: ShellSessionConfig): Bash {
-	const sdkPath = getSdkSourcePath();
-
-	// mountPoint '/' because MountableFs already strips the /sdk prefix
-	const sdkOverlay = new OverlayFs({
-		root: sdkPath,
-		mountPoint: '/',
-		readOnly: true
-	});
-
-	// Pass initial files to InMemoryFs directly — Bash ignores `files` when custom `fs` is set
 	const initialFiles: Record<string, string> = {
 		'/workspace/.keep': ''
 	};
+
+	// Populate SDK source files (bundled at build time via Vite glob)
+	for (const [path, content] of Object.entries(sdkFiles)) {
+		initialFiles[`/sdk${path}`] = content;
+	}
 
 	if (config.savedScripts) {
 		for (const [slug, code] of Object.entries(config.savedScripts)) {
@@ -104,10 +94,7 @@ function createSession(config: ShellSessionConfig): Bash {
 		}
 	}
 
-	const baseFs = new InMemoryFs(initialFiles);
-	const fs = new MountableFs({ base: baseFs });
-	fs.mount('/sdk', sdkOverlay);
-
+	const fs = new InMemoryFs(initialFiles);
 	const executeTsCmd = buildExecuteTsCommand(config);
 
 	return new Bash({

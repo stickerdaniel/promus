@@ -48,6 +48,7 @@
 	let editTitle = $state('');
 	let editNotes = $state('');
 	let editingNotes = $state(false);
+	let notesDirty = $state(false);
 	let rejectFeedback = $state('');
 	let initialTaskId = $state('');
 
@@ -58,6 +59,7 @@
 			editTitle = task.title;
 			editNotes = task.notes ?? '';
 			editingNotes = false;
+			notesDirty = false;
 			rejectFeedback = '';
 		}
 		if (!open) {
@@ -68,7 +70,7 @@
 	// Keep notes in sync with live backend updates (agent writes)
 	// but only when user is not actively editing
 	$effect(() => {
-		if (open && !editingNotes) {
+		if (open && !editingNotes && !notesDirty) {
 			const liveNotes = task.notes ?? '';
 			if (liveNotes !== editNotes) {
 				editNotes = liveNotes;
@@ -140,6 +142,9 @@
 						rows={3}
 						onfocus={() => {
 							editingNotes = true;
+						}}
+						oninput={() => {
+							notesDirty = true;
 						}}
 						onblur={async () => {
 							if (!editNotes) return;

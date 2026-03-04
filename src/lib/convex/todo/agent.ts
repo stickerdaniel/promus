@@ -354,6 +354,46 @@ export const notifyTask = createTool({
 	}
 });
 
+export const webSearch = createTool({
+	description:
+		'Search the web using Brave Search. Returns titles, snippets, and URLs. Use this to research topics, find documentation, or answer factual questions.',
+	inputSchema: z.object({
+		query: z.string().describe('Search query keywords'),
+		count: z.number().optional().describe('Number of results (default 5, max 20)')
+	}),
+	execute: async (_ctx: ToolCtx, input): Promise<Record<string, unknown>> => {
+		const apiKey = process.env.BRAVE_SEARCH_API_KEY;
+		if (!apiKey) return { success: false, error: 'BRAVE_SEARCH_API_KEY not configured' };
+
+		const params = new URLSearchParams({
+			q: input.query,
+			count: String(input.count ?? 5)
+		});
+
+		const res = await fetch(`https://api.search.brave.com/res/v1/web/search?${params}`, {
+			headers: {
+				Accept: 'application/json',
+				'X-Subscription-Token': apiKey
+			}
+		});
+
+		if (!res.ok) {
+			return { success: false, error: `Brave API ${res.status}: ${await res.text()}` };
+		}
+
+		const data = await res.json();
+		const results = (data.web?.results ?? []).map(
+			(r: { title: string; url: string; description: string }) => ({
+				title: r.title,
+				url: r.url,
+				snippet: r.description
+			})
+		);
+
+		return { success: true, results };
+	}
+});
+
 export const todoAgent = new Agent(components.agent, {
 	name: 'Task Assistant',
 
@@ -383,6 +423,7 @@ CRITICAL: Reading SDK source is research, NOT execution. You have NOT completed 
 - saveScript: Save a working script for future reuse
 - createTask: Delegate concrete follow-up work only — never to ask questions
 - notifyTask: Message another task's agent when your work is relevant to them
+- webSearch: Search the web for information. Use for research queries (finding docs, how-tos, factual info). Use bash + execute-ts for Unipile SDK operations
 
 You can ONLY modify YOUR OWN task. To affect another task, use notifyTask.
 
@@ -543,7 +584,8 @@ Rules:
 		updateMyNotes,
 		moveMyTask,
 		setMyTaskUI,
-		notifyTask
+		notifyTask,
+		webSearch
 	},
 
 	callSettings: {},

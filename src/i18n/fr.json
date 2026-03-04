@@ -876,7 +876,8 @@
 			"instagram": "Instagram",
 			"messenger": "Messenger",
 			"telegram": "Telegram",
-			"twitter": "X (Twitter)"
+			"twitter": "X (Twitter)",
+			"imap": "IMAP"
 		}
 	},
 	"settings": {

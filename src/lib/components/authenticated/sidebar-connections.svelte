@@ -43,7 +43,8 @@
 		{ type: 'INSTAGRAM', labelKey: 'sidebar.connections.instagram' },
 		{ type: 'MESSENGER', labelKey: 'sidebar.connections.messenger' },
 		{ type: 'TELEGRAM', labelKey: 'sidebar.connections.telegram' },
-		{ type: 'TWITTER', labelKey: 'sidebar.connections.twitter' }
+		{ type: 'TWITTER', labelKey: 'sidebar.connections.twitter' },
+		{ type: 'MAIL', labelKey: 'sidebar.connections.imap' }
 	] as const;
 
 	let accounts = $state<Account[]>([]);

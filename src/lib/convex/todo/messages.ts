@@ -229,10 +229,17 @@ export const triggerAgentForNewTask = internalAction({
 			args.taskId
 		);
 
+		// 3b. Fetch column instructions
+		const columnInstructions = await ctx.runQuery(internal.todos.getColumnInstructionsInternal, {
+			userId: args.userId,
+			columnId: args.taskColumn
+		});
+
 		// 4. Build prompt
 		const promptParts: (string | null)[] = [
 			`You are now the dedicated agent for this task: "${args.taskTitle}"`,
 			`Current column: ${args.taskColumn}`,
+			columnInstructions ? `Column instructions: ${columnInstructions}` : null,
 			args.taskNotes ? `Notes: ${args.taskNotes}` : null,
 			''
 		];
@@ -351,8 +358,21 @@ export const triggerAgentForTaskUpdate = internalAction({
 			args.taskId
 		);
 
+		// 1b. Fetch task column + column instructions
+		const taskInfo = await ctx.runQuery(internal.todos.getTaskThreadInfo, {
+			userId: args.userId,
+			taskId: args.taskId
+		});
+		const columnInstructions = taskInfo?.columnId
+			? await ctx.runQuery(internal.todos.getColumnInstructionsInternal, {
+					userId: args.userId,
+					columnId: taskInfo.columnId
+				})
+			: undefined;
+
 		const fullPrompt = [
 			args.prompt,
+			columnInstructions ? `Column instructions: ${columnInstructions}` : null,
 			'',
 			accountLine,
 			savedScriptCount > 0
@@ -488,6 +508,18 @@ export const triggerAgentForNotification = internalAction({
 			args.taskId
 		);
 
+		// 4b. Fetch column instructions
+		const taskInfo = await ctx.runQuery(internal.todos.getTaskThreadInfo, {
+			userId: args.userId,
+			taskId: args.taskId
+		});
+		const columnInstructions = taskInfo?.columnId
+			? await ctx.runQuery(internal.todos.getColumnInstructionsInternal, {
+					userId: args.userId,
+					columnId: taskInfo.columnId
+				})
+			: undefined;
+
 		const prompt = [
 			`Notification received for your task: "${args.taskTitle}"`,
 			'',
@@ -498,6 +530,7 @@ export const triggerAgentForNotification = internalAction({
 			'You may update your own notes, move your task, or take no action if irrelevant.',
 			'If you need to notify other tasks in response, use notifyTask.',
 			'',
+			columnInstructions ? `Column instructions: ${columnInstructions}` : null,
 			accountLine,
 			savedScriptCount > 0
 				? `You have ${savedScriptCount} saved script(s). Use findSavedScripts to check for reusable scripts before writing new ones.`

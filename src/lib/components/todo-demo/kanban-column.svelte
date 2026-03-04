@@ -9,6 +9,8 @@
 		overlayTilted?: boolean;
 		children: Snippet;
 		onAdd: (title: string) => void | Promise<void>;
+		onEdit?: () => void;
+		editAriaLabel?: string;
 	}
 </script>
 
@@ -16,6 +18,7 @@
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import { CollisionPriority } from '@dnd-kit/abstract';
 	import GripVerticalIcon from '@lucide/svelte/icons/grip-vertical';
+	import PencilIcon from '@lucide/svelte/icons/pencil';
 	import TodoAddForm from './todo-add-form.svelte';
 
 	let {
@@ -25,7 +28,9 @@
 		isOverlay = false,
 		overlayTilted = true,
 		children,
-		onAdd
+		onAdd,
+		onEdit,
+		editAriaLabel
 	}: KanbanColumnProps = $props();
 
 	const { ref, handleRef, isDragging, isDropping } = useSortable({
@@ -50,12 +55,23 @@
 		>
 			<div class="flex items-center justify-between px-1 pb-3">
 				<span class="text-sm font-semibold text-foreground">{title}</span>
-				<button
-					class="cursor-grab rounded p-1 text-foreground/70 transition-colors hover:bg-muted/70 hover:text-foreground dark:hover:bg-background"
-					{@attach handleRef}
-				>
-					<GripVerticalIcon class="size-4" />
-				</button>
+				<div class="flex items-center gap-0.5">
+					{#if onEdit && !isOverlay}
+						<button
+							class="rounded p-1 text-foreground/70 transition-colors hover:bg-muted/70 hover:text-foreground dark:hover:bg-background"
+							onclick={onEdit}
+							aria-label={editAriaLabel}
+						>
+							<PencilIcon class="size-3.5" />
+						</button>
+					{/if}
+					<button
+						class="cursor-grab rounded p-1 text-foreground/70 transition-colors hover:bg-muted/70 hover:text-foreground dark:hover:bg-background"
+						{@attach handleRef}
+					>
+						<GripVerticalIcon class="size-4" />
+					</button>
+				</div>
 			</div>
 			<div class="grid min-h-0 gap-2">
 				{@render children()}

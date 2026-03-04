@@ -4,6 +4,14 @@ import { internal } from './_generated/api';
 import { authedMutation, authedQuery } from './functions';
 
 const COLUMN_IDS = ['todo', 'working-on', 'prepared', 'done'] as const;
+const DEFAULT_COLUMN_IDS = [...COLUMN_IDS];
+
+type ColumnMeta = { id: string; name?: string; instructions?: string };
+const columnMetaValidator = v.object({
+	id: v.string(),
+	name: v.optional(v.string()),
+	instructions: v.optional(v.string())
+});
 
 const agentStatusValidator = v.optional(
 	v.union(
@@ -505,5 +513,104 @@ export const updateTaskAgentStatusInternal = internalMutation({
 		if (args.agentDraft !== undefined) patch.agentDraft = args.agentDraft;
 		if (args.agentDraftType !== undefined) patch.agentDraftType = args.agentDraftType;
 		await patchTask(ctx, args, patch);
+	}
+});
+
+// ── Column metadata queries/mutations ───────────────────────────────────────
+
+export const getColumnMeta = authedQuery({
+	args: {},
+	handler: async (ctx) => {
+		const board = await ctx.db
+			.query('todoBoards')
+			.withIndex('by_user', (q) => q.eq('userId', ctx.user._id))
+			.first();
+		return board?.columns ?? undefined;
+	}
+});
+
+export const updateColumn = authedMutation({
+	args: {
+		columnId: v.string(),
+		name: v.optional(v.string()),
+		instructions: v.optional(v.string())
+	},
+	handler: async (ctx, args) => {
+		const board = await ctx.db
+			.query('todoBoards')
+			.withIndex('by_user', (q) => q.eq('userId', ctx.user._id))
+			.first();
+
+		const now = Date.now();
+		const columns: ColumnMeta[] = board?.columns ? [...board.columns] : [];
+		const idx = columns.findIndex((c) => c.id === args.columnId);
+		const entry: ColumnMeta = {
+			id: args.columnId,
+			...(args.name ? { name: args.name } : {}),
+			...(args.instructions ? { instructions: args.instructions } : {})
+		};
+
+		if (idx !== -1) {
+			columns[idx] = entry;
+		} else {
+			columns.push(entry);
+		}
+
+		if (board) {
+			await ctx.db.patch(board._id, { columns, updatedAt: now });
+		} else {
+			await ctx.db.insert('todoBoards', {
+				userId: ctx.user._id,
+				tasks: [],
+				columns,
+				createdAt: now,
+				updatedAt: now
+			});
+		}
+	}
+});
+
+export const saveColumnOrder = authedMutation({
+	args: {
+		columnIds: v.array(v.string())
+	},
+	handler: async (ctx, args) => {
+		const board = await ctx.db
+			.query('todoBoards')
+			.withIndex('by_user', (q) => q.eq('userId', ctx.user._id))
+			.first();
+
+		const now = Date.now();
+		const existingMap = new Map<string, ColumnMeta>();
+		for (const col of board?.columns ?? []) {
+			existingMap.set(col.id, col);
+		}
+
+		const columns: ColumnMeta[] = args.columnIds.map((id) => existingMap.get(id) ?? { id });
+
+		if (board) {
+			await ctx.db.patch(board._id, { columns, updatedAt: now });
+		} else {
+			await ctx.db.insert('todoBoards', {
+				userId: ctx.user._id,
+				tasks: [],
+				columns,
+				createdAt: now,
+				updatedAt: now
+			});
+		}
+	}
+});
+
+export const getColumnInstructionsInternal = internalQuery({
+	args: { userId: v.string(), columnId: v.string() },
+	handler: async (ctx, args) => {
+		const board = await ctx.db
+			.query('todoBoards')
+			.withIndex('by_user', (q: any) => q.eq('userId', args.userId))
+			.first();
+		if (!board?.columns) return undefined;
+		const col = board.columns.find((c) => c.id === args.columnId);
+		return col?.instructions ?? undefined;
 	}
 });

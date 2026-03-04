@@ -17,4 +17,6 @@ export type TodoItem = {
 
 export type ColumnId = 'todo' | 'working-on' | 'prepared' | 'done';
 
+export type ColumnMeta = { id: string; name?: string; instructions?: string };
+
 export type KanbanData = Record<ColumnId, TodoItem[]>;

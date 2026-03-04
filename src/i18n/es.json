@@ -1133,6 +1133,16 @@
 			"todo": "Por hacer",
 			"working-on": "En progreso"
 		},
+		"column_edit": {
+			"aria_edit": "Editar configuración de columna",
+			"description": "Personaliza el nombre de esta lista y establece instrucciones para Coda.",
+			"instructions_description": "Coda seguirá estas instrucciones para las tareas en esta columna.",
+			"instructions_label": "Instrucciones para Coda",
+			"instructions_placeholder": "ej. Investigar a fondo antes de mover a la siguiente columna...",
+			"name_description": "Dejar vacío para usar el nombre predeterminado.",
+			"name_label": "Nombre de la lista",
+			"title": "Editar columna"
+		},
 		"cta": "Empezar gratis",
 		"detail": {
 			"agent_draft_title": "Borrador de Coda",

@@ -1133,6 +1133,16 @@
 			"todo": "To Do",
 			"working-on": "Working On"
 		},
+		"column_edit": {
+			"aria_edit": "Edit column settings",
+			"description": "Customize this list's name and set instructions for Coda.",
+			"instructions_description": "Coda will follow these instructions for tasks in this column.",
+			"instructions_label": "Coda instructions",
+			"instructions_placeholder": "e.g. Research thoroughly before moving to the next column...",
+			"name_description": "Leave empty to use the default name.",
+			"name_label": "List name",
+			"title": "Edit column"
+		},
 		"cta": "Get Started Free",
 		"detail": {
 			"agent_draft_title": "Coda Draft",

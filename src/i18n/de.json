@@ -1133,6 +1133,16 @@
 			"todo": "Zu erledigen",
 			"working-on": "In Bearbeitung"
 		},
+		"column_edit": {
+			"aria_edit": "Spalteneinstellungen bearbeiten",
+			"description": "Passe den Namen dieser Liste an und setze Anweisungen für Coda.",
+			"instructions_description": "Coda wird diesen Anweisungen für Aufgaben in dieser Spalte folgen.",
+			"instructions_label": "Coda-Anweisungen",
+			"instructions_placeholder": "z.B. Gründlich recherchieren, bevor zur nächsten Spalte verschoben wird...",
+			"name_description": "Leer lassen, um den Standardnamen zu verwenden.",
+			"name_label": "Listenname",
+			"title": "Spalte bearbeiten"
+		},
 		"cta": "Kostenlos starten",
 		"detail": {
 			"agent_draft_title": "Coda-Entwurf",

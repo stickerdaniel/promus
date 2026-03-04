@@ -127,6 +127,9 @@
       },
     },
   },
+  "patchedDependencies": {
+    "just-bash@2.11.6": "patches/just-bash@2.11.6.patch",
+  },
   "overrides": {
     "zod": "4.3.6",
   },

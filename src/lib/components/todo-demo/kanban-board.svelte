@@ -11,19 +11,22 @@
 	import { toast } from 'svelte-sonner';
 	import { getTranslate } from '@tolgee/svelte';
 	import { api } from '$lib/convex/_generated/api';
-	import type { KanbanData, ColumnId, TodoItem, AgentStatus } from './types.js';
+	import type { KanbanData, ColumnId, TodoItem, AgentStatus, ColumnMeta } from './types.js';
 	import KanbanColumn from './kanban-column.svelte';
 	import KanbanItem from './kanban-item.svelte';
 	import TodoDetailDialog from './todo-detail-dialog.svelte';
+	import ColumnEditDialog from './column-edit-dialog.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { dev } from '$app/environment';
+
+	const DEFAULT_COLUMN_IDS: ColumnId[] = ['todo', 'working-on', 'prepared', 'done'];
 
 	const { t } = getTranslate();
 	const convexClient = useConvexClient();
 
 	const sensors = [PointerSensor, KeyboardSensor];
-	const columnIds: ColumnId[] = ['todo', 'working-on', 'prepared', 'done'];
 	const boardQuery = useQuery(api.todos.getBoard, {});
+	const columnMetaQuery = useQuery(api.todos.getColumnMeta, {});
 
 	let items: KanbanData = $state({
 		todo: [],
@@ -31,12 +34,31 @@
 		prepared: [],
 		done: []
 	});
+	let columnIds: ColumnId[] = $state([...DEFAULT_COLUMN_IDS]);
 	let overlayTilted = $state(false);
 	let isDragging = $state(false);
 	let pendingSaveCount = $state(0);
+	let pendingColumnSave = $state(false);
 	let dragStartSnapshot = $state<KanbanData | null>(null);
+	let dragStartColumnIds = $state<ColumnId[] | null>(null);
 	let selectedTaskId = $state<string | null>(null);
 	let dialogOpen = $state(false);
+	let editingColumnId = $state<string | null>(null);
+	let columnEditOpen = $state(false);
+
+	let columnMetaMap: Record<string, ColumnMeta> = $derived.by(() => {
+		const map: Record<string, ColumnMeta> = {};
+		if (columnMetaQuery.data) {
+			for (const col of columnMetaQuery.data) {
+				map[col.id] = col;
+			}
+		}
+		return map;
+	});
+
+	function getColumnTitle(colId: string): string {
+		return columnMetaMap[colId]?.name || $t(`todo_demo.column.${colId}`);
+	}
 
 	let selectedTask: TodoItem | undefined = $derived.by(() => {
 		if (!selectedTaskId) return undefined;
@@ -48,7 +70,10 @@
 	});
 
 	type SyncEvent = {
-		operation: { source?: { type?: unknown } | null; target?: unknown | null };
+		operation: {
+			source?: { id?: unknown; type?: unknown } | null;
+			target?: { id?: unknown } | null;
+		};
 	};
 
 	type EndEvent = SyncEvent & {
@@ -91,9 +116,38 @@
 		items = cloneBoard(boardQuery.data);
 	});
 
+	// Sync column order from metadata query
+	$effect(() => {
+		if (!columnMetaQuery.data || isDragging || pendingColumnSave) return;
+		const metaIds = columnMetaQuery.data
+			.map((c) => c.id)
+			.filter((id) => DEFAULT_COLUMN_IDS.includes(id as ColumnId));
+		if (metaIds.length > 0) {
+			// Add any default columns not in metadata at the end
+			const remaining = DEFAULT_COLUMN_IDS.filter((id) => !metaIds.includes(id));
+			columnIds = [...metaIds, ...remaining] as ColumnId[];
+		} else {
+			columnIds = [...DEFAULT_COLUMN_IDS];
+		}
+	});
+
 	function syncItemOrder(event: SyncEvent) {
 		const { source, target } = event.operation;
-		if (!source || !target || source.type === 'column') return;
+		if (!source || !target) return;
+
+		if (source.type === 'column') {
+			// Column reorder
+			const sourceId = String(source.id);
+			const targetId = String(target.id);
+			const fromIdx = columnIds.indexOf(sourceId as ColumnId);
+			const toIdx = columnIds.indexOf(targetId as ColumnId);
+			if (fromIdx === -1 || toIdx === -1 || fromIdx === toIdx) return;
+			const next = [...columnIds];
+			const [removed] = next.splice(fromIdx, 1);
+			next.splice(toIdx, 0, removed);
+			columnIds = next;
+			return;
+		}
 
 		items = move(items, event as any) as KanbanData;
 	}
@@ -409,6 +463,24 @@
 		const suspended = event.suspend();
 		requestAnimationFrame(() => suspended.resume());
 
+		// Check for column order change
+		const startCols = dragStartColumnIds;
+		dragStartColumnIds = null;
+		if (startCols && startCols.join(',') !== columnIds.join(',')) {
+			pendingColumnSave = true;
+			try {
+				await convexClient.mutation(api.todos.saveColumnOrder, {
+					columnIds: [...columnIds]
+				});
+			} catch (error) {
+				console.error('[kanban] Failed to save column order:', error);
+				columnIds = startCols;
+				toast.error($t('todo_demo.save_failed'));
+			} finally {
+				pendingColumnSave = false;
+			}
+		}
+
 		const startBoard = dragStartSnapshot;
 		dragStartSnapshot = null;
 		if (!startBoard) return;
@@ -428,6 +500,7 @@
 		modifiers={[RestrictToWindowEdges]}
 		onDragStart={() => {
 			dragStartSnapshot = cloneBoard(items);
+			dragStartColumnIds = [...columnIds];
 			overlayTilted = true;
 			isDragging = true;
 		}}
@@ -440,9 +513,14 @@
 			{#each columnIds as columnId, colIdx (columnId)}
 				<KanbanColumn
 					id={columnId}
-					title={$t(`todo_demo.column.${columnId}`)}
+					title={getColumnTitle(columnId)}
 					index={colIdx}
 					onAdd={(title) => addTodo(columnId, title)}
+					onEdit={() => {
+						editingColumnId = columnId;
+						columnEditOpen = true;
+					}}
+					editAriaLabel={$t('todo_demo.column_edit.aria_edit')}
 				>
 					{#each items[columnId] as task, taskIdx (task.id)}
 						<KanbanItem
@@ -468,7 +546,7 @@
 					{@const colId = source.id as ColumnId}
 					<KanbanColumn
 						id={colId}
-						title={$t(`todo_demo.column.${colId}`)}
+						title={getColumnTitle(colId)}
 						index={0}
 						isOverlay
 						{overlayTilted}
@@ -536,5 +614,26 @@
 		onApprove={handleAgentApprove}
 		onReject={handleAgentReject}
 		onBlockAction={handleBlockAction}
+	/>
+{/if}
+
+{#if editingColumnId}
+	<ColumnEditDialog
+		columnId={editingColumnId}
+		columnMeta={columnMetaMap[editingColumnId]}
+		defaultTitle={$t(`todo_demo.column.${editingColumnId}`)}
+		bind:open={columnEditOpen}
+		onSave={async (colId, updates) => {
+			try {
+				await convexClient.mutation(api.todos.updateColumn, {
+					columnId: colId,
+					name: updates.name,
+					instructions: updates.instructions
+				});
+			} catch (error) {
+				console.error('[kanban] Failed to update column:', error);
+				toast.error($t('todo_demo.save_failed'));
+			}
+		}}
 	/>
 {/if}

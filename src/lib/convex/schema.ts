@@ -47,6 +47,15 @@ export default defineSchema({
 				updatedAt: v.number()
 			})
 		),
+		columns: v.optional(
+			v.array(
+				v.object({
+					id: v.string(),
+					name: v.optional(v.string()),
+					instructions: v.optional(v.string())
+				})
+			)
+		),
 		createdAt: v.number(),
 		updatedAt: v.number()
 	}).index('by_user', ['userId']),

@@ -1133,6 +1133,16 @@
 			"todo": "À faire",
 			"working-on": "En cours"
 		},
+		"column_edit": {
+			"aria_edit": "Modifier les paramètres de la colonne",
+			"description": "Personnalise le nom de cette liste et définis des instructions pour Coda.",
+			"instructions_description": "Coda suivra ces instructions pour les tâches dans cette colonne.",
+			"instructions_label": "Instructions pour Coda",
+			"instructions_placeholder": "ex. Rechercher en profondeur avant de passer à la colonne suivante...",
+			"name_description": "Laisser vide pour utiliser le nom par défaut.",
+			"name_label": "Nom de la liste",
+			"title": "Modifier la colonne"
+		},
 		"cta": "Commencer gratuitement",
 		"detail": {
 			"agent_draft_title": "Brouillon de Coda",

@@ -3,14 +3,14 @@
 </script>
 
 <SlideContainer>
-	<div class="flex flex-col h-full" style="padding: var(--slide-padding);">
-		<h2 class="text-4xl font-bold tracking-tight text-foreground font-serif mb-8">Architecture</h2>
+	<div class="flex h-full flex-col" style="padding: var(--slide-padding);">
+		<h2 class="mb-8 font-serif text-4xl font-bold tracking-tight text-foreground">Architecture</h2>
 
-		<div class="flex flex-col gap-2.5 flex-1 justify-center max-w-[700px] mx-auto w-full">
+		<div class="mx-auto flex w-full max-w-[700px] flex-1 flex-col justify-center gap-2.5">
 			<!-- Row 1: SvelteKit -->
-			<div class="rounded-2xl px-6 py-5 flex items-center gap-4 border border-border bg-card">
-				<div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-					<span class="text-primary font-bold text-sm">SK</span>
+			<div class="flex items-center gap-4 rounded-2xl border border-border bg-card px-6 py-5">
+				<div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+					<span class="text-sm font-bold text-primary">SK</span>
 				</div>
 				<div>
 					<p class="text-base font-semibold text-foreground">SvelteKit</p>
@@ -30,9 +30,9 @@
 			</div>
 
 			<!-- Row 2: Convex -->
-			<div class="rounded-2xl px-6 py-5 flex items-center gap-4 border border-border bg-card">
-				<div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-					<span class="text-primary font-bold text-sm">CX</span>
+			<div class="flex items-center gap-4 rounded-2xl border border-border bg-card px-6 py-5">
+				<div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+					<span class="text-sm font-bold text-primary">CX</span>
 				</div>
 				<div>
 					<p class="text-base font-semibold text-foreground">Convex</p>
@@ -55,10 +55,10 @@
 			<div class="flex gap-3">
 				<!-- Daytona + Vibe -->
 				<div
-					class="flex-1 rounded-2xl px-6 py-5 flex items-center gap-4 border border-border bg-card"
+					class="flex flex-1 items-center gap-4 rounded-2xl border border-border bg-card px-6 py-5"
 				>
-					<div class="size-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-						<span class="text-primary font-bold text-sm">DT</span>
+					<div class="flex size-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+						<span class="text-sm font-bold text-primary">DT</span>
 					</div>
 					<div>
 						<p class="text-base font-semibold text-foreground">Daytona Sandbox + Mistral Vibe</p>
@@ -67,12 +67,12 @@
 				</div>
 
 				<!-- Right stack -->
-				<div class="flex flex-col gap-3 w-[200px] shrink-0">
+				<div class="flex w-[200px] shrink-0 flex-col gap-3">
 					<div
-						class="flex-1 rounded-2xl px-4 py-3 flex items-center gap-3 border border-border bg-card"
+						class="flex flex-1 items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3"
 					>
-						<div class="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-							<span class="text-primary font-bold text-xs">AWS</span>
+						<div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+							<span class="text-xs font-bold text-primary">AWS</span>
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-foreground">Bedrock</p>
@@ -81,10 +81,10 @@
 					</div>
 
 					<div
-						class="flex-1 rounded-2xl px-4 py-3 flex items-center gap-3 border border-border bg-card"
+						class="flex flex-1 items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3"
 					>
-						<div class="size-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-							<span class="text-primary font-bold text-xs">UP</span>
+						<div class="flex size-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+							<span class="text-xs font-bold text-primary">UP</span>
 						</div>
 						<div>
 							<p class="text-sm font-semibold text-foreground">Unipile</p>

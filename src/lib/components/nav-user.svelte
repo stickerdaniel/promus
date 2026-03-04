@@ -70,11 +70,11 @@
 			</Avatar.Root>
 			<div class="grid flex-1 text-left text-sm leading-tight">
 				<span class="truncate font-medium">{user.name}</span>
-				<span class="text-muted-foreground truncate text-xs">{user.email}</span>
+				<span class="truncate text-xs text-muted-foreground">{user.email}</span>
 			</div>
 			<button
 				onclick={() => signOut()}
-				class="text-muted-foreground hover:text-foreground shrink-0 rounded-md p-1 transition-colors"
+				class="shrink-0 rounded-md p-1 text-muted-foreground transition-colors hover:text-foreground"
 				data-testid="logout-button"
 			>
 				<LogOutIcon class="size-4" />
@@ -84,7 +84,7 @@
 	</Sidebar.MenuItem>
 	{#if isImpersonating}
 		<Sidebar.MenuItem>
-			<Sidebar.MenuButton onclick={() => stopImpersonating()} class="pl-4 text-warning">
+			<Sidebar.MenuButton onclick={() => stopImpersonating()} class="text-warning pl-4">
 				<UserXIcon />
 				<span><T keyName="app.user_menu.stop_impersonating" /></span>
 			</Sidebar.MenuButton>

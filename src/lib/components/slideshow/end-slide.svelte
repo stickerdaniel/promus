@@ -6,15 +6,15 @@
 
 <SlideContainer>
 	<div
-		class="flex items-center justify-center h-full relative"
+		class="relative flex h-full items-center justify-center"
 		style="padding: var(--slide-padding);"
 	>
 		<div class="flex flex-col items-center gap-6">
-			<div class="w-16 h-1 bg-primary rounded-full"></div>
-			<h1 class="text-[112px] font-bold tracking-tighter leading-none text-foreground font-serif">
+			<div class="h-1 w-16 rounded-full bg-primary"></div>
+			<h1 class="font-serif text-[112px] leading-none font-bold tracking-tighter text-foreground">
 				DEMO
 			</h1>
-			<div class="w-16 h-1 bg-primary rounded-full"></div>
+			<div class="h-1 w-16 rounded-full bg-primary"></div>
 			<a href={resolve('/')} class="mt-4">
 				<Button variant="outline" size="lg">Start Demo</Button>
 			</a>

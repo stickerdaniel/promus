@@ -13,7 +13,7 @@
 	<title>Slideshow | Promus</title>
 </svelte:head>
 
-<div class="min-h-screen bg-muted flex flex-col items-center justify-center p-8 gap-6">
+<div class="flex min-h-screen flex-col items-center justify-center gap-6 bg-muted p-8">
 	<div class="flex items-center gap-4">
 		<h1 class="text-xl font-semibold">Slideshow Preview</h1>
 		<LightSwitch />

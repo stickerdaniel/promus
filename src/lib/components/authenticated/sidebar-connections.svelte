@@ -321,7 +321,7 @@
 												? 'bg-red-500'
 												: 'bg-green-500'}"
 										></span>
-										<span class="text-muted-foreground text-xs">
+										<span class="text-xs text-muted-foreground">
 											{$t('sidebar.connections.connected_since', {
 												date: formatTimestamp(openaiConnection.data.connectedAt)
 											})}
@@ -340,7 +340,7 @@
 							</DropdownMenu.Content>
 						</DropdownMenu.Root>
 					{:else}
-						<div class="absolute right-1 top-1 group-data-[collapsible=icon]:hidden">
+						<div class="absolute top-1 right-1 group-data-[collapsible=icon]:hidden">
 							<Button
 								variant="outline"
 								size="sm"
@@ -394,7 +394,7 @@
 										</span>
 										<span class="flex items-center gap-1.5">
 											<span class="size-2 shrink-0 rounded-full bg-green-500"></span>
-											<span class="text-muted-foreground text-xs">
+											<span class="text-xs text-muted-foreground">
 												{$t('sidebar.connections.connected_since', {
 													date: formatDate(connectedAccount.created_at)
 												})}
@@ -412,7 +412,7 @@
 								</DropdownMenu.Content>
 							</DropdownMenu.Root>
 						{:else}
-							<div class="absolute right-1 top-1 group-data-[collapsible=icon]:hidden">
+							<div class="absolute top-1 right-1 group-data-[collapsible=icon]:hidden">
 								<Button
 									variant="outline"
 									size="sm"
@@ -449,7 +449,7 @@
 		<div class="space-y-4 py-4">
 			<div class="flex items-center justify-center gap-3">
 				<code
-					class="bg-muted rounded-lg px-6 py-3 text-center font-mono text-2xl font-bold tracking-widest"
+					class="rounded-lg bg-muted px-6 py-3 text-center font-mono text-2xl font-bold tracking-widest"
 				>
 					{deviceCode}
 				</code>
@@ -470,7 +470,7 @@
 				</Button>
 			</div>
 
-			<div class="text-muted-foreground flex items-center justify-center gap-2 text-sm">
+			<div class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
 				<LoaderCircleIcon class="h-4 w-4 animate-spin" />
 				<T keyName="settings.connections.openai_waiting" />
 			</div>

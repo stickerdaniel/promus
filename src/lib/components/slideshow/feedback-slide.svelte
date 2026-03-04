@@ -5,18 +5,18 @@
 <SlideContainer>
 	<div class="flex h-full" style="padding: var(--slide-padding);">
 		<!-- Left -->
-		<div class="flex flex-col justify-center flex-1 pr-16">
-			<h2 class="text-5xl font-bold tracking-tight leading-[1.1] text-foreground font-serif">
+		<div class="flex flex-1 flex-col justify-center pr-16">
+			<h2 class="font-serif text-5xl leading-[1.1] font-bold tracking-tight text-foreground">
 				Your standards<br />become its<br />standards.
 			</h2>
-			<div class="w-12 h-1 bg-primary rounded-full my-8"></div>
-			<p class="text-lg text-muted-foreground font-light max-w-[360px]">
+			<div class="my-8 h-1 w-12 rounded-full bg-primary"></div>
+			<p class="max-w-[360px] text-lg font-light text-muted-foreground">
 				Give feedback. Coda learns your tone, your preferences, your way of working.
 			</p>
 		</div>
 
 		<!-- Right: feedback loop visual -->
-		<div class="flex items-center justify-center w-[400px] shrink-0">
+		<div class="flex w-[400px] shrink-0 items-center justify-center">
 			<div class="relative">
 				<!-- Circle loop -->
 				<svg class="size-[280px]" viewBox="0 0 280 280" fill="none">
@@ -39,17 +39,17 @@
 				</svg>
 
 				<!-- Top: Agent output -->
-				<div class="absolute -top-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
-					<div class="size-14 rounded-2xl bg-primary flex items-center justify-center shadow-sm">
-						<span class="text-primary-foreground font-bold text-xl">P</span>
+				<div class="absolute -top-2 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2">
+					<div class="flex size-14 items-center justify-center rounded-2xl bg-primary shadow-sm">
+						<span class="text-xl font-bold text-primary-foreground">P</span>
 					</div>
-					<span class="text-xs font-medium text-foreground whitespace-nowrap">Coda output</span>
+					<span class="text-xs font-medium whitespace-nowrap text-foreground">Coda output</span>
 				</div>
 
 				<!-- Right: Review -->
-				<div class="absolute top-1/2 -right-4 -translate-y-1/2 flex flex-col items-center gap-2">
+				<div class="absolute top-1/2 -right-4 flex -translate-y-1/2 flex-col items-center gap-2">
 					<div
-						class="size-14 rounded-2xl bg-card border-2 border-border flex items-center justify-center"
+						class="flex size-14 items-center justify-center rounded-2xl border-2 border-border bg-card"
 					>
 						<svg
 							class="size-5 text-foreground"
@@ -66,9 +66,9 @@
 				</div>
 
 				<!-- Bottom: Correct -->
-				<div class="absolute -bottom-2 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2">
+				<div class="absolute -bottom-2 left-1/2 flex -translate-x-1/2 flex-col items-center gap-2">
 					<div
-						class="size-14 rounded-2xl bg-card border-2 border-border flex items-center justify-center"
+						class="flex size-14 items-center justify-center rounded-2xl border-2 border-border bg-card"
 					>
 						<svg
 							class="size-5 text-muted-foreground"
@@ -84,9 +84,9 @@
 				</div>
 
 				<!-- Left: Adapts -->
-				<div class="absolute top-1/2 -left-4 -translate-y-1/2 flex flex-col items-center gap-2">
+				<div class="absolute top-1/2 -left-4 flex -translate-y-1/2 flex-col items-center gap-2">
 					<div
-						class="size-14 rounded-2xl bg-primary/10 border-2 border-primary/30 flex items-center justify-center"
+						class="flex size-14 items-center justify-center rounded-2xl border-2 border-primary/30 bg-primary/10"
 					>
 						<svg
 							class="size-5 text-primary"

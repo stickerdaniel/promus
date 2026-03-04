@@ -5,7 +5,7 @@
 </script>
 
 <div
-	class="bg-background text-foreground overflow-hidden relative"
+	class="relative overflow-hidden bg-background text-foreground"
 	style="width: var(--slide-width); height: var(--slide-height);"
 >
 	{@render children()}

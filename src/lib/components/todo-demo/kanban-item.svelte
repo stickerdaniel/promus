@@ -69,7 +69,7 @@
 </script>
 
 <div
-	class="relative select-none cursor-grab active:cursor-grabbing {isOverlay && overlayTilted
+	class="relative cursor-grab select-none active:cursor-grabbing {isOverlay && overlayTilted
 		? 'drag-tilt-item'
 		: ''}"
 	{@attach ref}
@@ -97,7 +97,7 @@
 		!isOverlay
 			? 'invisible'
 			: ''} {isDropTarget.current
-			? 'border-primary/35 ring-2 ring-primary/25 bg-primary/[0.04] dark:border-primary/35 dark:ring-primary/25'
+			? 'border-primary/35 bg-primary/[0.04] ring-2 ring-primary/25 dark:border-primary/35 dark:ring-primary/25'
 			: ''}"
 		role="button"
 		tabindex={isOverlay ? -1 : 0}
@@ -110,7 +110,7 @@
 		<div class="flex items-center justify-between gap-2">
 			<span class="min-w-0">{task.title}</span>
 			{#if task.agentStatus === 'working'}
-				<Logo class="size-4 shrink-0 text-muted-foreground agent-working" />
+				<Logo class="size-4 shrink-0 agent-working text-muted-foreground" />
 			{:else if task.notes}
 				<span class="relative shrink-0">
 					<StickyNoteIcon class="size-4 text-muted-foreground" />

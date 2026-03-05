@@ -861,25 +861,6 @@
 			"trigger_mobile": "Suchen..."
 		}
 	},
-	"sidebar": {
-		"connections": {
-			"llm_providers": "KI-Anbieter",
-			"connections": "Verbindungen",
-			"connect": "Verbinden",
-			"connected": "Verbunden",
-			"connected_since": "Verbunden seit {date}",
-			"remove": "Verbindung entfernen",
-			"linkedin": "LinkedIn",
-			"gmail": "Gmail",
-			"outlook": "Outlook",
-			"whatsapp": "WhatsApp",
-			"instagram": "Instagram",
-			"messenger": "Messenger",
-			"telegram": "Telegram",
-			"twitter": "X (Twitter)",
-			"imap": "IMAP"
-		}
-	},
 	"settings": {
 		"account": {
 			"avatar": {
@@ -939,7 +920,7 @@
 			"openai_connected_date": "Verbunden am {date}",
 			"openai_copy_code": "Code kopieren",
 			"openai_description": "Verbinde dein ChatGPT Plus- oder Pro-Konto, um KI-Funktionen ohne zusätzliche Kosten zu nutzen.",
-			"openai_device_code_description": "Gib den folgenden Code bei OpenAI ein, um den Zugriff zu autorisieren.",
+			"openai_device_code_description": "Nutze dein ChatGPT Plus oder Pro Abo, um die KI in dieser App zu verwenden. Wir haben keinen Zugriff auf deine Chats.",
 			"openai_device_code_title": "ChatGPT-Konto verbinden",
 			"openai_disconnect": "ChatGPT trennen",
 			"openai_disconnect_confirm": "ChatGPT-Konto trennen? Du kannst es jederzeit wieder verbinden.",
@@ -947,6 +928,8 @@
 			"openai_disconnected": "ChatGPT-Konto getrennt",
 			"openai_expired": "Abgelaufen",
 			"openai_open_openai": "OpenAI öffnen",
+			"openai_step1_label": "Öffne die OpenAI-Autorisierungsseite",
+			"openai_step2_label": "Gib diesen Code ein",
 			"openai_timeout": "Autorisierung abgelaufen. Bitte versuche es erneut.",
 			"openai_title": "ChatGPT / OpenAI",
 			"openai_waiting": "Warte auf Autorisierung...",
@@ -1020,6 +1003,25 @@
 			"security": "Sicherheit"
 		},
 		"title": "Einstellungen"
+	},
+	"sidebar": {
+		"connections": {
+			"connect": "Verbinden",
+			"connected": "Verbunden",
+			"connected_since": "Verbunden seit {date}",
+			"connections": "Verbindungen",
+			"gmail": "Gmail",
+			"imap": "IMAP",
+			"instagram": "Instagram",
+			"linkedin": "LinkedIn",
+			"llm_providers": "KI-Anbieter",
+			"messenger": "Messenger",
+			"outlook": "Outlook",
+			"remove": "Verbindung entfernen",
+			"telegram": "Telegram",
+			"twitter": "X (Twitter)",
+			"whatsapp": "WhatsApp"
+		}
 	},
 	"support": {
 		"avatar": {
@@ -1126,6 +1128,7 @@
 			"placeholder": "Frag etwas zu dieser Aufgabe...",
 			"title": "Aufgaben-KI"
 		},
+		"chatgpt_connect_description": "Verbinden Sie Ihr ChatGPT-Konto, damit Coda an Ihren Aufgaben arbeiten kann. Ohne Verbindung funktioniert Ihr Board als normale To-Do-Liste.",
 		"column": {
 			"done": "Erledigt",
 			"in-progress": "In Bearbeitung",

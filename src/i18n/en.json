@@ -861,25 +861,6 @@
 			"trigger_mobile": "Search..."
 		}
 	},
-	"sidebar": {
-		"connections": {
-			"llm_providers": "LLM Providers",
-			"connections": "Connections",
-			"connect": "Connect",
-			"connected": "Connected",
-			"connected_since": "Connected since {date}",
-			"remove": "Remove connection",
-			"linkedin": "LinkedIn",
-			"gmail": "Gmail",
-			"outlook": "Outlook",
-			"whatsapp": "WhatsApp",
-			"instagram": "Instagram",
-			"messenger": "Messenger",
-			"telegram": "Telegram",
-			"twitter": "X (Twitter)",
-			"imap": "IMAP"
-		}
-	},
 	"settings": {
 		"account": {
 			"avatar": {
@@ -939,7 +920,7 @@
 			"openai_connected_date": "Connected {date}",
 			"openai_copy_code": "Copy code",
 			"openai_description": "Connect your ChatGPT Plus or Pro account to use AI features at no extra cost.",
-			"openai_device_code_description": "Enter the code below at OpenAI to authorize access.",
+			"openai_device_code_description": "Use your ChatGPT Plus or Pro subscription to power AI in this app. We never access your chats.",
 			"openai_device_code_title": "Connect your ChatGPT account",
 			"openai_disconnect": "Disconnect ChatGPT",
 			"openai_disconnect_confirm": "Disconnect your ChatGPT account? You can reconnect at any time.",
@@ -947,6 +928,8 @@
 			"openai_disconnected": "ChatGPT account disconnected",
 			"openai_expired": "Expired",
 			"openai_open_openai": "Open OpenAI",
+			"openai_step1_label": "Open the OpenAI authorization page",
+			"openai_step2_label": "Enter this code",
 			"openai_timeout": "Authorization timed out. Please try again.",
 			"openai_title": "ChatGPT / OpenAI",
 			"openai_waiting": "Waiting for authorization...",
@@ -1020,6 +1003,25 @@
 			"security": "Security"
 		},
 		"title": "Settings"
+	},
+	"sidebar": {
+		"connections": {
+			"connect": "Connect",
+			"connected": "Connected",
+			"connected_since": "Connected since {date}",
+			"connections": "Connections",
+			"gmail": "Gmail",
+			"imap": "IMAP",
+			"instagram": "Instagram",
+			"linkedin": "LinkedIn",
+			"llm_providers": "LLM Providers",
+			"messenger": "Messenger",
+			"outlook": "Outlook",
+			"remove": "Remove connection",
+			"telegram": "Telegram",
+			"twitter": "X (Twitter)",
+			"whatsapp": "WhatsApp"
+		}
 	},
 	"support": {
 		"avatar": {
@@ -1126,6 +1128,7 @@
 			"placeholder": "Ask about this task...",
 			"title": "Task AI"
 		},
+		"chatgpt_connect_description": "Connect your ChatGPT account to let Coda work on your tasks. Without it, your board works as a regular todo list.",
 		"column": {
 			"done": "Done",
 			"in-progress": "In Progress",

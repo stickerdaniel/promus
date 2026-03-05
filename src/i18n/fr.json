@@ -861,25 +861,6 @@
 			"trigger_mobile": "Rechercher..."
 		}
 	},
-	"sidebar": {
-		"connections": {
-			"llm_providers": "Fournisseurs IA",
-			"connections": "Connexions",
-			"connect": "Connecter",
-			"connected": "Connecté",
-			"connected_since": "Connecté depuis {date}",
-			"remove": "Supprimer la connexion",
-			"linkedin": "LinkedIn",
-			"gmail": "Gmail",
-			"outlook": "Outlook",
-			"whatsapp": "WhatsApp",
-			"instagram": "Instagram",
-			"messenger": "Messenger",
-			"telegram": "Telegram",
-			"twitter": "X (Twitter)",
-			"imap": "IMAP"
-		}
-	},
 	"settings": {
 		"account": {
 			"avatar": {
@@ -939,7 +920,7 @@
 			"openai_connected_date": "Connecté le {date}",
 			"openai_copy_code": "Copier le code",
 			"openai_description": "Connecte ton compte ChatGPT Plus ou Pro pour utiliser les fonctionnalités IA sans frais supplémentaires.",
-			"openai_device_code_description": "Entre le code ci-dessous sur OpenAI pour autoriser l'accès.",
+			"openai_device_code_description": "Utilise ton abonnement ChatGPT Plus ou Pro pour alimenter l'IA dans cette app. Nous n'accédons jamais à tes discussions.",
 			"openai_device_code_title": "Connecter ton compte ChatGPT",
 			"openai_disconnect": "Déconnecter ChatGPT",
 			"openai_disconnect_confirm": "Déconnecter ton compte ChatGPT ? Tu peux te reconnecter à tout moment.",
@@ -947,6 +928,8 @@
 			"openai_disconnected": "Compte ChatGPT déconnecté",
 			"openai_expired": "Expiré",
 			"openai_open_openai": "Ouvrir OpenAI",
+			"openai_step1_label": "Ouvrez la page d'autorisation OpenAI",
+			"openai_step2_label": "Entrez ce code",
 			"openai_timeout": "L'autorisation a expiré. Veuillez réessayer.",
 			"openai_title": "ChatGPT / OpenAI",
 			"openai_waiting": "En attente d'autorisation...",
@@ -1020,6 +1003,25 @@
 			"security": "Sécurité"
 		},
 		"title": "Paramètres"
+	},
+	"sidebar": {
+		"connections": {
+			"connect": "Connecter",
+			"connected": "Connecté",
+			"connected_since": "Connecté depuis {date}",
+			"connections": "Connexions",
+			"gmail": "Gmail",
+			"imap": "IMAP",
+			"instagram": "Instagram",
+			"linkedin": "LinkedIn",
+			"llm_providers": "Fournisseurs IA",
+			"messenger": "Messenger",
+			"outlook": "Outlook",
+			"remove": "Supprimer la connexion",
+			"telegram": "Telegram",
+			"twitter": "X (Twitter)",
+			"whatsapp": "WhatsApp"
+		}
 	},
 	"support": {
 		"avatar": {
@@ -1126,6 +1128,7 @@
 			"placeholder": "Pose une question sur cette tâche...",
 			"title": "IA de tâches"
 		},
+		"chatgpt_connect_description": "Connectez votre compte ChatGPT pour permettre a Coda de travailler sur vos taches. Sans lui, votre tableau fonctionne comme une liste de taches classique.",
 		"column": {
 			"done": "Terminé",
 			"in-progress": "En cours",

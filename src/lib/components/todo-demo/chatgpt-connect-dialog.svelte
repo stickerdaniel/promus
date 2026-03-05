@@ -3,10 +3,10 @@
 	import { api } from '$lib/convex/_generated/api';
 	import * as Dialog from '$lib/components/ui/dialog/index.js';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { CopyButton } from '$lib/components/ui/copy-button/index.js';
+	import * as Field from '$lib/components/ui/field/index.js';
 	import { toast } from 'svelte-sonner';
 	import { T, getTranslate } from '@tolgee/svelte';
-	import CopyIcon from '@lucide/svelte/icons/copy';
-	import CheckIcon from '@lucide/svelte/icons/check';
 	import ExternalLinkIcon from '@lucide/svelte/icons/external-link';
 	import LoaderCircleIcon from '@lucide/svelte/icons/loader-circle';
 
@@ -23,7 +23,6 @@
 
 	let deviceCode = $state('');
 	let verificationUrl = $state('');
-	let codeCopied = $state(false);
 	let initiating = $state(false);
 	let pollingTimer = $state<ReturnType<typeof setInterval> | null>(null);
 	let pollTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
@@ -45,6 +44,10 @@
 			const result = await client.action(api.openai.initiateDeviceAuth, {});
 			deviceCode = result.userCode;
 			verificationUrl = result.verificationUrl;
+
+			// Auto-copy code and open OpenAI immediately
+			navigator.clipboard.writeText(result.userCode).catch(() => {});
+			window.open(result.verificationUrl, '_blank');
 
 			const intervalMs = result.interval * 1000;
 			pollingTimer = setInterval(async () => {
@@ -95,12 +98,6 @@
 		open = next;
 	}
 
-	async function copyCode() {
-		await navigator.clipboard.writeText(deviceCode);
-		codeCopied = true;
-		setTimeout(() => (codeCopied = false), 2000);
-	}
-
 	// Start auth flow when dialog opens
 	$effect(() => {
 		if (open && !deviceCode && !initiating) {
@@ -109,7 +106,6 @@
 		if (!open) {
 			deviceCode = '';
 			verificationUrl = '';
-			codeCopied = false;
 		}
 	});
 </script>
@@ -124,30 +120,50 @@
 		</Dialog.Header>
 
 		{#if deviceCode}
-			<div class="space-y-4 py-4">
-				<div class="flex items-center justify-center gap-3">
-					<code
-						class="rounded-lg bg-muted px-6 py-3 text-center font-mono text-2xl font-bold tracking-widest"
-					>
-						{deviceCode}
-					</code>
-					<Button variant="outline" size="icon" onclick={copyCode}>
-						{#if codeCopied}
-							<CheckIcon class="h-4 w-4" />
-						{:else}
-							<CopyIcon class="h-4 w-4" />
-						{/if}
-						<span class="sr-only"><T keyName="settings.connections.openai_copy_code" /></span>
-					</Button>
-				</div>
+			<div class="space-y-4 pt-3">
+				<Field.Group>
+					<!-- Step 1 -->
+					<div class="flex items-start gap-4">
+						<div
+							class="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
+						>
+							1
+						</div>
+						<Field.Field class="flex-1">
+							<p class="text-sm font-medium leading-none">
+								<T keyName="settings.connections.openai_step1_label" />
+							</p>
+							<Button class="w-full" onclick={() => window.open(verificationUrl, '_blank')}>
+								<ExternalLinkIcon class="h-4 w-4" />
+								<T keyName="settings.connections.openai_open_openai" />
+							</Button>
+						</Field.Field>
+					</div>
 
-				<div class="flex justify-center">
-					<Button variant="outline" onclick={() => window.open(verificationUrl, '_blank')}>
-						<ExternalLinkIcon class="h-4 w-4" />
-						<T keyName="settings.connections.openai_open_openai" />
-					</Button>
-				</div>
+					<!-- Step 2 -->
+					<div class="flex items-start gap-4">
+						<div
+							class="flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-xs font-semibold text-primary-foreground"
+						>
+							2
+						</div>
+						<Field.Field class="flex-1">
+							<p class="text-sm font-medium leading-none">
+								<T keyName="settings.connections.openai_step2_label" />
+							</p>
+							<div class="flex items-center gap-2">
+								<code
+									class="inline-flex h-9 flex-1 items-center justify-center rounded-md bg-muted px-4 font-mono text-xl font-bold tracking-widest"
+								>
+									{deviceCode}
+								</code>
+								<CopyButton text={deviceCode} variant="outline" />
+							</div>
+						</Field.Field>
+					</div>
+				</Field.Group>
 
+				<!-- Waiting -->
 				<div class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
 					<LoaderCircleIcon class="h-4 w-4 animate-spin" />
 					<T keyName="settings.connections.openai_waiting" />

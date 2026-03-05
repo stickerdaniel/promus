@@ -11,11 +11,9 @@
 	import { useEventListener } from 'runed';
 	import ProviderIcon from '$lib/components/icons/provider-icon.svelte';
 	import EllipsisVerticalIcon from '@lucide/svelte/icons/ellipsis-vertical';
-	import CopyIcon from '@lucide/svelte/icons/copy';
-	import CheckIcon from '@lucide/svelte/icons/check';
-	import ExternalLinkIcon from '@lucide/svelte/icons/external-link';
 	import LoaderCircleIcon from '@lucide/svelte/icons/loader-circle';
 	import UnplugIcon from '@lucide/svelte/icons/unplug';
+	import ChatgptConnectDialog from '$lib/components/todo-demo/chatgpt-connect-dialog.svelte';
 
 	const { t } = getTranslate();
 	const client = useConvexClient();
@@ -187,72 +185,9 @@
 
 	let openaiDialogOpen = $state(false);
 	let openaiDisconnecting = $state(false);
-	let deviceCode = $state('');
-	let verificationUrl = $state('');
-	let codeCopied = $state(false);
-	let pollingTimer = $state<ReturnType<typeof setInterval> | null>(null);
-	let pollTimeout = $state<ReturnType<typeof setTimeout> | null>(null);
 
-	function cleanupPolling() {
-		if (pollingTimer) {
-			clearInterval(pollingTimer);
-			pollingTimer = null;
-		}
-		if (pollTimeout) {
-			clearTimeout(pollTimeout);
-			pollTimeout = null;
-		}
-	}
-
-	async function handleOpenAIConnect() {
-		connectingProvider = 'CHATGPT';
-		try {
-			const result = await client.action(api.openai.initiateDeviceAuth, {});
-			deviceCode = result.userCode;
-			verificationUrl = result.verificationUrl;
-			openaiDialogOpen = true;
-
-			const intervalMs = result.interval * 1000;
-			pollingTimer = setInterval(async () => {
-				try {
-					const status = await client.action(api.openai.pollDeviceAuth, {
-						deviceAuthId: result.deviceAuthId,
-						userCode: result.userCode
-					});
-
-					if (status === 'success') {
-						cleanupPolling();
-						openaiDialogOpen = false;
-						connectingProvider = null;
-						toast.success($t('settings.connections.openai_connected'));
-						return;
-					}
-
-					if (status === 'failed') {
-						cleanupPolling();
-						openaiDialogOpen = false;
-						connectingProvider = null;
-						toast.error($t('settings.connections.openai_connect_failed'));
-						return;
-					}
-				} catch {
-					// Poll errors are non-fatal, keep trying
-				}
-			}, intervalMs);
-
-			pollTimeout = setTimeout(
-				() => {
-					cleanupPolling();
-					openaiDialogOpen = false;
-					connectingProvider = null;
-					toast.error($t('settings.connections.openai_timeout'));
-				},
-				5 * 60 * 1000
-			);
-		} catch {
-			toast.error($t('settings.connections.openai_connect_failed'));
-			connectingProvider = null;
-		}
+	function handleOpenAIConnect() {
+		openaiDialogOpen = true;
 	}
 
 	function handleOpenAIDisconnect() {
@@ -272,20 +207,6 @@
 				}
 			}
 		});
-	}
-
-	async function copyCode() {
-		await navigator.clipboard.writeText(deviceCode);
-		codeCopied = true;
-		setTimeout(() => (codeCopied = false), 2000);
-	}
-
-	function handleDialogClose(open: boolean) {
-		if (!open) {
-			cleanupPolling();
-			connectingProvider = null;
-		}
-		openaiDialogOpen = open;
 	}
 </script>
 
@@ -437,52 +358,6 @@
 	</Sidebar.GroupContent>
 </Sidebar.Group>
 
-<!-- Device Code Dialog for OpenAI -->
-<Dialog.Root open={openaiDialogOpen} onOpenChange={handleDialogClose}>
-	<Dialog.Content class="sm:max-w-md">
-		<Dialog.Header>
-			<Dialog.Title><T keyName="settings.connections.openai_device_code_title" /></Dialog.Title>
-			<Dialog.Description>
-				<T keyName="settings.connections.openai_device_code_description" />
-			</Dialog.Description>
-		</Dialog.Header>
-
-		<div class="space-y-4 py-4">
-			<div class="flex items-center justify-center gap-3">
-				<code
-					class="rounded-lg bg-muted px-6 py-3 text-center font-mono text-2xl font-bold tracking-widest"
-				>
-					{deviceCode}
-				</code>
-				<Button variant="outline" size="icon" onclick={copyCode}>
-					{#if codeCopied}
-						<CheckIcon class="h-4 w-4" />
-					{:else}
-						<CopyIcon class="h-4 w-4" />
-					{/if}
-					<span class="sr-only"><T keyName="settings.connections.openai_copy_code" /></span>
-				</Button>
-			</div>
-
-			<div class="flex justify-center">
-				<Button variant="outline" onclick={() => window.open(verificationUrl, '_blank')}>
-					<ExternalLinkIcon class="h-4 w-4" />
-					<T keyName="settings.connections.openai_open_openai" />
-				</Button>
-			</div>
-
-			<div class="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-				<LoaderCircleIcon class="h-4 w-4 animate-spin" />
-				<T keyName="settings.connections.openai_waiting" />
-			</div>
-		</div>
-
-		<Dialog.Footer>
-			<Button variant="ghost" onclick={() => handleDialogClose(false)}>
-				<T keyName="common.cancel" />
-			</Button>
-		</Dialog.Footer>
-	</Dialog.Content>
-</Dialog.Root>
+<ChatgptConnectDialog bind:open={openaiDialogOpen} />
 
 <ConfirmDeleteDialog />

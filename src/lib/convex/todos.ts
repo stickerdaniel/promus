@@ -238,8 +238,16 @@ export const saveBoard = authedMutation({
 			});
 		}
 
+		// Check if user has a ChatGPT connection — skip agent if not
+		const hasOpenai = !!(await ctx.db
+			.query('openaiConnections')
+			.withIndex('by_user', (q) => q.eq('userId', ctx.user._id))
+			.first());
+
 		// Detect changes and trigger agent
 		for (const task of sanitizedTasks) {
+			if (!hasOpenai) continue; // No ChatGPT connection — skip agent triggers
+
 			if (!existingTasksById.has(task.id)) {
 				// New task — create thread and trigger agent
 				await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNewTask, {

@@ -16,8 +16,10 @@
 	import KanbanItem from './kanban-item.svelte';
 	import TodoDetailDialog from './todo-detail-dialog.svelte';
 	import ColumnEditDialog from './column-edit-dialog.svelte';
+	import ChatgptConnectDialog from './chatgpt-connect-dialog.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import { dev } from '$app/environment';
+	import { browser } from '$app/environment';
 
 	const DEFAULT_COLUMN_IDS: ColumnId[] = ['todo', 'working-on', 'prepared', 'done'];
 
@@ -45,6 +47,24 @@
 	let dialogOpen = $state(false);
 	let editingColumnId = $state<string | null>(null);
 	let columnEditOpen = $state(false);
+	let connectDialogOpen = $state(false);
+
+	// ChatGPT connection check
+	const openaiConnection = useQuery(api.openai.getConnection, {});
+	const CONNECT_DISMISSED_KEY = 'promus:chatgpt-connect-dismissed';
+	let connectPopupDismissed = $state(
+		browser ? localStorage.getItem(CONNECT_DISMISSED_KEY) === '1' : false
+	);
+
+	let connectDialogWasOpen = $state(false);
+	$effect(() => {
+		if (connectDialogWasOpen && !connectDialogOpen && !openaiConnection.data) {
+			// Dismissed without connecting — don't show again
+			connectPopupDismissed = true;
+			if (browser) localStorage.setItem(CONNECT_DISMISSED_KEY, '1');
+		}
+		connectDialogWasOpen = connectDialogOpen;
+	});
 
 	let columnMetaMap: Record<string, ColumnMeta> = $derived.by(() => {
 		const map: Record<string, ColumnMeta> = {};
@@ -191,6 +211,11 @@
 		];
 		items = nextBoard;
 		await persistBoard(nextBoard, rollbackBoard);
+
+		// Prompt to connect ChatGPT if not connected and not already dismissed
+		if (!openaiConnection.data && !connectPopupDismissed) {
+			connectDialogOpen = true;
+		}
 	}
 
 	function handleTaskClick(task: TodoItem) {
@@ -616,6 +641,11 @@
 		onBlockAction={handleBlockAction}
 	/>
 {/if}
+
+<ChatgptConnectDialog
+	bind:open={connectDialogOpen}
+	description="todo_demo.chatgpt_connect_description"
+/>
 
 {#if editingColumnId}
 	<ColumnEditDialog

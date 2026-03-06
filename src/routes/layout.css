@@ -438,12 +438,14 @@
 }
 
 @utility drag-tilt-item {
-	transform: rotate(2deg) scale(1.02);
+	rotate: 2deg;
+	transition: rotate 75ms ease-out;
 	transform-origin: center;
 }
 
 @utility drag-tilt-column {
-	transform: rotate(2deg) scale(1.02);
+	rotate: 2deg;
+	transition: rotate 75ms ease-out;
 	transform-origin: center top;
 }
 

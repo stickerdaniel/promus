@@ -92,7 +92,7 @@
 		></div>
 	{/if}
 	<div
-		class="relative z-[1] rounded-lg border border-border/80 bg-card p-3 text-sm text-foreground transition-colors hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none dark:border-border/60 dark:bg-background {(isDragging.current ||
+		class="relative z-[1] rounded-lg border border-border/80 bg-card p-3 text-sm text-foreground hover:border-primary/40 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:outline-none dark:border-border/60 dark:bg-background {(isDragging.current ||
 			isDropping.current) &&
 		!isOverlay
 			? 'invisible'

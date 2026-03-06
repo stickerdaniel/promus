@@ -22,7 +22,7 @@ export async function getTaskLanguageModelForUser(
 			'OpenAI account not connected. Connect your ChatGPT account in Settings → Connections to use the task agent.'
 		);
 	}
-	return getOpenAILanguageModel(result.accessToken, result.accountId, 'gpt-5.3-codex');
+	return getOpenAILanguageModel(result.accessToken, result.accountId, 'gpt-5.4');
 }
 
 /**
@@ -32,7 +32,7 @@ export async function getTaskLanguageModelForUser(
 export function getOpenAILanguageModel(
 	accessToken: string,
 	accountId?: string,
-	modelId: string = 'gpt-5.3-codex'
+	modelId: string = 'gpt-5.4'
 ): any {
 	const openai = createOpenAI({
 		apiKey: 'codex-oauth', // Placeholder — overridden by custom fetch

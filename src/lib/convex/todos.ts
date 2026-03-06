@@ -624,15 +624,13 @@ export const saveColumnOrder = authedMutation({
 	}
 });
 
-export const getColumnInstructionsInternal = internalQuery({
-	args: { userId: v.string(), columnId: v.string() },
+export const getColumnMetaInternal = internalQuery({
+	args: { userId: v.string() },
 	handler: async (ctx, args) => {
 		const board = await ctx.db
 			.query('todoBoards')
 			.withIndex('by_user', (q: any) => q.eq('userId', args.userId))
 			.first();
-		if (!board?.columns) return undefined;
-		const col = board.columns.find((c) => c.id === args.columnId);
-		return col?.instructions ?? undefined;
+		return board?.columns ?? [];
 	}
 });

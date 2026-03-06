@@ -18,6 +18,10 @@
 	import ColumnEditDialog from './column-edit-dialog.svelte';
 	import ChatgptConnectDialog from './chatgpt-connect-dialog.svelte';
 	import { Button } from '$lib/components/ui/button/index.js';
+	import { Skeleton } from '$lib/components/ui/skeleton/index.js';
+	import GripVerticalIcon from '@lucide/svelte/icons/grip-vertical';
+	import PencilIcon from '@lucide/svelte/icons/pencil';
+	import PlusIcon from '@lucide/svelte/icons/plus';
 	import { dev } from '$app/environment';
 	import { browser } from '$app/environment';
 
@@ -65,6 +69,8 @@
 		}
 		connectDialogWasOpen = connectDialogOpen;
 	});
+
+	let isLoading = $derived(columnMetaQuery.data === undefined);
 
 	let columnMetaMap: Record<string, ColumnMeta> = $derived.by(() => {
 		const map: Record<string, ColumnMeta> = {};
@@ -553,31 +559,66 @@
 		}}
 		onDragOver={syncItemOrder}
 	>
-		<div class="grid items-start gap-3 md:grid-cols-4">
-			{#each columnIds as columnId, colIdx (columnId)}
-				<KanbanColumn
-					id={columnId}
-					title={getColumnTitle(columnId)}
-					index={colIdx}
-					onAdd={(title) => addTodo(columnId, title)}
-					onEdit={() => {
-						editingColumnId = columnId;
-						columnEditOpen = true;
-					}}
-					editAriaLabel={$t('todo_demo.column_edit.aria_edit')}
-				>
-					{#each items[columnId] as task, taskIdx (task.id)}
-						<KanbanItem
-							{task}
-							index={taskIdx}
-							group={columnId}
-							data={{ group: columnId }}
-							onclick={handleTaskClick}
-						/>
-					{/each}
-				</KanbanColumn>
-			{/each}
-		</div>
+		{#if isLoading}
+			<div class="grid items-start gap-3 md:grid-cols-4">
+				{#each { length: 4 } as _, i (i)}
+					<div
+						class="rounded-xl border border-border/80 bg-muted/45 p-3 dark:border-border/60 dark:bg-card/95"
+					>
+						<div class="flex items-center justify-between px-1 pb-3">
+							<Skeleton class="h-4 w-24" />
+							<div class="flex items-center gap-0.5">
+								<div class="rounded p-1 text-foreground/70">
+									<PencilIcon class="size-3.5" />
+								</div>
+								<div class="rounded p-1 text-foreground/70">
+									<GripVerticalIcon class="size-4" />
+								</div>
+							</div>
+						</div>
+						<div class="grid min-h-0 gap-2">
+							<Skeleton class="h-11 w-full rounded-lg" />
+							<Skeleton class="h-11 w-full rounded-lg" />
+						</div>
+						<button
+							class="mt-2 flex w-full items-center rounded-lg px-2 py-1.5 text-sm text-foreground/80 transition-colors hover:bg-muted/70 hover:text-foreground dark:text-foreground/75 dark:hover:bg-background"
+							disabled
+						>
+							<span class="flex items-center gap-1">
+								<PlusIcon class="size-4" />
+								{$t('todo_demo.add_card')}
+							</span>
+						</button>
+					</div>
+				{/each}
+			</div>
+		{:else}
+			<div class="grid items-start gap-3 md:grid-cols-4">
+				{#each columnIds as columnId, colIdx (columnId)}
+					<KanbanColumn
+						id={columnId}
+						title={getColumnTitle(columnId)}
+						index={colIdx}
+						onAdd={(title) => addTodo(columnId, title)}
+						onEdit={() => {
+							editingColumnId = columnId;
+							columnEditOpen = true;
+						}}
+						editAriaLabel={$t('todo_demo.column_edit.aria_edit')}
+					>
+						{#each items[columnId] as task, taskIdx (task.id)}
+							<KanbanItem
+								{task}
+								index={taskIdx}
+								group={columnId}
+								data={{ group: columnId }}
+								onclick={handleTaskClick}
+							/>
+						{/each}
+					</KanbanColumn>
+				{/each}
+			</div>
+		{/if}
 
 		<DragOverlay>
 			{#snippet children(source)}

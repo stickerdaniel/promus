@@ -150,13 +150,21 @@ async function buildBoardContext(
 	ctx: { runQuery: (fn: any, args: any) => Promise<any> },
 	userId: string,
 	excludeTaskId: string
-): Promise<{ otherTasks: string[]; accountLine: string; savedScriptCount: number }> {
+): Promise<{
+	otherTasks: string[];
+	columnInfo: string[];
+	accountLine: string;
+	savedScriptCount: number;
+}> {
 	const userAccountIds: string[] = await ctx.runQuery(
 		components.unipile.queries.getUserAccountIds,
 		{ userId }
 	);
 
-	const board = await ctx.runQuery(internal.todos.getBoardInternal, { userId });
+	const [board, columns] = await Promise.all([
+		ctx.runQuery(internal.todos.getBoardInternal, { userId }),
+		ctx.runQuery(internal.todos.getColumnMetaInternal, { userId })
+	]);
 
 	const savedScripts: Record<string, string> = await ctx.runQuery(
 		internal.todo.scripts.getAllScripts,
@@ -173,12 +181,23 @@ async function buildBoardContext(
 		}
 	}
 
+	const columnMeta = columns as { id: string; name?: string; instructions?: string }[];
+	const columnInfo: string[] = ['Lists on the board:'];
+	// Use board keys to get all column IDs, merge with metadata
+	const allColumnIds = Object.keys(board);
+	for (const colId of allColumnIds) {
+		const meta = columnMeta.find((c) => c.id === colId);
+		const namePart = meta?.name ? ` (name: "${meta.name}")` : '';
+		const instrPart = meta?.instructions ? ` — Instructions: "${meta.instructions}"` : '';
+		columnInfo.push(`  - ${colId}${namePart}${instrPart}`);
+	}
+
 	const accountLine =
 		userAccountIds.length > 0
 			? `Your Unipile account IDs: ${userAccountIds.join(', ')}`
 			: 'No Unipile accounts connected. If this task requires messaging or email, update your notes explaining that a connected account is needed, then move to "prepared".';
 
-	return { otherTasks, accountLine, savedScriptCount };
+	return { otherTasks, columnInfo, accountLine, savedScriptCount };
 }
 
 /**
@@ -223,24 +242,19 @@ export const triggerAgentForNewTask = internalAction({
 		});
 
 		// 3. Build board context
-		const { otherTasks, accountLine, savedScriptCount } = await buildBoardContext(
+		const { otherTasks, columnInfo, accountLine, savedScriptCount } = await buildBoardContext(
 			ctx,
 			args.userId,
 			args.taskId
 		);
 
-		// 3b. Fetch column instructions
-		const columnInstructions = await ctx.runQuery(internal.todos.getColumnInstructionsInternal, {
-			userId: args.userId,
-			columnId: args.taskColumn
-		});
-
 		// 4. Build prompt
 		const promptParts: (string | null)[] = [
 			`You are now the dedicated agent for this task: "${args.taskTitle}"`,
 			`Current column: ${args.taskColumn}`,
-			columnInstructions ? `Column instructions: ${columnInstructions}` : null,
 			args.taskNotes ? `Notes: ${args.taskNotes}` : null,
+			'',
+			columnInfo.join('\n'),
 			''
 		];
 
@@ -362,27 +376,16 @@ export const triggerAgentForTaskUpdate = internalAction({
 		});
 
 		// 1. Build board context
-		const { otherTasks, accountLine, savedScriptCount } = await buildBoardContext(
+		const { otherTasks, columnInfo, accountLine, savedScriptCount } = await buildBoardContext(
 			ctx,
 			args.userId,
 			args.taskId
 		);
 
-		// 1b. Fetch task column + column instructions
-		const taskInfo = await ctx.runQuery(internal.todos.getTaskThreadInfo, {
-			userId: args.userId,
-			taskId: args.taskId
-		});
-		const columnInstructions = taskInfo?.columnId
-			? await ctx.runQuery(internal.todos.getColumnInstructionsInternal, {
-					userId: args.userId,
-					columnId: taskInfo.columnId
-				})
-			: undefined;
-
 		const fullPrompt = [
 			args.prompt,
-			columnInstructions ? `Column instructions: ${columnInstructions}` : null,
+			'',
+			columnInfo.join('\n'),
 			'',
 			accountLine,
 			savedScriptCount > 0
@@ -522,23 +525,11 @@ export const triggerAgentForNotification = internalAction({
 		);
 
 		// 4. Build board context
-		const { otherTasks, accountLine, savedScriptCount } = await buildBoardContext(
+		const { otherTasks, columnInfo, accountLine, savedScriptCount } = await buildBoardContext(
 			ctx,
 			args.userId,
 			args.taskId
 		);
-
-		// 4b. Fetch column instructions
-		const taskInfo = await ctx.runQuery(internal.todos.getTaskThreadInfo, {
-			userId: args.userId,
-			taskId: args.taskId
-		});
-		const columnInstructions = taskInfo?.columnId
-			? await ctx.runQuery(internal.todos.getColumnInstructionsInternal, {
-					userId: args.userId,
-					columnId: taskInfo.columnId
-				})
-			: undefined;
 
 		const prompt = [
 			`Notification received for your task: "${args.taskTitle}"`,
@@ -550,7 +541,8 @@ export const triggerAgentForNotification = internalAction({
 			'You may update your own notes, move your task, or take no action if irrelevant.',
 			'If you need to notify other tasks in response, use notifyTask.',
 			'',
-			columnInstructions ? `Column instructions: ${columnInstructions}` : null,
+			columnInfo.join('\n'),
+			'',
 			accountLine,
 			savedScriptCount > 0
 				? `You have ${savedScriptCount} saved script(s). Use findSavedScripts to check for reusable scripts before writing new ones.`

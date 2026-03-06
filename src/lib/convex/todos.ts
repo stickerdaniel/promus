@@ -18,7 +18,8 @@ const agentStatusValidator = v.optional(
 		v.literal('idle'),
 		v.literal('working'),
 		v.literal('done'),
-		v.literal('awaiting_approval')
+		v.literal('awaiting_approval'),
+		v.literal('error')
 	)
 );
 const agentDraftTypeValidator = v.optional(
@@ -42,7 +43,7 @@ const taskValidator = v.object({
 const boardValidator = v.record(v.string(), v.array(taskValidator));
 
 type ColumnId = (typeof COLUMN_IDS)[number];
-type AgentStatus = 'idle' | 'working' | 'done' | 'awaiting_approval';
+type AgentStatus = 'idle' | 'working' | 'done' | 'awaiting_approval' | 'error';
 type AgentDraftType = 'message' | 'email' | 'research';
 type BoardTask = {
 	id: string;
@@ -70,6 +71,7 @@ type StoredTask = {
 	agentDraftType?: AgentDraftType;
 	hasUnreadNotes?: boolean;
 	agentSpec?: string;
+	agentStartedAt?: number;
 	columnId: ColumnId;
 	order: number;
 	createdAt: number;
@@ -276,7 +278,17 @@ export const saveBoard = authedMutation({
 					}
 				} else {
 					// Has thread — notify agent of user-initiated changes
-					if (columnChanged) {
+					const retryRequested = oldTask.agentStatus === 'error' && task.agentStatus !== 'error';
+
+					if (retryRequested) {
+						await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForTaskUpdate, {
+							userId: ctx.user._id,
+							threadId: oldTask.threadId,
+							taskId: task.id,
+							taskTitle: task.title,
+							prompt: `User requested retry after a previous error. Resume work on this task.`
+						});
+					} else if (columnChanged) {
 						await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForTaskUpdate, {
 							userId: ctx.user._id,
 							threadId: oldTask.threadId,
@@ -507,7 +519,8 @@ export const updateTaskAgentStatusInternal = internalMutation({
 			v.literal('idle'),
 			v.literal('working'),
 			v.literal('done'),
-			v.literal('awaiting_approval')
+			v.literal('awaiting_approval'),
+			v.literal('error')
 		),
 		agentSummary: v.optional(v.string()),
 		agentDraft: v.optional(v.string()),
@@ -517,6 +530,7 @@ export const updateTaskAgentStatusInternal = internalMutation({
 	},
 	handler: async (ctx, args) => {
 		const patch: Partial<StoredTask> = { agentStatus: args.agentStatus };
+		if (args.agentStatus === 'working') patch.agentStartedAt = Date.now();
 		if (args.agentSummary !== undefined) patch.agentSummary = args.agentSummary;
 		if (args.agentDraft !== undefined) patch.agentDraft = args.agentDraft;
 		if (args.agentDraftType !== undefined) patch.agentDraftType = args.agentDraftType;

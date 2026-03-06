@@ -7,6 +7,8 @@
 	import Trash2Icon from '@lucide/svelte/icons/trash-2';
 	import CheckIcon from '@lucide/svelte/icons/check';
 	import XIcon from '@lucide/svelte/icons/x';
+	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
+	import RotateCcwIcon from '@lucide/svelte/icons/rotate-ccw';
 	import Markdown from '$lib/components/prompt-kit/markdown/Markdown.svelte';
 	import Logo from '$lib/components/icons/logo.svelte';
 	import { Separator } from '$lib/components/ui/separator/index.js';
@@ -23,7 +25,8 @@
 		onDelete,
 		onApprove,
 		onReject,
-		onBlockAction
+		onBlockAction,
+		onRetry
 	}: {
 		task: TodoItem;
 		open: boolean;
@@ -32,6 +35,7 @@
 		onApprove?: (id: string) => void;
 		onReject?: (id: string, feedback: string) => void;
 		onBlockAction?: (taskId: string, threadId: string, action: string) => void;
+		onRetry?: (id: string) => void;
 	} = $props();
 
 	let parsedSpec: Spec | null = $derived.by(() => {
@@ -243,6 +247,23 @@
 			<div class="flex items-start gap-2 rounded-md border bg-muted/30 px-3 py-2">
 				<Logo class="mt-0.5 size-4 shrink-0 text-primary" />
 				<Markdown content={task.agentSummary} class="prose-sm text-sm text-muted-foreground" />
+			</div>
+		{:else if task.agentStatus === 'error'}
+			<div
+				class="flex items-start gap-2 rounded-md border border-destructive/30 bg-destructive/5 px-3 py-2"
+			>
+				<TriangleAlertIcon class="mt-0.5 size-4 shrink-0 text-destructive" />
+				<div class="flex flex-1 items-start justify-between gap-2">
+					<span class="text-sm text-destructive"
+						>{task.agentSummary || 'Coda encountered an error.'}</span
+					>
+					{#if onRetry}
+						<Button variant="outline" size="sm" class="shrink-0" onclick={() => onRetry(task.id)}>
+							<RotateCcwIcon class="mr-1.5 size-3.5" />
+							Retry
+						</Button>
+					{/if}
+				</div>
 			</div>
 		{:else if task.agentStatus === 'awaiting_approval'}
 			<div class="grid gap-3">

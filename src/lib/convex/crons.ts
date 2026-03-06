@@ -13,4 +13,7 @@ crons.interval('cleanupExpiredFiles', { hours: 1 }, internal.files.cleanup.clean
 // Runs every 6 hours to delete threads older than 24h with no messages
 crons.interval('deleteEmptyThreads', { hours: 6 }, internal.support.threads.deleteEmptyThreads, {});
 
+// Recover tasks stuck in 'working' status due to agent failures
+crons.interval('recoverStaleTasks', { minutes: 15 }, internal.todo.cleanup.recoverStaleTasks, {});
+
 export default crons;

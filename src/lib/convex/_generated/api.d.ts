@@ -57,6 +57,7 @@ import type * as support_threads from "../support/threads.js";
 import type * as support_types from "../support/types.js";
 import type * as tests from "../tests.js";
 import type * as todo_agent from "../todo/agent.js";
+import type * as todo_cleanup from "../todo/cleanup.js";
 import type * as todo_messages from "../todo/messages.js";
 import type * as todo_notifications from "../todo/notifications.js";
 import type * as todo_scripts from "../todo/scripts.js";
@@ -123,6 +124,7 @@ declare const fullApi: ApiFromModules<{
   "support/types": typeof support_types;
   tests: typeof tests;
   "todo/agent": typeof todo_agent;
+  "todo/cleanup": typeof todo_cleanup;
   "todo/messages": typeof todo_messages;
   "todo/notifications": typeof todo_notifications;
   "todo/scripts": typeof todo_scripts;

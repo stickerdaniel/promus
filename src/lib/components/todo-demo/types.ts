@@ -1,4 +1,4 @@
-export type AgentStatus = 'idle' | 'working' | 'done' | 'awaiting_approval';
+export type AgentStatus = 'idle' | 'working' | 'done' | 'awaiting_approval' | 'error';
 export type AgentDraftType = 'message' | 'email' | 'research';
 
 export type TodoItem = {

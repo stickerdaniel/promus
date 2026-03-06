@@ -302,6 +302,25 @@
 		await persistBoard(nextBoard, rollbackBoard);
 	}
 
+	async function handleAgentRetry(id: string) {
+		const rollbackBoard = cloneBoard(items);
+		const nextBoard = cloneBoard(items);
+		for (const colId of columnIds) {
+			const idx = nextBoard[colId].findIndex((t) => t.id === id);
+			if (idx !== -1) {
+				nextBoard[colId][idx] = {
+					...nextBoard[colId][idx],
+					agentStatus: 'idle' as AgentStatus,
+					agentSummary: undefined
+				};
+				break;
+			}
+		}
+		items = nextBoard;
+		dialogOpen = false;
+		await persistBoard(nextBoard, rollbackBoard);
+	}
+
 	async function handleBlockAction(taskId: string, threadId: string, action: string) {
 		dialogOpen = false;
 		try {
@@ -619,6 +638,14 @@
 				variant="outline"
 				size="sm"
 				class="h-6 text-xs"
+				onclick={() => mockAgentStatus('error')}
+			>
+				Set Error
+			</Button>
+			<Button
+				variant="outline"
+				size="sm"
+				class="h-6 text-xs"
 				onclick={() => mockAgentStatus('idle')}
 			>
 				Reset
@@ -639,6 +666,7 @@
 		onApprove={handleAgentApprove}
 		onReject={handleAgentReject}
 		onBlockAction={handleBlockAction}
+		onRetry={handleAgentRetry}
 	/>
 {/if}
 

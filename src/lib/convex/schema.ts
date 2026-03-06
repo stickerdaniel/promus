@@ -32,10 +32,12 @@ export default defineSchema({
 						v.literal('idle'),
 						v.literal('working'),
 						v.literal('done'),
-						v.literal('awaiting_approval')
+						v.literal('awaiting_approval'),
+						v.literal('error')
 					)
 				),
 				agentSummary: v.optional(v.string()),
+				agentStartedAt: v.optional(v.number()),
 				agentDraft: v.optional(v.string()),
 				agentDraftType: v.optional(
 					v.union(v.literal('message'), v.literal('email'), v.literal('research'))

@@ -304,30 +304,40 @@ export const triggerAgentForNewTask = internalAction({
 			}
 		);
 
-		await result.consumeStream();
+		try {
+			await result.consumeStream();
 
-		// 7. Debug logging
-		const debug = await extractAgentDebug(result, {
-			taskId: args.taskId,
-			trigger: 'newTask'
-		});
+			// 7. Debug logging
+			const debug = await extractAgentDebug(result, {
+				taskId: args.taskId,
+				trigger: 'newTask'
+			});
 
-		// 8. Update task with agent summary
-		const summary = (await result.text) || 'Coda completed analysis.';
+			// 8. Update task with agent summary
+			const summary = (await result.text) || 'Coda completed analysis.';
 
-		await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
-			userId: args.userId,
-			taskId: args.taskId,
-			agentLogs: `${debug}\n\n${summary}`.slice(0, 4000)
-		});
+			await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
+				userId: args.userId,
+				taskId: args.taskId,
+				agentLogs: `${debug}\n\n${summary}`.slice(0, 4000)
+			});
 
-		// 9. Mark task as done with summary
-		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
-			userId: args.userId,
-			taskId: args.taskId,
-			agentStatus: 'done',
-			agentSummary: summary.slice(0, 120)
-		});
+			// 9. Mark task as done with summary
+			await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
+				userId: args.userId,
+				taskId: args.taskId,
+				agentStatus: 'done',
+				agentSummary: summary.slice(0, 120)
+			});
+		} catch (e) {
+			console.error(`Agent failed for task ${args.taskId}:`, e);
+			await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
+				userId: args.userId,
+				taskId: args.taskId,
+				agentStatus: 'error',
+				agentSummary: `Error: ${e instanceof Error ? e.message : 'Unknown error'}`.slice(0, 120)
+			});
+		}
 	}
 });
 
@@ -411,30 +421,40 @@ export const triggerAgentForTaskUpdate = internalAction({
 			}
 		);
 
-		await result.consumeStream();
+		try {
+			await result.consumeStream();
 
-		// 4. Debug logging
-		const debug = await extractAgentDebug(result, {
-			taskId: args.taskId,
-			trigger: 'taskUpdate'
-		});
+			// 4. Debug logging
+			const debug = await extractAgentDebug(result, {
+				taskId: args.taskId,
+				trigger: 'taskUpdate'
+			});
 
-		// 5. Update agent logs
-		const summary = (await result.text) || 'Coda processed update.';
+			// 5. Update agent logs
+			const summary = (await result.text) || 'Coda processed update.';
 
-		await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
-			userId: args.userId,
-			taskId: args.taskId,
-			agentLogs: `${debug}\n\n${summary}`.slice(0, 4000)
-		});
+			await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
+				userId: args.userId,
+				taskId: args.taskId,
+				agentLogs: `${debug}\n\n${summary}`.slice(0, 4000)
+			});
 
-		// 6. Mark task as done
-		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
-			userId: args.userId,
-			taskId: args.taskId,
-			agentStatus: 'done',
-			agentSummary: summary.slice(0, 120)
-		});
+			// 6. Mark task as done
+			await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
+				userId: args.userId,
+				taskId: args.taskId,
+				agentStatus: 'done',
+				agentSummary: summary.slice(0, 120)
+			});
+		} catch (e) {
+			console.error(`Agent failed for task ${args.taskId}:`, e);
+			await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
+				userId: args.userId,
+				taskId: args.taskId,
+				agentStatus: 'error',
+				agentSummary: `Error: ${e instanceof Error ? e.message : 'Unknown error'}`.slice(0, 120)
+			});
+		}
 	}
 });
 
@@ -567,34 +587,44 @@ export const triggerAgentForNotification = internalAction({
 			}
 		);
 
-		await result.consumeStream();
+		try {
+			await result.consumeStream();
 
-		// 6. Clear pending notifications
-		await ctx.runMutation(internal.todo.notifications.clearPendingNotifications, {
-			userId: args.userId,
-			taskId: args.taskId
-		});
+			// 6. Clear pending notifications
+			await ctx.runMutation(internal.todo.notifications.clearPendingNotifications, {
+				userId: args.userId,
+				taskId: args.taskId
+			});
 
-		// 7. Debug logging
-		const debug = await extractAgentDebug(result, {
-			taskId: args.taskId,
-			trigger: 'notification'
-		});
+			// 7. Debug logging
+			const debug = await extractAgentDebug(result, {
+				taskId: args.taskId,
+				trigger: 'notification'
+			});
 
-		// 8. Update agent logs and status
-		const summary = (await result.text) || 'Coda processed notification.';
+			// 8. Update agent logs and status
+			const summary = (await result.text) || 'Coda processed notification.';
 
-		await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
-			userId: args.userId,
-			taskId: args.taskId,
-			agentLogs: `${debug}\n\n${summary}`.slice(0, 4000)
-		});
+			await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
+				userId: args.userId,
+				taskId: args.taskId,
+				agentLogs: `${debug}\n\n${summary}`.slice(0, 4000)
+			});
 
-		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
-			userId: args.userId,
-			taskId: args.taskId,
-			agentStatus: 'done',
-			agentSummary: summary.slice(0, 120)
-		});
+			await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
+				userId: args.userId,
+				taskId: args.taskId,
+				agentStatus: 'done',
+				agentSummary: summary.slice(0, 120)
+			});
+		} catch (e) {
+			console.error(`Agent failed for task ${args.taskId}:`, e);
+			await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
+				userId: args.userId,
+				taskId: args.taskId,
+				agentStatus: 'error',
+				agentSummary: `Error: ${e instanceof Error ? e.message : 'Unknown error'}`.slice(0, 120)
+			});
+		}
 	}
 });

@@ -16,6 +16,7 @@
 	import { fade } from 'svelte/transition';
 	import { useSortable } from '@dnd-kit-svelte/svelte/sortable';
 	import StickyNoteIcon from '@lucide/svelte/icons/sticky-note';
+	import TriangleAlertIcon from '@lucide/svelte/icons/triangle-alert';
 	import Logo from '$lib/components/icons/logo.svelte';
 
 	let {
@@ -109,7 +110,9 @@
 	>
 		<div class="flex items-center justify-between gap-2">
 			<span class="min-w-0">{task.title}</span>
-			{#if task.agentStatus === 'working'}
+			{#if task.agentStatus === 'error'}
+				<TriangleAlertIcon class="size-4 shrink-0 text-destructive" />
+			{:else if task.agentStatus === 'working'}
 				<Logo class="size-4 shrink-0 agent-working text-muted-foreground" />
 			{:else if task.notes}
 				<span class="relative shrink-0">

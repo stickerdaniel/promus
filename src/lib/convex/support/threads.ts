@@ -172,16 +172,19 @@ export const listThreads = query({
 		});
 
 		// Get supportThreads for all threads (for handoff status, assigned admin, and notification email)
+		// Only include threads that have a supportThreads record (filters out task assistant threads)
 		const supportThreadsMap = new Map<
 			string,
 			{ isHandedOff?: boolean; assignedTo?: string; notificationEmail?: string }
 		>();
+		const supportThreadIds = new Set<string>();
 		for (const thread of threads.page) {
 			const supportThread = await ctx.db
 				.query('supportThreads')
 				.withIndex('by_thread', (q) => q.eq('threadId', thread._id))
 				.first();
 			if (supportThread) {
+				supportThreadIds.add(thread._id);
 				supportThreadsMap.set(thread._id, {
 					isHandedOff: supportThread.isHandedOff,
 					assignedTo: supportThread.assignedTo,
@@ -189,6 +192,9 @@ export const listThreads = query({
 				});
 			}
 		}
+
+		// Filter to only support threads (exclude task assistant threads)
+		const supportOnlyThreads = threads.page.filter((t) => supportThreadIds.has(t._id));
 
 		// Collect unique admin IDs and fetch their info
 		const adminIds = new Set<string>();
@@ -213,7 +219,7 @@ export const listThreads = query({
 
 		// For each thread, get the last message and combine with support data
 		const threadsWithLastMessage = await Promise.all(
-			threads.page.map(async (thread) => {
+			supportOnlyThreads.map(async (thread) => {
 				// Get the most recent completed message in this thread (exclude pending/streaming)
 				const messages = await ctx.runQuery(components.agent.messages.listMessagesByThreadId, {
 					threadId: thread._id,

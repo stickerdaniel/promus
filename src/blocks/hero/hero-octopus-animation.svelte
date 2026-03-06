@@ -161,7 +161,10 @@
   so the tentacle overlay aligns with the task list in the column.
 -->
 <div class="hero-octo-wrapper" aria-hidden="true">
-	<div class="relative h-[520px] w-[480px] origin-top-left overflow-hidden" style="">
+	<div
+		class="relative h-[520px] w-[480px] origin-top-left overflow-hidden"
+		class:pulling={phase === 'pulling'}
+	>
 		<!-- Real KanbanColumn shell + KanbanItem cards with DnD -->
 		<div class="absolute" style="left: 64px; top: 80px; width: 280px;">
 			<DragDropProvider
@@ -212,7 +215,7 @@
 								animate:flip={{ duration: 300 }}
 								in:scale={{ start: 0.85, duration: 450, easing: backOut }}
 								style={task.id === grabbedId
-									? `transform: translateX(${grabbedOffset}px); rotate: ${grabbedOffset > 0 ? '2deg' : '0deg'}; opacity: ${grabbedOffset > 0 ? 0 : 1}; transition: transform 1.8s ease-in-out, rotate 75ms ease-out, opacity 1.2s ease-in-out 0.4s;${grabbedOffset > 0 ? ' pointer-events: none;' : ''}`
+									? `transform: translateX(var(--pull-x, 0px)); rotate: ${grabbedOffset > 0 ? '2deg' : '0deg'}; opacity: ${grabbedOffset > 0 ? 0 : 1}; transition: rotate 75ms ease-out, opacity 1.2s ease-in-out 0.4s;${grabbedOffset > 0 ? ' pointer-events: none;' : ''}`
 									: ''}
 							>
 								<KanbanItem {task} index={i} group="demo" data={{ group: 'demo' }} />
@@ -278,6 +281,12 @@
 </div>
 
 <style>
+	@property --pull-x {
+		syntax: '<length>';
+		initial-value: 0px;
+		inherits: true;
+	}
+
 	/* Scale the fixed 480×520 layout to fit the container width */
 	.hero-octo-wrapper {
 		width: 100%;
@@ -298,6 +307,12 @@
 		container-type: inline-size;
 	}
 
+	/* Shared pull offset — single transition drives both card + tentacle */
+	.hero-octo-wrapper > div.pulling {
+		--pull-x: 300px;
+		transition: --pull-x 1.8s ease-in-out;
+	}
+
 	/* Tentacle slide in/out */
 	.octo-tentacle {
 		transform: translateX(300px);
@@ -308,8 +323,8 @@
 		transition: transform 1.2s ease-out;
 	}
 	.octo-tentacle.octo-out {
-		transform: translateX(300px);
-		transition: transform 1.8s ease-in-out;
+		transform: translateX(var(--pull-x, 300px));
+		transition: none;
 	}
 
 	@media (prefers-reduced-motion: reduce) {

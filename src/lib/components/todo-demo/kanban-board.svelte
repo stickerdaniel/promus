@@ -24,6 +24,7 @@
 	import PlusIcon from '@lucide/svelte/icons/plus';
 	import { dev } from '$app/environment';
 	import { browser } from '$app/environment';
+	import { haptic } from '$lib/hooks/use-haptic.svelte';
 
 	const DEFAULT_COLUMN_IDS: ColumnId[] = ['todo', 'working-on', 'prepared', 'done'];
 
@@ -196,6 +197,7 @@
 		} catch (error) {
 			console.error('[kanban] Failed to save board:', error);
 			items = rollbackSnapshot;
+			haptic.trigger('error');
 			toast.error($t('todo_demo.save_failed'));
 		} finally {
 			pendingSaveCount = Math.max(0, pendingSaveCount - 1);
@@ -205,6 +207,7 @@
 	async function addTodo(columnId: ColumnId, title: string): Promise<void> {
 		const trimmed = title.trim();
 		if (!trimmed) return;
+		haptic.trigger('success');
 
 		const rollbackBoard = cloneBoard(items);
 		const nextBoard = cloneBoard(items);
@@ -258,6 +261,7 @@
 	}
 
 	async function handleTaskDelete(id: string) {
+		haptic.trigger('warning');
 		const rollbackBoard = cloneBoard(items);
 		const nextBoard = cloneBoard(items);
 		for (const colId of columnIds) {
@@ -268,6 +272,7 @@
 	}
 
 	async function handleAgentApprove(id: string) {
+		haptic.trigger('success');
 		const rollbackBoard = cloneBoard(items);
 		const nextBoard = cloneBoard(items);
 		for (const colId of columnIds) {
@@ -288,6 +293,7 @@
 	}
 
 	async function handleAgentReject(id: string, feedback: string) {
+		haptic.trigger('medium');
 		const rollbackBoard = cloneBoard(items);
 		const nextBoard = cloneBoard(items);
 		for (const colId of columnIds) {
@@ -309,6 +315,7 @@
 	}
 
 	async function handleAgentRetry(id: string) {
+		haptic.trigger('medium');
 		const rollbackBoard = cloneBoard(items);
 		const nextBoard = cloneBoard(items);
 		for (const colId of columnIds) {
@@ -336,6 +343,7 @@
 			});
 		} catch (error) {
 			console.error('[kanban] Failed to send block action:', error);
+			haptic.trigger('error');
 			toast.error($t('todo_demo.save_failed'));
 		}
 	}
@@ -525,6 +533,7 @@
 			} catch (error) {
 				console.error('[kanban] Failed to save column order:', error);
 				columnIds = startCols;
+				haptic.trigger('error');
 				toast.error($t('todo_demo.save_failed'));
 			} finally {
 				pendingColumnSave = false;
@@ -549,6 +558,7 @@
 		{sensors}
 		modifiers={[RestrictToWindowEdges]}
 		onDragStart={() => {
+			haptic.trigger('medium');
 			dragStartSnapshot = cloneBoard(items);
 			dragStartColumnIds = [...columnIds];
 			overlayTilted = true;
@@ -731,6 +741,7 @@
 				});
 			} catch (error) {
 				console.error('[kanban] Failed to update column:', error);
+				haptic.trigger('error');
 				toast.error($t('todo_demo.save_failed'));
 			}
 		}}

@@ -14,6 +14,7 @@
 	import LoaderCircleIcon from '@lucide/svelte/icons/loader-circle';
 	import UnplugIcon from '@lucide/svelte/icons/unplug';
 	import ChatgptConnectDialog from '$lib/components/todo-demo/chatgpt-connect-dialog.svelte';
+	import { haptic } from '$lib/hooks/use-haptic.svelte';
 
 	const { t } = getTranslate();
 	const client = useConvexClient();
@@ -61,6 +62,7 @@
 		if (status === 'completed' && lastPendingStatus === 'pending') {
 			loadAccounts();
 		} else if (status === 'expired' && lastPendingStatus === 'pending') {
+			haptic.trigger('error');
 			toast.error($t('settings.connections.connect_failed'));
 		}
 
@@ -126,6 +128,7 @@
 			const { url } = await client.action(api.unipile.getHostedAuthLink, {});
 			window.open(url, '_blank');
 		} catch {
+			haptic.trigger('error');
 			toast.error($t('settings.connections.connect_failed'));
 		} finally {
 			connectingProvider = null;
@@ -143,9 +146,11 @@
 			onConfirm: async () => {
 				try {
 					await client.action(api.unipile.deleteAccount, { accountId: account.id });
+					haptic.trigger('success');
 					toast.success($t('settings.connections.disconnected'));
 					await loadAccounts();
 				} catch (err) {
+					haptic.trigger('error');
 					toast.error($t('settings.connections.disconnect_failed'));
 					throw err;
 				}
@@ -199,8 +204,10 @@
 				openaiDisconnecting = true;
 				try {
 					await client.action(api.openai.deleteConnection, {});
+					haptic.trigger('success');
 					toast.success($t('settings.connections.openai_disconnected'));
 				} catch {
+					haptic.trigger('error');
 					toast.error($t('settings.connections.openai_disconnect_failed'));
 				} finally {
 					openaiDisconnecting = false;

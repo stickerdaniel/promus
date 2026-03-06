@@ -7,6 +7,7 @@
 	import * as Field from '$lib/components/ui/field/index.js';
 	import { toast } from 'svelte-sonner';
 	import { T, getTranslate } from '@tolgee/svelte';
+	import { haptic } from '$lib/hooks/use-haptic.svelte';
 	import ExternalLinkIcon from '@lucide/svelte/icons/external-link';
 	import LoaderCircleIcon from '@lucide/svelte/icons/loader-circle';
 
@@ -60,6 +61,7 @@
 					if (status === 'success') {
 						cleanupPolling();
 						open = false;
+						haptic.trigger('success');
 						toast.success($t('settings.connections.openai_connected'));
 						return;
 					}
@@ -67,6 +69,7 @@
 					if (status === 'failed') {
 						cleanupPolling();
 						open = false;
+						haptic.trigger('error');
 						toast.error($t('settings.connections.openai_connect_failed'));
 						return;
 					}
@@ -79,11 +82,13 @@
 				() => {
 					cleanupPolling();
 					open = false;
+					haptic.trigger('error');
 					toast.error($t('settings.connections.openai_timeout'));
 				},
 				5 * 60 * 1000
 			);
 		} catch {
+			haptic.trigger('error');
 			toast.error($t('settings.connections.openai_connect_failed'));
 			open = false;
 		} finally {
@@ -129,7 +134,7 @@
 						1
 					</div>
 					<Field.Field class="flex-1">
-						<p class="text-sm font-medium leading-none">
+						<p class="text-sm leading-none font-medium">
 							<T keyName="settings.connections.openai_step1_label" />
 						</p>
 						<Button
@@ -151,7 +156,7 @@
 						2
 					</div>
 					<Field.Field class="flex-1">
-						<p class="text-sm font-medium leading-none">
+						<p class="text-sm leading-none font-medium">
 							<T keyName="settings.connections.openai_step2_label" />
 						</p>
 						<div class="flex items-center gap-2">

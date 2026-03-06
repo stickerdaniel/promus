@@ -20,6 +20,7 @@
 	import { resolve } from '$app/paths';
 	import { T, getTranslate } from '@tolgee/svelte';
 	import KeyIcon from '@lucide/svelte/icons/key-round';
+	import { haptic } from '$lib/hooks/use-haptic.svelte';
 	import { authFlow } from '$lib/hooks/auth-flow.svelte';
 	import {
 		type LastAuthMethod,
@@ -241,16 +242,19 @@
 					onError: (ctx) => {
 						failed = true;
 						lastValidSignInSubmission = null;
+						haptic.trigger('error');
 						formError = getAuthErrorKey(ctx.error, 'auth.messages.invalid_credentials');
 					}
 				}
 			);
 			if (!failed) {
+				haptic.trigger('success');
 				clearLastSuccessfulAuthMethod();
 				clearPendingOAuthProvider();
 			}
 		} catch (error) {
 			console.error('[SignIn] Login error:', error);
+			haptic.trigger('error');
 			lastValidSignInSubmission = null;
 			formError = 'auth.messages.generic_error';
 		} finally {
@@ -284,6 +288,7 @@
 				},
 				{
 					onSuccess: () => {
+						haptic.trigger('success');
 						clearLastSuccessfulAuthMethod();
 						clearPendingOAuthProvider();
 						verificationStep = { email: signUpData.email };
@@ -291,6 +296,7 @@
 					onError: (ctx) => {
 						failed = true;
 						lastValidSignUpSubmission = null;
+						haptic.trigger('error');
 						formError = getAuthErrorKey(ctx.error, 'auth.messages.signup_failed');
 					}
 				}
@@ -332,6 +338,7 @@
 	}
 
 	async function handleOAuth(provider: PendingOAuthProvider) {
+		haptic.trigger('light');
 		isLoading = true;
 		formError = '';
 		beginOAuth(provider);
@@ -351,6 +358,7 @@
 	}
 
 	async function handlePasskeyLogin() {
+		haptic.trigger('light');
 		isLoading = true;
 		formError = '';
 

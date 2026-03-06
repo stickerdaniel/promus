@@ -369,6 +369,14 @@
 			"name": "justBash",
 			"path": "docs/references/just-bash/src",
 			"specialNotes": "Virtual bash shell for JS/TS. Bash class, InMemoryFs, MountableFs, OverlayFs, defineCommand. Check fs/ for filesystem impls, commands/ for builtins, custom-commands.ts for defineCommand API."
+		},
+		{
+			"type": "git",
+			"name": "webHaptics",
+			"url": "https://github.com/lochie/web-haptics",
+			"branch": "main",
+			"searchPath": "packages/web-haptics/src",
+			"specialNotes": "Haptic feedback for mobile web. Svelte integration via createWebHaptics. Patterns: success, error, warning, etc. Check apps/svelte-example for usage."
 		}
 	],
 	"model": "claude-haiku-4.5",

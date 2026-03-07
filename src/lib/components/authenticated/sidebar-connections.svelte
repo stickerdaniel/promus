@@ -180,6 +180,9 @@
 	}
 
 	function getConnectedAccount(providerType: string): Account | undefined {
+		if (providerType === 'GOOGLE_CALENDAR') {
+			return accounts.find((a) => a.type.toUpperCase() === 'GOOGLE_OAUTH');
+		}
 		return accounts.find((a) => a.type.toUpperCase() === providerType);
 	}
 
@@ -308,6 +311,7 @@
 						<span><T keyName={provider.labelKey} /></span>
 					</Sidebar.MenuButton>
 					{#if accountsLoaded}
+						{@const isDerived = provider.type === 'GOOGLE_CALENDAR'}
 						{#if connectedAccount}
 							<DropdownMenu.Root>
 								<DropdownMenu.Trigger>
@@ -331,17 +335,19 @@
 											</span>
 										</span>
 									</DropdownMenu.Label>
-									<DropdownMenu.Separator />
-									<DropdownMenu.Item
-										class="text-destructive focus:text-destructive"
-										onclick={() => handleUnipileDisconnect(connectedAccount)}
-									>
-										<UnplugIcon class="size-4" />
-										<T keyName="sidebar.connections.remove" />
-									</DropdownMenu.Item>
+									{#if !isDerived}
+										<DropdownMenu.Separator />
+										<DropdownMenu.Item
+											class="text-destructive focus:text-destructive"
+											onclick={() => handleUnipileDisconnect(connectedAccount)}
+										>
+											<UnplugIcon class="size-4" />
+											<T keyName="sidebar.connections.remove" />
+										</DropdownMenu.Item>
+									{/if}
 								</DropdownMenu.Content>
 							</DropdownMenu.Root>
-						{:else}
+						{:else if !isDerived}
 							<div class="absolute top-1 right-1 group-data-[collapsible=icon]:hidden">
 								<Button
 									variant="outline"

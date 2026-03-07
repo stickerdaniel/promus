@@ -321,28 +321,36 @@ async function runTodoAgentForTask(
 		agentLogs: logLines.join('\n').slice(0, 4000)
 	});
 
+	// Check if agent deferred (task still in todo) — set idle so cascade picks it up
+	const taskInfo = await ctx.runQuery(internal.todos.getTaskThreadInfo, {
+		userId: args.userId,
+		taskId: args.taskId
+	});
+	const deferred = taskInfo?.columnId === 'todo';
+	const agentStatus = deferred ? 'idle' : resolution.status;
+
 	await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
 		userId: args.userId,
 		taskId: args.taskId,
-		agentStatus: resolution.status,
-		agentSummary: resolution.summary.slice(0, 120)
+		agentStatus,
+		agentSummary: deferred
+			? 'Waiting for a related task to finish.'
+			: resolution.summary.slice(0, 120)
 	});
 
-	// Trigger post-completion cascade to wake deferred tasks
-	try {
-		const taskInfo = await ctx.runQuery(internal.todos.getTaskThreadInfo, {
-			userId: args.userId,
-			taskId: args.taskId
-		});
-		await ctx.scheduler.runAfter(2000, internal.todo.messages.triggerPostCompletionCascade, {
-			userId: args.userId,
-			completedTaskId: args.taskId,
-			completedTaskTitle: taskInfo?.title ?? args.taskId,
-			completedTaskSummary: resolution.summary.slice(0, 200),
-			completedTaskStatus: resolution.status
-		});
-	} catch (e) {
-		console.error(`Failed to schedule cascade for task ${args.taskId}:`, e);
+	// Only cascade if task actually completed (not deferred)
+	if (!deferred) {
+		try {
+			await ctx.scheduler.runAfter(2000, internal.todo.messages.triggerPostCompletionCascade, {
+				userId: args.userId,
+				completedTaskId: args.taskId,
+				completedTaskTitle: taskInfo?.title ?? args.taskId,
+				completedTaskSummary: resolution.summary.slice(0, 200),
+				completedTaskStatus: resolution.status
+			});
+		} catch (e) {
+			console.error(`Failed to schedule cascade for task ${args.taskId}:`, e);
+		}
 	}
 
 	return resolution;
@@ -463,9 +471,10 @@ async function buildBoardContext(
 
 	const otherTasks: string[] = [];
 	for (const [col, tasks] of Object.entries(board)) {
-		for (const t of tasks as { id: string; title: string }[]) {
+		for (const t of tasks as { id: string; title: string; agentStatus?: string }[]) {
 			if (t.id !== excludeTaskId) {
-				otherTasks.push(`  - [${col}] ${t.title} (id: ${t.id})`);
+				const statusTag = t.agentStatus ? ` [${t.agentStatus}]` : '';
+				otherTasks.push(`  - [${col}] ${t.title} (id: ${t.id})${statusTag}`);
 			}
 		}
 	}
@@ -512,21 +521,6 @@ export const triggerAgentForNewTask = internalAction({
 		)
 	},
 	handler: async (ctx, args) => {
-		// -1. Deference: skip if another task is already working (unless explicitly triggered)
-		if (!args.parentNotification && !args.incomingNotification) {
-			const allTasks = await ctx.runQuery(internal.todos.getTasksForCascade, {
-				userId: args.userId
-			});
-			const hasWorking = allTasks.some(
-				(t: { id: string; agentStatus?: string }) =>
-					t.id !== args.taskId && t.agentStatus === 'working'
-			);
-			if (hasWorking) {
-				console.log(`[cascade] Deferring task ${args.taskId} — another task is already working`);
-				return;
-			}
-		}
-
 		// 0. Mark task as working
 		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
 			userId: args.userId,

@@ -461,6 +461,7 @@ todo -> working-on -> prepared -> done
 ## Workflow
 
 1. Read the task title, notes, and board context
+1b. If another task on the board is currently \`[working]\` and its results would directly help your task, defer: update your notes explaining what you're waiting for, then stop without moving columns. You will be automatically triggered when that task finishes. Only defer for clearly related tasks — unrelated tasks should proceed immediately.
 2. Move to "working-on"
 3. For SDK work: check saved scripts first, then explore SDK source to understand methods and schemas
 4. Write a script to /workspace/, execute it with execute-ts, read the output

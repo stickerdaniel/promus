@@ -221,6 +221,8 @@ async function extractAgentDebug(
 async function runTodoAgentForTask(
 	ctx: {
 		runMutation: (fn: any, args: any) => Promise<any>;
+		runQuery: (fn: any, args: any) => Promise<any>;
+		scheduler: { runAfter: (delayMs: number, fn: any, args: any) => Promise<any> };
 	},
 	args: {
 		userId: string;
@@ -326,6 +328,23 @@ async function runTodoAgentForTask(
 		agentSummary: resolution.summary.slice(0, 120)
 	});
 
+	// Trigger post-completion cascade to wake deferred tasks
+	try {
+		const taskInfo = await ctx.runQuery(internal.todos.getTaskThreadInfo, {
+			userId: args.userId,
+			taskId: args.taskId
+		});
+		await ctx.scheduler.runAfter(2000, internal.todo.messages.triggerPostCompletionCascade, {
+			userId: args.userId,
+			completedTaskId: args.taskId,
+			completedTaskTitle: taskInfo?.title ?? args.taskId,
+			completedTaskSummary: resolution.summary.slice(0, 200),
+			completedTaskStatus: resolution.status
+		});
+	} catch (e) {
+		console.error(`Failed to schedule cascade for task ${args.taskId}:`, e);
+	}
+
 	return resolution;
 }
 
@@ -424,6 +443,7 @@ async function buildBoardContext(
 	columnInfo: string[];
 	accountLine: string;
 	savedScriptCount: number;
+	currentDateTime: string;
 }> {
 	const userAccountIds: string[] = await ctx.runQuery(
 		components.unipile.queries.getUserAccountIds,
@@ -466,7 +486,9 @@ async function buildBoardContext(
 			? `Your Unipile account IDs: ${userAccountIds.join(', ')}`
 			: 'No Unipile accounts connected. If this task requires messaging or email, update your notes explaining that a connected account is needed, then move to "prepared".';
 
-	return { otherTasks, columnInfo, accountLine, savedScriptCount };
+	const currentDateTime = new Date().toISOString();
+
+	return { otherTasks, columnInfo, accountLine, savedScriptCount, currentDateTime };
 }
 
 /**
@@ -490,6 +512,21 @@ export const triggerAgentForNewTask = internalAction({
 		)
 	},
 	handler: async (ctx, args) => {
+		// -1. Deference: skip if another task is already working (unless explicitly triggered)
+		if (!args.parentNotification && !args.incomingNotification) {
+			const allTasks = await ctx.runQuery(internal.todos.getTasksForCascade, {
+				userId: args.userId
+			});
+			const hasWorking = allTasks.some(
+				(t: { id: string; agentStatus?: string }) =>
+					t.id !== args.taskId && t.agentStatus === 'working'
+			);
+			if (hasWorking) {
+				console.log(`[cascade] Deferring task ${args.taskId} — another task is already working`);
+				return;
+			}
+		}
+
 		// 0. Mark task as working
 		await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
 			userId: args.userId,
@@ -511,17 +548,19 @@ export const triggerAgentForNewTask = internalAction({
 		});
 
 		// 3. Build board context
-		const { otherTasks, columnInfo, accountLine, savedScriptCount } = await buildBoardContext(
-			ctx,
-			args.userId,
-			args.taskId
-		);
+		const { otherTasks, columnInfo, accountLine, savedScriptCount, currentDateTime } =
+			await buildBoardContext(ctx, args.userId, args.taskId);
 
 		// 4. Build prompt
+		const truncatedNotes =
+			args.taskNotes && args.taskNotes.length > 300
+				? args.taskNotes.slice(0, 300) + '... (truncated — use readTaskNotes to see full notes)'
+				: args.taskNotes;
 		const promptParts: (string | null)[] = [
+			`Current date/time: ${currentDateTime}`,
 			`You are now the dedicated agent for this task: "${args.taskTitle}"`,
 			`Current column: ${args.taskColumn}`,
-			args.taskNotes ? `Notes: ${args.taskNotes}` : null,
+			truncatedNotes ? `Notes: ${truncatedNotes}` : null,
 			'',
 			columnInfo.join('\n'),
 			''
@@ -602,13 +641,11 @@ export const triggerAgentForTaskUpdate = internalAction({
 		});
 
 		// 1. Build board context
-		const { otherTasks, columnInfo, accountLine, savedScriptCount } = await buildBoardContext(
-			ctx,
-			args.userId,
-			args.taskId
-		);
+		const { otherTasks, columnInfo, accountLine, savedScriptCount, currentDateTime } =
+			await buildBoardContext(ctx, args.userId, args.taskId);
 
 		const fullPrompt = [
+			`Current date/time: ${currentDateTime}`,
 			args.prompt,
 			'',
 			columnInfo.join('\n'),
@@ -708,13 +745,11 @@ export const triggerAgentForNotification = internalAction({
 		);
 
 		// 4. Build board context
-		const { otherTasks, columnInfo, accountLine, savedScriptCount } = await buildBoardContext(
-			ctx,
-			args.userId,
-			args.taskId
-		);
+		const { otherTasks, columnInfo, accountLine, savedScriptCount, currentDateTime } =
+			await buildBoardContext(ctx, args.userId, args.taskId);
 
 		const prompt = [
+			`Current date/time: ${currentDateTime}`,
 			`Notification received for your task: "${args.taskTitle}"`,
 			'',
 			'Incoming notification(s):',
@@ -759,5 +794,72 @@ export const triggerAgentForNotification = internalAction({
 				});
 			}
 		});
+	}
+});
+
+/**
+ * Post-completion cascade: wakes idle tasks after a task finishes.
+ * Deferred tasks (in `todo` with no agentStatus) get triggered here.
+ */
+const MAX_CASCADE_TARGETS = 3;
+
+export const triggerPostCompletionCascade = internalAction({
+	args: {
+		userId: v.string(),
+		completedTaskId: v.string(),
+		completedTaskTitle: v.string(),
+		completedTaskSummary: v.string(),
+		completedTaskStatus: v.string()
+	},
+	handler: async (ctx, args) => {
+		const allTasks = await ctx.runQuery(internal.todos.getTasksForCascade, {
+			userId: args.userId
+		});
+
+		// Find candidates: todo column, no agentStatus or idle/error, not the completed task
+		const candidates = allTasks.filter(
+			(t: { id: string; columnId: string; agentStatus?: string }) =>
+				t.id !== args.completedTaskId &&
+				t.columnId === 'todo' &&
+				(!t.agentStatus || t.agentStatus === 'idle' || t.agentStatus === 'error')
+		);
+
+		const targets = candidates.slice(0, MAX_CASCADE_TARGETS);
+
+		if (targets.length === 0) {
+			console.log(`[cascade] No cascade targets for completed task ${args.completedTaskId}`);
+			return;
+		}
+
+		console.log(`[cascade] Cascading from ${args.completedTaskId} to ${targets.length} task(s)`);
+
+		const notification = {
+			fromTaskId: args.completedTaskId,
+			message: `Task "${args.completedTaskTitle}" completed (${args.completedTaskStatus}): ${args.completedTaskSummary}`,
+			priority: 'normal'
+		};
+
+		for (const target of targets) {
+			if (target.threadId) {
+				await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNotification, {
+					userId: args.userId,
+					threadId: target.threadId,
+					taskId: target.id,
+					taskTitle: target.title,
+					fromTaskId: args.completedTaskId,
+					message: notification.message,
+					priority: notification.priority
+				});
+			} else {
+				await ctx.scheduler.runAfter(0, internal.todo.messages.triggerAgentForNewTask, {
+					userId: args.userId,
+					taskId: target.id,
+					taskTitle: target.title,
+					taskNotes: target.notes,
+					taskColumn: target.columnId,
+					incomingNotification: notification
+				});
+			}
+		}
 	}
 });

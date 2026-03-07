@@ -634,3 +634,22 @@ export const getColumnMetaInternal = internalQuery({
 		return board?.columns ?? [];
 	}
 });
+
+export const getTasksForCascade = internalQuery({
+	args: { userId: v.string() },
+	handler: async (ctx, args) => {
+		const board = await ctx.db
+			.query('todoBoards')
+			.withIndex('by_user', (q: any) => q.eq('userId', args.userId))
+			.first();
+		if (!board) return [];
+		return (board.tasks as StoredTask[]).map((t) => ({
+			id: t.id,
+			title: t.title,
+			notes: t.notes,
+			columnId: t.columnId,
+			agentStatus: t.agentStatus,
+			threadId: t.threadId
+		}));
+	}
+});

@@ -354,6 +354,29 @@ export const notifyTask = createTool({
 	}
 });
 
+export const readTaskNotes = createTool({
+	description:
+		'Read the full notes of any task on the board by its ID. Board context only shows truncated notes — use this to get the complete text when you need details from another task.',
+	inputSchema: z.object({
+		taskId: z.string().describe('The ID of the task whose notes you want to read')
+	}),
+	execute: async (ctx: ToolCtx, input): Promise<Record<string, unknown>> => {
+		if (!ctx.userId) return { success: false, error: 'No userId' };
+		const info = await ctx.runQuery(internal.todos.getTaskThreadInfo, {
+			userId: ctx.userId,
+			taskId: input.taskId
+		});
+		if (!info) return { success: false, error: `Task ${input.taskId} not found` };
+		return {
+			success: true,
+			taskId: input.taskId,
+			title: info.title,
+			notes: info.notes ?? '(no notes)',
+			columnId: info.columnId
+		};
+	}
+});
+
 export const webSearch = createTool({
 	description:
 		'Search the web using Brave Search. Returns titles, snippets, and URLs. Use this to research topics, find documentation, or answer factual questions.',
@@ -423,6 +446,7 @@ CRITICAL: Reading SDK source is research, NOT execution. You have NOT completed 
 - saveScript: Save a working script for future reuse
 - createTask: Delegate concrete follow-up work only — never to ask questions
 - notifyTask: Message another task's agent when your work is relevant to them
+- readTaskNotes: Read full notes of another task (board context only shows truncated previews)
 - webSearch: Search the web for information. Use for research queries (finding docs, how-tos, factual info). Use bash + execute-ts for Unipile SDK operations
 
 You can ONLY modify YOUR OWN task. To affect another task, use notifyTask.
@@ -597,6 +621,7 @@ Rules:
 		moveMyTask,
 		setMyTaskUI,
 		notifyTask,
+		readTaskNotes,
 		webSearch
 	},
 

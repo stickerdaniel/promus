@@ -14,7 +14,7 @@ Agents can read each other's output and notify each other, so finished work feed
 
 ## Stack
 
-|              |                                                               |
+| Layer        | Technology                                                    |
 | ------------ | ------------------------------------------------------------- |
 | Frontend     | SvelteKit, Svelte 5, Tailwind v4, shadcn-svelte               |
 | Backend      | Convex (real-time DB + agent orchestration)                   |

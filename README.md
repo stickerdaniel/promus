@@ -8,7 +8,7 @@ A Kanban board where each task gets an AI agent that can use your connected acco
 
 Four columns: **Todo → Working On → Prepared → Done**.
 
-You write a task in plain language. An agent picks it up, writes TypeScript against the Unipile SDK, runs it in an isolated VM, and comes back with results. Nothing executes without your approval.
+You write a task in plain language. An agent picks it up, writes TypeScript against the Unipile SDK, runs it in an isolated VM, and comes back with results.
 
 Agents can read each other's output and notify each other, so finished work feeds into the next task.
 

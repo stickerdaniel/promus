@@ -7,6 +7,199 @@ import { listUIMessages, syncStreams } from '@convex-dev/agent';
 import { vStreamArgs } from '@convex-dev/agent/validators';
 import { authedMutation } from '../functions';
 import { getTaskLanguageModelForUser } from '../support/llmProvider';
+import { stepCountIs, type FinishReason, type LanguageModelUsage, type ModelMessage } from 'ai';
+
+const TODO_AGENT_ABORT_MS = 9 * 60 * 1000 + 30 * 1000;
+const TODO_AGENT_WARNING_MS = 8 * 60 * 1000 + 30 * 1000;
+const TODO_AGENT_MAX_STEPS = 24;
+const TODO_AGENT_WARNING_STEP = 20;
+const TODO_AGENT_TIMEOUT_SUMMARY =
+	'Coda ran out of time after partial progress. Review notes and retry if needed.';
+const TODO_AGENT_STEP_LIMIT_SUMMARY =
+	'Coda stopped after reaching the task step limit. Partial progress was saved.';
+const TODO_AGENT_NEAR_LIMIT_REMINDER =
+	'System reminder: you are close to the runtime limit. Wrap up now. Record concrete findings, move the task to the right column, and send your final one-sentence summary. Do not start new exploratory work unless it is required to finish.';
+
+type TodoRunOutcome = 'done' | 'timeout' | 'step_limit' | 'error';
+
+type TodoRunMetadata = {
+	finishReason?: FinishReason;
+	usage?: LanguageModelUsage;
+	text: string;
+	steps: Array<{
+		text?: string;
+		toolCalls?: Array<{ toolName?: string; args?: unknown }>;
+		toolResults?: Array<{ result?: unknown }>;
+	}>;
+};
+
+type TodoRunResolution = {
+	outcome: TodoRunOutcome;
+	status: 'done' | 'error';
+	summary: string;
+	detail?: string;
+};
+
+function toDisplayText(value: unknown): string {
+	if (typeof value === 'string') return value;
+	if (value == null) return '';
+	try {
+		return JSON.stringify(value);
+	} catch {
+		return String(value);
+	}
+}
+
+function truncateText(value: unknown, maxLength: number): string {
+	const text = toDisplayText(value);
+	return text.length > maxLength ? `${text.slice(0, maxLength)}...` : text;
+}
+
+function normalizeSummaryText(value: unknown): string {
+	return typeof value === 'string' ? value.trim() : '';
+}
+
+function getErrorMessage(error: unknown): string {
+	if (error instanceof Error && error.message) return error.message;
+	if (typeof error === 'string') return error;
+	if (error && typeof error === 'object' && 'message' in error) {
+		return toDisplayText((error as { message?: unknown }).message) || 'Unknown error';
+	}
+	return 'Unknown error';
+}
+
+function isAbortLikeError(error: unknown): boolean {
+	const message = getErrorMessage(error).toLowerCase();
+	const name =
+		error && typeof error === 'object' && 'name' in error
+			? String((error as { name?: unknown }).name ?? '')
+			: '';
+
+	return (
+		name === 'AbortError' ||
+		name === 'TimeoutError' ||
+		message.includes('aborted') ||
+		message.includes('timeout') ||
+		message.includes('timed out')
+	);
+}
+
+async function collectTodoRunMetadata(result: any): Promise<TodoRunMetadata> {
+	const [stepsResult, finishReasonResult, usageResult, textResult] = await Promise.allSettled([
+		result.steps,
+		result.finishReason,
+		result.usage,
+		result.text
+	]);
+
+	return {
+		steps:
+			stepsResult.status === 'fulfilled' && Array.isArray(stepsResult.value)
+				? stepsResult.value
+				: [],
+		finishReason: finishReasonResult.status === 'fulfilled' ? finishReasonResult.value : undefined,
+		usage: usageResult.status === 'fulfilled' ? usageResult.value : undefined,
+		text: textResult.status === 'fulfilled' ? normalizeSummaryText(textResult.value) : ''
+	};
+}
+
+export function formatTodoAgentDebug(
+	data: Partial<TodoRunMetadata>,
+	context: { taskId: string; trigger: string }
+): string {
+	const steps = Array.isArray(data.steps) ? data.steps : [];
+	const stepCount = steps.length;
+	const toolSummaries: string[] = [];
+
+	for (const [i, step] of steps.entries()) {
+		const calls = Array.isArray(step.toolCalls) ? step.toolCalls : [];
+		const results = Array.isArray(step.toolResults) ? step.toolResults : [];
+
+		for (const [j, toolCall] of calls.entries()) {
+			const toolResult = results[j];
+			const resultPreview = toolResult?.result ? truncateText(toolResult.result, 300) : '(empty)';
+			toolSummaries.push(
+				`  step${i}/${toolCall?.toolName ?? 'unknown'}(${truncateText(toolCall?.args, 200)}) => ${resultPreview}`
+			);
+		}
+
+		const stepText = normalizeSummaryText(step.text);
+		if (calls.length === 0 && stepText) {
+			toolSummaries.push(`  step${i}/text: ${truncateText(stepText, 200)}`);
+		}
+	}
+
+	return [
+		`[agent-debug] task=${context.taskId} trigger=${context.trigger}`,
+		`  steps=${stepCount} finishReason=${data.finishReason ?? 'unknown'} tokens=${data.usage?.totalTokens ?? '?'}`,
+		`  finalText=${truncateText(data.text ?? '', 150)}`,
+		...toolSummaries
+	].join('\n');
+}
+
+export function resolveTodoRunOutcome(args: {
+	defaultSummary: string;
+	error?: unknown;
+	finishReason?: FinishReason;
+	steps?: Array<unknown>;
+	text?: string;
+}): TodoRunResolution {
+	const text = normalizeSummaryText(args.text);
+	const finishReason = args.finishReason;
+	const stepCount = Array.isArray(args.steps) ? args.steps.length : 0;
+
+	if (args.error) {
+		const errorMessage = getErrorMessage(args.error);
+		if (isAbortLikeError(args.error)) {
+			return {
+				outcome: 'timeout',
+				status: 'error',
+				summary: TODO_AGENT_TIMEOUT_SUMMARY,
+				detail: `error=${errorMessage}`
+			};
+		}
+
+		return {
+			outcome: 'error',
+			status: 'error',
+			summary: truncateText(`Coda hit an error: ${errorMessage}`, 120),
+			detail: `error=${errorMessage}`
+		};
+	}
+
+	if (finishReason === 'tool-calls' && stepCount >= TODO_AGENT_MAX_STEPS) {
+		return {
+			outcome: 'step_limit',
+			status: 'error',
+			summary: TODO_AGENT_STEP_LIMIT_SUMMARY,
+			detail: `finishReason=${finishReason} stepCount=${stepCount}`
+		};
+	}
+
+	return {
+		outcome: 'done',
+		status: 'done',
+		summary: text || args.defaultSummary
+	};
+}
+
+export function shouldInjectTodoNearLimitReminder(args: {
+	elapsedMs: number;
+	stepCount: number;
+	reminderSent: boolean;
+}): boolean {
+	return (
+		!args.reminderSent &&
+		(args.elapsedMs >= TODO_AGENT_WARNING_MS || args.stepCount >= TODO_AGENT_WARNING_STEP)
+	);
+}
+
+function createTodoNearLimitReminderMessage(): ModelMessage {
+	return {
+		role: 'user',
+		content: TODO_AGENT_NEAR_LIMIT_REMINDER
+	};
+}
 
 /** Extract debug info from a streamText result after consumeStream(). */
 async function extractAgentDebug(
@@ -14,43 +207,8 @@ async function extractAgentDebug(
 	context: { taskId: string; trigger: string }
 ): Promise<string> {
 	try {
-		const steps = await result.steps;
-		const finishReason = await result.finishReason;
-		const usage = await result.usage;
-		const text = (await result.text) || '';
-
-		const stepCount = Array.isArray(steps) ? steps.length : 0;
-		const toolSummaries: string[] = [];
-
-		if (Array.isArray(steps)) {
-			for (const [i, step] of steps.entries()) {
-				const calls = step.toolCalls ?? [];
-				const results = step.toolResults ?? [];
-				for (const [j, tc] of calls.entries()) {
-					const toolResult = results[j];
-					let resultPreview = '';
-					if (toolResult?.result) {
-						const r = toolResult.result;
-						const str = typeof r === 'string' ? r : JSON.stringify(r);
-						resultPreview = str.length > 300 ? str.slice(0, 300) + '...' : str;
-					}
-					toolSummaries.push(
-						`  step${i}/${tc.toolName}(${JSON.stringify(tc.args).slice(0, 200)}) => ${resultPreview || '(empty)'}`
-					);
-				}
-				if (calls.length === 0 && step.text) {
-					toolSummaries.push(`  step${i}/text: ${step.text.slice(0, 200)}`);
-				}
-			}
-		}
-
-		const debug = [
-			`[agent-debug] task=${context.taskId} trigger=${context.trigger}`,
-			`  steps=${stepCount} finishReason=${finishReason ?? 'unknown'} tokens=${usage?.totalTokens ?? '?'}`,
-			`  finalText=${text.slice(0, 150)}`,
-			...toolSummaries
-		].join('\n');
-
+		const metadata = await collectTodoRunMetadata(result);
+		const debug = formatTodoAgentDebug(metadata, context);
 		console.log(debug);
 		return debug;
 	} catch (e) {
@@ -58,6 +216,117 @@ async function extractAgentDebug(
 		console.log(fallback);
 		return fallback;
 	}
+}
+
+async function runTodoAgentForTask(
+	ctx: {
+		runMutation: (fn: any, args: any) => Promise<any>;
+	},
+	args: {
+		userId: string;
+		taskId: string;
+		threadId: string;
+		promptMessageId: string;
+		trigger: string;
+		defaultSummary: string;
+		onDone?: () => Promise<void>;
+	}
+): Promise<TodoRunResolution> {
+	const model = await getTaskLanguageModelForUser(ctx as any, args.userId);
+	const startedAt = Date.now();
+	let nearLimitReminderSent = false;
+	const result = await todoAgent.streamText(
+		ctx as any,
+		{ threadId: args.threadId, userId: args.userId },
+		{
+			promptMessageId: args.promptMessageId,
+			model,
+			providerOptions: { openai: { store: false, reasoningEffort: 'medium' } },
+			abortSignal: AbortSignal.timeout(TODO_AGENT_ABORT_MS),
+			stopWhen: stepCountIs(TODO_AGENT_MAX_STEPS),
+			prepareStep: async (options) => {
+				if (
+					!shouldInjectTodoNearLimitReminder({
+						elapsedMs: Date.now() - startedAt,
+						stepCount: options.stepNumber,
+						reminderSent: nearLimitReminderSent
+					})
+				) {
+					return undefined;
+				}
+
+				nearLimitReminderSent = true;
+				return {
+					messages: [...options.messages, createTodoNearLimitReminderMessage()]
+				};
+			}
+		},
+		{
+			saveStreamDeltas: {
+				chunking: 'line',
+				throttleMs: 100
+			}
+		}
+	);
+
+	let metadata: TodoRunMetadata = {
+		steps: [],
+		text: ''
+	};
+	let resolution: TodoRunResolution;
+
+	try {
+		await result.consumeStream();
+		metadata = await collectTodoRunMetadata(result);
+		resolution = resolveTodoRunOutcome({
+			defaultSummary: args.defaultSummary,
+			finishReason: metadata.finishReason,
+			steps: metadata.steps,
+			text: metadata.text
+		});
+
+		if (resolution.outcome === 'done') {
+			await args.onDone?.();
+		}
+	} catch (error) {
+		console.error(`Agent failed for task ${args.taskId}:`, error);
+		metadata = await collectTodoRunMetadata(result);
+		resolution = resolveTodoRunOutcome({
+			defaultSummary: args.defaultSummary,
+			error,
+			finishReason: metadata.finishReason,
+			steps: metadata.steps,
+			text: metadata.text
+		});
+	}
+
+	const debug = await extractAgentDebug(result, {
+		taskId: args.taskId,
+		trigger: args.trigger
+	});
+
+	const logLines = [debug, '', `outcome=${resolution.outcome}`, `summary=${resolution.summary}`];
+	if (nearLimitReminderSent) {
+		logLines.push('nearLimitReminder=sent');
+	}
+	if (resolution.detail) {
+		logLines.push(resolution.detail);
+	}
+
+	await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
+		userId: args.userId,
+		taskId: args.taskId,
+		agentLogs: logLines.join('\n').slice(0, 4000)
+	});
+
+	await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
+		userId: args.userId,
+		taskId: args.taskId,
+		agentStatus: resolution.status,
+		agentSummary: resolution.summary.slice(0, 120)
+	});
+
+	return resolution;
 }
 
 /**
@@ -300,58 +569,15 @@ export const triggerAgentForNewTask = internalAction({
 			skipEmbeddings: true
 		});
 
-		// 6. Run the agent with streaming
-		const model = await getTaskLanguageModelForUser(ctx, args.userId);
-		const result = await todoAgent.streamText(
-			ctx,
-			{ threadId, userId: args.userId },
-			{
-				promptMessageId: messageId,
-				model,
-				providerOptions: { openai: { store: false, reasoningEffort: 'medium' } }
-			},
-			{
-				saveStreamDeltas: {
-					chunking: 'line',
-					throttleMs: 100
-				}
-			}
-		);
-
-		try {
-			await result.consumeStream();
-
-			// 7. Debug logging
-			const debug = await extractAgentDebug(result, {
-				taskId: args.taskId,
-				trigger: 'newTask'
-			});
-
-			// 8. Update task with agent summary
-			const summary = (await result.text) || 'Coda completed analysis.';
-
-			await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
-				userId: args.userId,
-				taskId: args.taskId,
-				agentLogs: `${debug}\n\n${summary}`.slice(0, 4000)
-			});
-
-			// 9. Mark task as done with summary
-			await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
-				userId: args.userId,
-				taskId: args.taskId,
-				agentStatus: 'done',
-				agentSummary: summary.slice(0, 120)
-			});
-		} catch (e) {
-			console.error(`Agent failed for task ${args.taskId}:`, e);
-			await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
-				userId: args.userId,
-				taskId: args.taskId,
-				agentStatus: 'error',
-				agentSummary: `Error: ${e instanceof Error ? e.message : 'Unknown error'}`.slice(0, 120)
-			});
-		}
+		// 6. Run the agent with guarded execution
+		await runTodoAgentForTask(ctx, {
+			userId: args.userId,
+			taskId: args.taskId,
+			threadId,
+			promptMessageId: messageId,
+			trigger: 'newTask',
+			defaultSummary: 'Coda completed analysis.'
+		});
 	}
 });
 
@@ -406,58 +632,15 @@ export const triggerAgentForTaskUpdate = internalAction({
 			skipEmbeddings: true
 		});
 
-		// 3. Run agent
-		const model = await getTaskLanguageModelForUser(ctx, args.userId);
-		const result = await todoAgent.streamText(
-			ctx,
-			{ threadId: args.threadId, userId: args.userId },
-			{
-				promptMessageId: messageId,
-				model,
-				providerOptions: { openai: { store: false, reasoningEffort: 'medium' } }
-			},
-			{
-				saveStreamDeltas: {
-					chunking: 'line',
-					throttleMs: 100
-				}
-			}
-		);
-
-		try {
-			await result.consumeStream();
-
-			// 4. Debug logging
-			const debug = await extractAgentDebug(result, {
-				taskId: args.taskId,
-				trigger: 'taskUpdate'
-			});
-
-			// 5. Update agent logs
-			const summary = (await result.text) || 'Coda processed update.';
-
-			await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
-				userId: args.userId,
-				taskId: args.taskId,
-				agentLogs: `${debug}\n\n${summary}`.slice(0, 4000)
-			});
-
-			// 6. Mark task as done
-			await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
-				userId: args.userId,
-				taskId: args.taskId,
-				agentStatus: 'done',
-				agentSummary: summary.slice(0, 120)
-			});
-		} catch (e) {
-			console.error(`Agent failed for task ${args.taskId}:`, e);
-			await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
-				userId: args.userId,
-				taskId: args.taskId,
-				agentStatus: 'error',
-				agentSummary: `Error: ${e instanceof Error ? e.message : 'Unknown error'}`.slice(0, 120)
-			});
-		}
+		// 3. Run agent with guarded execution
+		await runTodoAgentForTask(ctx, {
+			userId: args.userId,
+			taskId: args.taskId,
+			threadId: args.threadId,
+			promptMessageId: messageId,
+			trigger: 'taskUpdate',
+			defaultSummary: 'Coda processed update.'
+		});
 	}
 });
 
@@ -562,61 +745,19 @@ export const triggerAgentForNotification = internalAction({
 			skipEmbeddings: true
 		});
 
-		const model = await getTaskLanguageModelForUser(ctx, args.userId);
-		const result = await todoAgent.streamText(
-			ctx,
-			{ threadId: args.threadId, userId: args.userId },
-			{
-				promptMessageId: messageId,
-				model,
-				providerOptions: { openai: { store: false, reasoningEffort: 'medium' } }
-			},
-			{
-				saveStreamDeltas: {
-					chunking: 'line',
-					throttleMs: 100
-				}
+		await runTodoAgentForTask(ctx, {
+			userId: args.userId,
+			taskId: args.taskId,
+			threadId: args.threadId,
+			promptMessageId: messageId,
+			trigger: 'notification',
+			defaultSummary: 'Coda processed notification.',
+			onDone: async () => {
+				await ctx.runMutation(internal.todo.notifications.clearPendingNotifications, {
+					userId: args.userId,
+					taskId: args.taskId
+				});
 			}
-		);
-
-		try {
-			await result.consumeStream();
-
-			// 6. Clear pending notifications
-			await ctx.runMutation(internal.todo.notifications.clearPendingNotifications, {
-				userId: args.userId,
-				taskId: args.taskId
-			});
-
-			// 7. Debug logging
-			const debug = await extractAgentDebug(result, {
-				taskId: args.taskId,
-				trigger: 'notification'
-			});
-
-			// 8. Update agent logs and status
-			const summary = (await result.text) || 'Coda processed notification.';
-
-			await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
-				userId: args.userId,
-				taskId: args.taskId,
-				agentLogs: `${debug}\n\n${summary}`.slice(0, 4000)
-			});
-
-			await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
-				userId: args.userId,
-				taskId: args.taskId,
-				agentStatus: 'done',
-				agentSummary: summary.slice(0, 120)
-			});
-		} catch (e) {
-			console.error(`Agent failed for task ${args.taskId}:`, e);
-			await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
-				userId: args.userId,
-				taskId: args.taskId,
-				agentStatus: 'error',
-				agentSummary: `Error: ${e instanceof Error ? e.message : 'Unknown error'}`.slice(0, 120)
-			});
-		}
+		});
 	}
 });

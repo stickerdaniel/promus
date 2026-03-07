@@ -28,7 +28,7 @@ export const getAccount = action({
 			headers: { 'X-API-KEY': apiKey }
 		});
 
-		if (response.status === 404) return null;
+		if (response.status === 404 || response.status === 503) return null;
 
 		if (!response.ok) {
 			const text = await response.text();

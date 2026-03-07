@@ -84,7 +84,7 @@ export const listAccounts = action({
 			userId: user._id
 		});
 
-		// Fetch each account individually — skip 404s (deleted on Unipile side)
+		// Fetch each account individually — unregister stale ones (deleted/disconnected on Unipile side)
 		const items = [];
 		for (const accountId of userAccountIds) {
 			const account = await ctx.runAction(components.unipile.actions.getAccount, {
@@ -92,7 +92,14 @@ export const listAccounts = action({
 				apiKey: unipileConfig.apiKey!,
 				accountId
 			});
-			if (account) items.push(account);
+			if (account) {
+				items.push(account);
+			} else {
+				await ctx.runMutation(components.unipile.mutations.unregisterAccount, {
+					userId: user._id,
+					unipileAccountId: accountId
+				});
+			}
 		}
 
 		return { items };

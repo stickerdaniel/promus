@@ -10,6 +10,10 @@
 		},
 		"unipile": {
 			"url": "https://developer.unipile.com/mcp"
+		},
+		"playwright": {
+			"command": "bunx",
+			"args": ["@playwright/mcp@latest"]
 		}
 	}
 }

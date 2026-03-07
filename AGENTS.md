@@ -394,6 +394,16 @@ A customizable Svelte component for building node-based editors and interactive 
 - `vercel logs` - View deployment logs
 - `vercel domains` - Manage custom domains
 
+### Environment Variable Sync
+
+Shared env vars (e.g. `UNIPILE_DSN`, `UNIPILE_API_KEY`, `SANDBOX_INTERNAL_API_KEY`) must be identical across all three targets. The sandbox runs on Vercel but uses account IDs from Convex — mismatched credentials will silently break all SDK calls.
+
+When changing a shared env var, always update all three:
+
+1. `bun convex env set KEY value` — Convex development
+2. `bun convex env set KEY value --prod` — Convex production
+3. `printf "value" | vercel env add KEY production` — Vercel production
+
 ## Task Agent Architecture
 
 Single agent (Claude Opus via Convex Agent) that generates and executes Unipile SDK code directly:

@@ -300,7 +300,7 @@
 			</div>
 		{/if}
 
-		<Dialog.Footer class="flex-row items-center justify-between">
+		<Dialog.Footer class="!flex-row items-center !justify-between">
 			<Button variant="destructive" size="sm" onclick={handleDelete}>
 				<Trash2Icon class="mr-1.5 size-3.5" />
 				<T keyName="todo_demo.detail.delete" />

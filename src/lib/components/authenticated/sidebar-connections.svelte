@@ -36,14 +36,13 @@
 
 	const UNIPILE_PROVIDERS = [
 		{ type: 'LINKEDIN', labelKey: 'sidebar.connections.linkedin' },
-		{ type: 'GOOGLE_OAUTH', labelKey: 'sidebar.connections.gmail' },
+		{ type: 'GOOGLE_OAUTH', labelKey: 'sidebar.connections.google' },
 		{ type: 'OUTLOOK', labelKey: 'sidebar.connections.outlook' },
 		{ type: 'WHATSAPP', labelKey: 'sidebar.connections.whatsapp' },
 		{ type: 'INSTAGRAM', labelKey: 'sidebar.connections.instagram' },
 		{ type: 'MESSENGER', labelKey: 'sidebar.connections.messenger' },
 		{ type: 'TELEGRAM', labelKey: 'sidebar.connections.telegram' },
 		{ type: 'TWITTER', labelKey: 'sidebar.connections.twitter' },
-		{ type: 'GOOGLE_CALENDAR', labelKey: 'sidebar.connections.google_calendar' },
 		{ type: 'MAIL', labelKey: 'sidebar.connections.imap' }
 	] as const;
 
@@ -180,9 +179,6 @@
 	}
 
 	function getConnectedAccount(providerType: string): Account | undefined {
-		if (providerType === 'GOOGLE_CALENDAR') {
-			return accounts.find((a) => a.type.toUpperCase() === 'GOOGLE_OAUTH');
-		}
 		return accounts.find((a) => a.type.toUpperCase() === providerType);
 	}
 
@@ -311,7 +307,6 @@
 						<span><T keyName={provider.labelKey} /></span>
 					</Sidebar.MenuButton>
 					{#if accountsLoaded}
-						{@const isDerived = provider.type === 'GOOGLE_CALENDAR'}
 						{#if connectedAccount}
 							<DropdownMenu.Root>
 								<DropdownMenu.Trigger>
@@ -335,19 +330,17 @@
 											</span>
 										</span>
 									</DropdownMenu.Label>
-									{#if !isDerived}
-										<DropdownMenu.Separator />
-										<DropdownMenu.Item
-											class="text-destructive focus:text-destructive"
-											onclick={() => handleUnipileDisconnect(connectedAccount)}
-										>
-											<UnplugIcon class="size-4" />
-											<T keyName="sidebar.connections.remove" />
-										</DropdownMenu.Item>
-									{/if}
+									<DropdownMenu.Separator />
+									<DropdownMenu.Item
+										class="text-destructive focus:text-destructive"
+										onclick={() => handleUnipileDisconnect(connectedAccount)}
+									>
+										<UnplugIcon class="size-4" />
+										<T keyName="sidebar.connections.remove" />
+									</DropdownMenu.Item>
 								</DropdownMenu.Content>
 							</DropdownMenu.Root>
-						{:else if !isDerived}
+						{:else}
 							<div class="absolute top-1 right-1 group-data-[collapsible=icon]:hidden">
 								<Button
 									variant="outline"

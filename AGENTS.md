@@ -434,42 +434,26 @@ Planner only via W&B Weave.
 
 ### Debugging Agent Runs
 
-Agent threads and messages are stored in the Convex Agent component. Use these commands to inspect what the agent actually did:
+Agent threads live in the Convex Agent component. Add `--prod` for production, omit for dev.
 
 ```bash
-# 1. List all threads (find the thread ID for your task)
-bun convex run --component agent threads:listThreadsByUserId '{"userId": "jh73e6v7bg5syfq0t4na54kfhh820p82"}'
+# 1. Email → userId (internalQuery, no secret needed)
+bun convex run 'tests:getTestUser' '{"email": "EMAIL"}' --prod
+# Use the _id value from the output
 
-# 2. Get all messages in a thread (tool calls + results)
+# 2. List tasks + thread IDs
+bun convex run 'todos:getBoardInternal' '{"userId": "USER_ID"}' --prod | python3 -c "
+import json,sys;d=json.load(sys.stdin)
+for c,ts in d.items():
+ for t in ts: print(f'[{c}] thread={t.get(\"threadId\",\"none\")}  {t[\"title\"][:60]}')"
+
+# 3. Dump thread → trace
 bun convex run --component agent messages:listMessagesByThreadId \
-  '{"threadId": "<THREAD_ID>", "order": "asc", "paginationOpts": {"cursor": null, "numItems": 100}}'
-
-# 3. Parse messages into readable tool-call/result trace
-cat /tmp/thread.json | python3 -c "
-import json, sys
-data = json.load(sys.stdin)
-for i, msg in enumerate(data.get('page', [])):
-    message = msg.get('message', {})
-    content = message.get('content', '')
-    if isinstance(content, list):
-        for part in content:
-            if part.get('type') == 'tool-call':
-                args = part.get('args', {})
-                name = part.get('toolName', '')
-                cmd = args.get('command', '') if name == 'bash' else json.dumps(args)[:200]
-                print(f'msg[{i}] {name}: {cmd[:200]}')
-            elif part.get('type') == 'tool-result':
-                out = part.get('output', {})
-                val = out.get('value', {}) if isinstance(out, dict) else {}
-                print(f'  => exit={val.get(\"exitCode\",\"?\")} success={val.get(\"success\",\"?\")} output_len={len(str(val.get(\"output\",\"\")))}')
-    text = msg.get('text', '')
-    if text:
-        print(f'  FINAL: {text[:200]}')
-    print()
-"
+  '{"threadId": "THREAD_ID", "order": "asc", "paginationOpts": {"cursor": null, "numItems": 100}}' \
+  --prod > /tmp/thread.json && python3 scripts/parse-agent-trace.py /tmp/thread.json
 ```
 
-Key fields in each message: `message.content` is an array of `tool-call` (with `toolName` + `args`) and `tool-result` (with `output.value`). The `text` field holds the agent's final summary.
+The trace parser script is at `scripts/parse-agent-trace.py`.
 
 ## Plan Mode
 

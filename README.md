@@ -1,8 +1,6 @@
 # Promus
 
-A task board where every todo gets its own AI agent.
-
-Your agent searches your emails, finds LinkedIn profiles, drafts messages, and hands everything back for your approval. Nothing runs without your sign-off.
+A Kanban board where each task gets an AI agent that can use your connected accounts (Gmail, LinkedIn, WhatsApp, etc.) to do the actual work.
 
 **[Try it](https://promus-ai.vercel.app)**
 
@@ -10,9 +8,9 @@ Your agent searches your emails, finds LinkedIn profiles, drafts messages, and h
 
 Four columns: **Todo → Working On → Prepared → Done**.
 
-Drop a task in your own words. It gets its own agent. The agent writes TypeScript on the fly, executes it in an isolated VM, and uses your connected tools (Gmail, LinkedIn, WhatsApp, and more) to get the job done. You review the result and approve.
+You write a task in plain language. An agent picks it up, writes TypeScript against the Unipile SDK, runs it in an isolated VM, and comes back with results. Nothing executes without your approval.
 
-Agents share context. A finished task teaches the next one. An agent can activate others that stopped. A hivemind working through your list.
+Agents can read each other's output and notify each other, so finished work feeds into the next task.
 
 ## Stack
 

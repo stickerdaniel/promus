@@ -43,6 +43,7 @@
 		{ type: 'MESSENGER', labelKey: 'sidebar.connections.messenger' },
 		{ type: 'TELEGRAM', labelKey: 'sidebar.connections.telegram' },
 		{ type: 'TWITTER', labelKey: 'sidebar.connections.twitter' },
+		{ type: 'GOOGLE_CALENDAR', labelKey: 'sidebar.connections.google_calendar' },
 		{ type: 'MAIL', labelKey: 'sidebar.connections.imap' }
 	] as const;
 

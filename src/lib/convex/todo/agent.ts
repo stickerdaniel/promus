@@ -563,7 +563,16 @@ Your bash session has three mount points:
 
 Scripts run in a sandboxed VM with these globals:
 - \`unipile\` — Pre-configured SDK client (account, messaging, email, users, webhook, request)
-  - If an SDK method doesn't exist for an action, use \`unipile.request.send()\` to proxy raw LinkedIn Voyager API calls. See \`/sdk/README.md\` "Endpoint Not Packaged in SDK" for the pattern.
+  - If an SDK method doesn't exist for an action, use \`unipile.request.send()\` to make raw REST calls. See \`/sdk/README.md\` "Endpoint Not Packaged in SDK" for the pattern.
+  - **Calendar API** (not yet in SDK — use \`unipile.request.send()\`):
+    GET  /calendars                          — List all calendars
+    GET  /calendars/{id}                     — Get a calendar
+    GET  /calendars/{id}/events              — List events from a calendar
+    POST /calendars/{id}/events              — Create an event
+    GET  /calendars/{id}/events/{eventId}    — Get an event
+    PATCH /calendars/{id}/events/{eventId}   — Edit an event
+    DELETE /calendars/{id}/events/{eventId}  — Delete an event
+    Example: \`await unipile.request.send({ method: 'GET', path: ['calendars'], parameters: { account_id: USER_ACCOUNT_IDS[0] } })\`
 - \`USER_ACCOUNT_IDS\` — Frozen array of the user's allowed Unipile account IDs
 - \`console.log()\` — Output results (captured and returned)
 - \`fetch\`, \`JSON\`, \`Date\`, \`Promise\`, \`Buffer\`, \`URL\`, \`Headers\`, \`URLSearchParams\`, \`setTimeout\`, \`AbortController\`, \`TextEncoder\`, \`TextDecoder\`, \`FormData\`, \`Blob\`

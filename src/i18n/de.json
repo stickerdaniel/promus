@@ -1011,6 +1011,7 @@
 			"connected_since": "Verbunden seit {date}",
 			"connections": "Verbindungen",
 			"gmail": "Gmail",
+			"google_calendar": "Google Calendar",
 			"imap": "IMAP",
 			"instagram": "Instagram",
 			"linkedin": "LinkedIn",

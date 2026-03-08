@@ -4,6 +4,10 @@ A Kanban board where each task gets an AI agent that can use your connected acco
 
 **[Try it](https://promus-ai.vercel.app)**
 
+
+https://github.com/user-attachments/assets/6f995fb6-48ea-494a-87c1-017adf1f81cf
+
+
 ## How it works
 
 Four columns: **Todo → Working On → Prepared → Done**.

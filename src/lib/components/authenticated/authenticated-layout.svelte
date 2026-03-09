@@ -42,6 +42,7 @@
 
 {#if user}
 	<Sidebar.Provider
+		data-testid="authenticated-layout"
 		style="--sidebar-width: calc(var(--spacing) * 72); --header-height: calc(var(--spacing) * 12);"
 		class="h-svh overflow-hidden"
 	>

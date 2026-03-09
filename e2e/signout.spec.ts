@@ -7,8 +7,7 @@ test('signout works', async ({ page }) => {
 	await page.goto('/app');
 	await waitForAuthenticated(page);
 
-	// Click user menu and sign out
-	await page.locator('#user-menu-trigger').click();
+	// Sign out — logout button is directly visible in sidebar footer
 	await page.locator('[data-testid="logout-button"]').click();
 
 	// Should redirect away from app after logout (to home or signin page)

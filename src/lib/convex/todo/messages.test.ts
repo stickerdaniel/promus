@@ -1,8 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+	applyColumnGuard,
 	formatTodoAgentDebug,
 	resolveTodoRunOutcome,
+	shouldContinueAfterOther,
 	shouldInjectTodoNearLimitReminder
 } from './messages';
 
@@ -47,6 +49,142 @@ describe('resolveTodoRunOutcome', () => {
 			status: 'done',
 			summary: 'Found the result'
 		});
+	});
+
+	it('maps finishReason=other to error', () => {
+		const outcome = resolveTodoRunOutcome({
+			defaultSummary: 'fallback',
+			finishReason: 'other',
+			steps: [{}, {}, {}]
+		});
+
+		expect(outcome).toMatchObject({ outcome: 'error', status: 'error' });
+		expect(outcome.summary).toContain('stopped unexpectedly');
+	});
+
+	it('maps finishReason=length to error', () => {
+		const outcome = resolveTodoRunOutcome({
+			defaultSummary: 'fallback',
+			finishReason: 'length',
+			steps: [{}, {}]
+		});
+
+		expect(outcome).toMatchObject({ outcome: 'error', status: 'error' });
+		expect(outcome.summary).toContain('ran out of response tokens');
+	});
+
+	it('maps finishReason=content-filter to error', () => {
+		const outcome = resolveTodoRunOutcome({
+			defaultSummary: 'fallback',
+			finishReason: 'content-filter',
+			steps: [{}]
+		});
+
+		expect(outcome).toMatchObject({ outcome: 'error', status: 'error' });
+		expect(outcome.summary).toContain('content filter');
+	});
+
+	it('maps finishReason=error to error', () => {
+		const outcome = resolveTodoRunOutcome({
+			defaultSummary: 'fallback',
+			finishReason: 'error',
+			steps: [{}, {}]
+		});
+
+		expect(outcome).toMatchObject({ outcome: 'error', status: 'error' });
+		expect(outcome.summary).toContain('model error');
+	});
+
+	it('uses defaultSummary for finishReason=stop with no text', () => {
+		const outcome = resolveTodoRunOutcome({
+			defaultSummary: 'Coda finished processing.',
+			finishReason: 'stop',
+			steps: [{}, {}],
+			text: ''
+		});
+
+		expect(outcome).toEqual({
+			outcome: 'done',
+			status: 'done',
+			summary: 'Coda finished processing.'
+		});
+	});
+
+	it('maps finishReason=tool-calls under max steps to done', () => {
+		const outcome = resolveTodoRunOutcome({
+			defaultSummary: 'fallback',
+			finishReason: 'tool-calls',
+			steps: [{}, {}, {}],
+			text: 'Completed tasks'
+		});
+
+		expect(outcome).toEqual({
+			outcome: 'done',
+			status: 'done',
+			summary: 'Completed tasks'
+		});
+	});
+});
+
+describe('applyColumnGuard', () => {
+	const doneResolution = {
+		outcome: 'done' as const,
+		status: 'done' as const,
+		summary: 'Task completed successfully.'
+	};
+
+	const errorResolution = {
+		outcome: 'error' as const,
+		status: 'error' as const,
+		summary: 'Something went wrong.'
+	};
+
+	it('overrides done to error when task is stuck in working-on', () => {
+		const result = applyColumnGuard(doneResolution, 'working-on');
+		expect(result).toMatchObject({ outcome: 'error', status: 'error' });
+		expect(result.summary).toContain('finished without completing');
+	});
+
+	it('passes through done when task moved to done', () => {
+		const result = applyColumnGuard(doneResolution, 'done');
+		expect(result).toEqual(doneResolution);
+	});
+
+	it('passes through done when task moved to prepared', () => {
+		const result = applyColumnGuard(doneResolution, 'prepared');
+		expect(result).toEqual(doneResolution);
+	});
+
+	it('passes through error resolution regardless of column', () => {
+		const result = applyColumnGuard(errorResolution, 'working-on');
+		expect(result).toEqual(errorResolution);
+	});
+
+	it('handles undefined columnId gracefully', () => {
+		const result = applyColumnGuard(doneResolution, undefined);
+		expect(result).toEqual(doneResolution);
+	});
+});
+
+describe('shouldContinueAfterOther', () => {
+	it('returns true for finishReason=other with progress', () => {
+		expect(shouldContinueAfterOther('other', 3)).toBe(true);
+	});
+
+	it('returns false for finishReason=other with no steps', () => {
+		expect(shouldContinueAfterOther('other', 0)).toBe(false);
+	});
+
+	it('returns false for finishReason=stop', () => {
+		expect(shouldContinueAfterOther('stop', 5)).toBe(false);
+	});
+
+	it('returns false for finishReason=error', () => {
+		expect(shouldContinueAfterOther('error', 2)).toBe(false);
+	});
+
+	it('returns false for undefined finishReason', () => {
+		expect(shouldContinueAfterOther(undefined, 3)).toBe(false);
 	});
 });
 

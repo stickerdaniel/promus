@@ -29,7 +29,7 @@ export async function waitForAuthenticated(page: Page, timeout = 30000, maxRetri
 			throw new Error(`Server returned 500 after ${maxRetries} attempts`);
 		}
 
-		await expect(page.locator('#user-menu-trigger')).toBeVisible({ timeout });
+		await expect(page.locator('[data-testid="authenticated-layout"]')).toBeVisible({ timeout });
 		return;
 	}
 }

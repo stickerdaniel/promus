@@ -17,6 +17,14 @@ const TODO_AGENT_TIMEOUT_SUMMARY =
 	'Coda ran out of time after partial progress. Review notes and retry if needed.';
 const TODO_AGENT_STEP_LIMIT_SUMMARY =
 	'Coda stopped after reaching the task step limit. Partial progress was saved.';
+const TODO_AGENT_ERROR_FINISH_SUMMARY =
+	'Coda stopped due to a model error. Review notes and retry if needed.';
+const TODO_AGENT_LENGTH_FINISH_SUMMARY =
+	'Coda ran out of response tokens before finishing. Review notes and retry if needed.';
+const TODO_AGENT_CONTENT_FILTER_SUMMARY =
+	'Coda was stopped by a content filter. Review the task and retry with different wording.';
+const TODO_AGENT_OTHER_FINISH_SUMMARY =
+	'Coda stopped unexpectedly without completing the task. Review notes and retry if needed.';
 const TODO_AGENT_NEAR_LIMIT_REMINDER =
 	'System reminder: you are close to the runtime limit. Wrap up now. Record concrete findings, move the task to the right column, and send your final one-sentence summary. Do not start new exploratory work unless it is required to finish.';
 
@@ -176,6 +184,42 @@ export function resolveTodoRunOutcome(args: {
 		};
 	}
 
+	if (finishReason === 'error') {
+		return {
+			outcome: 'error',
+			status: 'error',
+			summary: TODO_AGENT_ERROR_FINISH_SUMMARY,
+			detail: `finishReason=${finishReason} stepCount=${stepCount}`
+		};
+	}
+
+	if (finishReason === 'length') {
+		return {
+			outcome: 'error',
+			status: 'error',
+			summary: TODO_AGENT_LENGTH_FINISH_SUMMARY,
+			detail: `finishReason=${finishReason} stepCount=${stepCount}`
+		};
+	}
+
+	if (finishReason === 'content-filter') {
+		return {
+			outcome: 'error',
+			status: 'error',
+			summary: TODO_AGENT_CONTENT_FILTER_SUMMARY,
+			detail: `finishReason=${finishReason} stepCount=${stepCount}`
+		};
+	}
+
+	if (finishReason === 'other') {
+		return {
+			outcome: 'error',
+			status: 'error',
+			summary: TODO_AGENT_OTHER_FINISH_SUMMARY,
+			detail: `finishReason=${finishReason} stepCount=${stepCount}`
+		};
+	}
+
 	return {
 		outcome: 'done',
 		status: 'done',
@@ -327,7 +371,15 @@ async function runTodoAgentForTask(
 		taskId: args.taskId
 	});
 	const deferred = taskInfo?.columnId === 'todo';
-	const agentStatus = deferred ? 'idle' : resolution.status;
+
+	// Guard: if agent reports "done" but task is still in working-on, override to error
+	const stuckInWorkingOn = resolution.outcome === 'done' && taskInfo?.columnId === 'working-on';
+	const effectiveStatus = stuckInWorkingOn ? 'error' : resolution.status;
+	const effectiveSummary = stuckInWorkingOn
+		? 'Coda finished without completing the task. Review notes and retry.'
+		: resolution.summary;
+
+	const agentStatus = deferred ? 'idle' : effectiveStatus;
 
 	await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
 		userId: args.userId,
@@ -335,7 +387,7 @@ async function runTodoAgentForTask(
 		agentStatus,
 		agentSummary: deferred
 			? 'Waiting for a related task to finish.'
-			: resolution.summary.slice(0, 120)
+			: effectiveSummary.slice(0, 120)
 	});
 
 	// Only cascade if task actually completed (not deferred)
@@ -345,8 +397,8 @@ async function runTodoAgentForTask(
 				userId: args.userId,
 				completedTaskId: args.taskId,
 				completedTaskTitle: taskInfo?.title ?? args.taskId,
-				completedTaskSummary: resolution.summary.slice(0, 200),
-				completedTaskStatus: resolution.status
+				completedTaskSummary: effectiveSummary.slice(0, 200),
+				completedTaskStatus: effectiveStatus
 			});
 		} catch (e) {
 			console.error(`Failed to schedule cascade for task ${args.taskId}:`, e);
@@ -609,7 +661,7 @@ export const triggerAgentForNewTask = internalAction({
 			threadId,
 			promptMessageId: messageId,
 			trigger: 'newTask',
-			defaultSummary: 'Coda completed analysis.'
+			defaultSummary: 'Coda finished processing.'
 		});
 	}
 });
@@ -670,7 +722,7 @@ export const triggerAgentForTaskUpdate = internalAction({
 			threadId: args.threadId,
 			promptMessageId: messageId,
 			trigger: 'taskUpdate',
-			defaultSummary: 'Coda processed update.'
+			defaultSummary: 'Coda finished processing.'
 		});
 	}
 });
@@ -780,7 +832,7 @@ export const triggerAgentForNotification = internalAction({
 			threadId: args.threadId,
 			promptMessageId: messageId,
 			trigger: 'notification',
-			defaultSummary: 'Coda processed notification.',
+			defaultSummary: 'Coda finished processing.',
 			onDone: async () => {
 				await ctx.runMutation(internal.todo.notifications.clearPendingNotifications, {
 					userId: args.userId,

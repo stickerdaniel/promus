@@ -48,6 +48,80 @@ describe('resolveTodoRunOutcome', () => {
 			summary: 'Found the result'
 		});
 	});
+
+	it('maps finishReason=other to error', () => {
+		const outcome = resolveTodoRunOutcome({
+			defaultSummary: 'fallback',
+			finishReason: 'other',
+			steps: [{}, {}, {}]
+		});
+
+		expect(outcome).toMatchObject({ outcome: 'error', status: 'error' });
+		expect(outcome.summary).toContain('stopped unexpectedly');
+	});
+
+	it('maps finishReason=length to error', () => {
+		const outcome = resolveTodoRunOutcome({
+			defaultSummary: 'fallback',
+			finishReason: 'length',
+			steps: [{}, {}]
+		});
+
+		expect(outcome).toMatchObject({ outcome: 'error', status: 'error' });
+		expect(outcome.summary).toContain('ran out of response tokens');
+	});
+
+	it('maps finishReason=content-filter to error', () => {
+		const outcome = resolveTodoRunOutcome({
+			defaultSummary: 'fallback',
+			finishReason: 'content-filter',
+			steps: [{}]
+		});
+
+		expect(outcome).toMatchObject({ outcome: 'error', status: 'error' });
+		expect(outcome.summary).toContain('content filter');
+	});
+
+	it('maps finishReason=error to error', () => {
+		const outcome = resolveTodoRunOutcome({
+			defaultSummary: 'fallback',
+			finishReason: 'error',
+			steps: [{}, {}]
+		});
+
+		expect(outcome).toMatchObject({ outcome: 'error', status: 'error' });
+		expect(outcome.summary).toContain('model error');
+	});
+
+	it('uses defaultSummary for finishReason=stop with no text', () => {
+		const outcome = resolveTodoRunOutcome({
+			defaultSummary: 'Coda finished processing.',
+			finishReason: 'stop',
+			steps: [{}, {}],
+			text: ''
+		});
+
+		expect(outcome).toEqual({
+			outcome: 'done',
+			status: 'done',
+			summary: 'Coda finished processing.'
+		});
+	});
+
+	it('maps finishReason=tool-calls under max steps to done', () => {
+		const outcome = resolveTodoRunOutcome({
+			defaultSummary: 'fallback',
+			finishReason: 'tool-calls',
+			steps: [{}, {}, {}],
+			text: 'Completed tasks'
+		});
+
+		expect(outcome).toEqual({
+			outcome: 'done',
+			status: 'done',
+			summary: 'Completed tasks'
+		});
+	});
 });
 
 describe('shouldInjectTodoNearLimitReminder', () => {

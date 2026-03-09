@@ -4,6 +4,7 @@ import {
 	applyColumnGuard,
 	formatTodoAgentDebug,
 	resolveTodoRunOutcome,
+	shouldContinueAfterOther,
 	shouldInjectTodoNearLimitReminder
 } from './messages';
 
@@ -162,6 +163,28 @@ describe('applyColumnGuard', () => {
 	it('handles undefined columnId gracefully', () => {
 		const result = applyColumnGuard(doneResolution, undefined);
 		expect(result).toEqual(doneResolution);
+	});
+});
+
+describe('shouldContinueAfterOther', () => {
+	it('returns true for finishReason=other with progress', () => {
+		expect(shouldContinueAfterOther('other', 3)).toBe(true);
+	});
+
+	it('returns false for finishReason=other with no steps', () => {
+		expect(shouldContinueAfterOther('other', 0)).toBe(false);
+	});
+
+	it('returns false for finishReason=stop', () => {
+		expect(shouldContinueAfterOther('stop', 5)).toBe(false);
+	});
+
+	it('returns false for finishReason=error', () => {
+		expect(shouldContinueAfterOther('error', 2)).toBe(false);
+	});
+
+	it('returns false for undefined finishReason', () => {
+		expect(shouldContinueAfterOther(undefined, 3)).toBe(false);
 	});
 });
 

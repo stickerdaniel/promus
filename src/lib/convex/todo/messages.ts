@@ -25,6 +25,8 @@ const TODO_AGENT_CONTENT_FILTER_SUMMARY =
 	'Coda was stopped by a content filter. Review the task and retry with different wording.';
 const TODO_AGENT_OTHER_FINISH_SUMMARY =
 	'Coda stopped unexpectedly without completing the task. Review notes and retry if needed.';
+const TODO_AGENT_CONTINUE_PROMPT = 'Complete the task.';
+const TODO_AGENT_MAX_CONTINUATIONS = 1;
 const TODO_AGENT_NEAR_LIMIT_REMINDER =
 	'System reminder: you are close to the runtime limit. Wrap up now. Record concrete findings, move the task to the right column, and send your final one-sentence summary. Do not start new exploratory work unless it is required to finish.';
 
@@ -242,6 +244,17 @@ export function shouldInjectTodoNearLimitReminder(args: {
 }
 
 /**
+ * Check if a run ended with finishReason=other and made progress,
+ * meaning a continuation retry is likely to succeed.
+ */
+export function shouldContinueAfterOther(
+	finishReason: FinishReason | undefined,
+	stepCount: number
+): boolean {
+	return finishReason === 'other' && stepCount > 0;
+}
+
+/**
  * Apply post-run column guard: if the agent reported "done" but the task
  * is still in working-on, override to error. Returns an effective resolution.
  */
@@ -303,71 +316,97 @@ async function runTodoAgentForTask(
 	const model = await getTaskLanguageModelForUser(ctx as any, args.userId);
 	const startedAt = Date.now();
 	let nearLimitReminderSent = false;
-	const result = await todoAgent.streamText(
-		ctx as any,
-		{ threadId: args.threadId, userId: args.userId },
-		{
-			promptMessageId: args.promptMessageId,
-			model,
-			providerOptions: { openai: { store: false, reasoningEffort: 'medium' } },
-			abortSignal: AbortSignal.timeout(TODO_AGENT_ABORT_MS),
-			stopWhen: stepCountIs(TODO_AGENT_MAX_STEPS),
-			prepareStep: async (options) => {
-				if (
-					!shouldInjectTodoNearLimitReminder({
-						elapsedMs: Date.now() - startedAt,
-						stepCount: options.stepNumber,
-						reminderSent: nearLimitReminderSent
-					})
-				) {
-					return undefined;
+	let promptMessageId = args.promptMessageId;
+	let metadata: TodoRunMetadata = { steps: [], text: '' };
+	let resolution!: TodoRunResolution;
+	let totalSteps = 0;
+	const debugParts: string[] = [];
+
+	for (let attempt = 0; attempt <= TODO_AGENT_MAX_CONTINUATIONS; attempt++) {
+		const result = await todoAgent.streamText(
+			ctx as any,
+			{ threadId: args.threadId, userId: args.userId },
+			{
+				promptMessageId,
+				model,
+				providerOptions: { openai: { store: false, reasoningEffort: 'medium' } },
+				abortSignal: AbortSignal.timeout(TODO_AGENT_ABORT_MS - (Date.now() - startedAt)),
+				stopWhen: stepCountIs(TODO_AGENT_MAX_STEPS - totalSteps),
+				prepareStep: async (options) => {
+					if (
+						!shouldInjectTodoNearLimitReminder({
+							elapsedMs: Date.now() - startedAt,
+							stepCount: totalSteps + options.stepNumber,
+							reminderSent: nearLimitReminderSent
+						})
+					) {
+						return undefined;
+					}
+
+					nearLimitReminderSent = true;
+					return {
+						messages: [...options.messages, createTodoNearLimitReminderMessage()]
+					};
 				}
+			},
+			{
+				saveStreamDeltas: {
+					chunking: 'line',
+					throttleMs: 100
+				}
+			}
+		);
 
-				nearLimitReminderSent = true;
-				return {
-					messages: [...options.messages, createTodoNearLimitReminderMessage()]
-				};
-			}
-		},
-		{
-			saveStreamDeltas: {
-				chunking: 'line',
-				throttleMs: 100
-			}
+		try {
+			await result.consumeStream();
+			metadata = await collectTodoRunMetadata(result);
+			resolution = resolveTodoRunOutcome({
+				defaultSummary: args.defaultSummary,
+				finishReason: metadata.finishReason,
+				steps: metadata.steps,
+				text: metadata.text
+			});
+		} catch (error) {
+			console.error(`Agent failed for task ${args.taskId}:`, error);
+			metadata = await collectTodoRunMetadata(result);
+			resolution = resolveTodoRunOutcome({
+				defaultSummary: args.defaultSummary,
+				error,
+				finishReason: metadata.finishReason,
+				steps: metadata.steps,
+				text: metadata.text
+			});
 		}
-	);
 
-	let metadata: TodoRunMetadata = {
-		steps: [],
-		text: ''
-	};
-	let resolution: TodoRunResolution;
+		totalSteps += metadata.steps.length;
 
-	try {
-		await result.consumeStream();
-		metadata = await collectTodoRunMetadata(result);
-		resolution = resolveTodoRunOutcome({
-			defaultSummary: args.defaultSummary,
-			finishReason: metadata.finishReason,
-			steps: metadata.steps,
-			text: metadata.text
+		const debug = await extractAgentDebug(result, {
+			taskId: args.taskId,
+			trigger: attempt === 0 ? args.trigger : `continuation-${attempt}`
 		});
-	} catch (error) {
-		console.error(`Agent failed for task ${args.taskId}:`, error);
-		metadata = await collectTodoRunMetadata(result);
-		resolution = resolveTodoRunOutcome({
-			defaultSummary: args.defaultSummary,
-			error,
-			finishReason: metadata.finishReason,
-			steps: metadata.steps,
-			text: metadata.text
-		});
+		debugParts.push(debug);
+
+		// Retry if finishReason=other and model made progress
+		if (
+			attempt < TODO_AGENT_MAX_CONTINUATIONS &&
+			shouldContinueAfterOther(metadata.finishReason, metadata.steps.length)
+		) {
+			console.log(
+				`[agent-continue] task=${args.taskId} attempt=${attempt} finishReason=other steps=${metadata.steps.length} — sending continuation`
+			);
+			const { messageId } = await todoAgent.saveMessage(ctx as any, {
+				threadId: args.threadId,
+				prompt: TODO_AGENT_CONTINUE_PROMPT,
+				skipEmbeddings: true
+			});
+			promptMessageId = messageId;
+			continue;
+		}
+
+		break;
 	}
 
-	const debug = await extractAgentDebug(result, {
-		taskId: args.taskId,
-		trigger: args.trigger
-	});
+	const debug = debugParts.join('\n---\n');
 
 	// Check if agent deferred (task still in todo) — set idle so cascade picks it up
 	const taskInfo = await ctx.runQuery(internal.todos.getTaskThreadInfo, {

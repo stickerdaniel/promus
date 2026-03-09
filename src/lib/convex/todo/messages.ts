@@ -28,6 +28,9 @@ const TODO_AGENT_OTHER_FINISH_SUMMARY =
 const TODO_AGENT_NEAR_LIMIT_REMINDER =
 	'System reminder: you are close to the runtime limit. Wrap up now. Record concrete findings, move the task to the right column, and send your final one-sentence summary. Do not start new exploratory work unless it is required to finish.';
 
+const TODO_AGENT_STUCK_WORKING_SUMMARY =
+	'Coda finished without completing the task. Review notes and retry.';
+
 type TodoRunOutcome = 'done' | 'timeout' | 'step_limit' | 'error';
 
 type TodoRunMetadata = {
@@ -238,6 +241,25 @@ export function shouldInjectTodoNearLimitReminder(args: {
 	);
 }
 
+/**
+ * Apply post-run column guard: if the agent reported "done" but the task
+ * is still in working-on, override to error. Returns an effective resolution.
+ */
+export function applyColumnGuard(
+	resolution: TodoRunResolution,
+	columnId: string | undefined
+): TodoRunResolution {
+	if (resolution.outcome === 'done' && columnId === 'working-on') {
+		return {
+			...resolution,
+			outcome: 'error',
+			status: 'error',
+			summary: TODO_AGENT_STUCK_WORKING_SUMMARY
+		};
+	}
+	return resolution;
+}
+
 function createTodoNearLimitReminderMessage(): ModelMessage {
 	return {
 		role: 'user',
@@ -330,10 +352,6 @@ async function runTodoAgentForTask(
 			steps: metadata.steps,
 			text: metadata.text
 		});
-
-		if (resolution.outcome === 'done') {
-			await args.onDone?.();
-		}
 	} catch (error) {
 		console.error(`Agent failed for task ${args.taskId}:`, error);
 		metadata = await collectTodoRunMetadata(result);
@@ -351,12 +369,27 @@ async function runTodoAgentForTask(
 		trigger: args.trigger
 	});
 
-	const logLines = [debug, '', `outcome=${resolution.outcome}`, `summary=${resolution.summary}`];
+	// Check if agent deferred (task still in todo) — set idle so cascade picks it up
+	const taskInfo = await ctx.runQuery(internal.todos.getTaskThreadInfo, {
+		userId: args.userId,
+		taskId: args.taskId
+	});
+	const deferred = taskInfo?.columnId === 'todo';
+
+	// Apply column guard before onDone or any side effects
+	const effective = applyColumnGuard(resolution, taskInfo?.columnId);
+
+	// Only run onDone if the effective resolution is still done
+	if (effective.outcome === 'done') {
+		await args.onDone?.();
+	}
+
+	const logLines = [debug, '', `outcome=${effective.outcome}`, `summary=${effective.summary}`];
 	if (nearLimitReminderSent) {
 		logLines.push('nearLimitReminder=sent');
 	}
-	if (resolution.detail) {
-		logLines.push(resolution.detail);
+	if (effective.detail) {
+		logLines.push(effective.detail);
 	}
 
 	await ctx.runMutation(internal.todos.updateTaskAgentLogsInternal, {
@@ -365,21 +398,7 @@ async function runTodoAgentForTask(
 		agentLogs: logLines.join('\n').slice(0, 4000)
 	});
 
-	// Check if agent deferred (task still in todo) — set idle so cascade picks it up
-	const taskInfo = await ctx.runQuery(internal.todos.getTaskThreadInfo, {
-		userId: args.userId,
-		taskId: args.taskId
-	});
-	const deferred = taskInfo?.columnId === 'todo';
-
-	// Guard: if agent reports "done" but task is still in working-on, override to error
-	const stuckInWorkingOn = resolution.outcome === 'done' && taskInfo?.columnId === 'working-on';
-	const effectiveStatus = stuckInWorkingOn ? 'error' : resolution.status;
-	const effectiveSummary = stuckInWorkingOn
-		? 'Coda finished without completing the task. Review notes and retry.'
-		: resolution.summary;
-
-	const agentStatus = deferred ? 'idle' : effectiveStatus;
+	const agentStatus = deferred ? 'idle' : effective.status;
 
 	await ctx.runMutation(internal.todos.updateTaskAgentStatusInternal, {
 		userId: args.userId,
@@ -387,7 +406,7 @@ async function runTodoAgentForTask(
 		agentStatus,
 		agentSummary: deferred
 			? 'Waiting for a related task to finish.'
-			: effectiveSummary.slice(0, 120)
+			: effective.summary.slice(0, 120)
 	});
 
 	// Only cascade if task actually completed (not deferred)
@@ -397,15 +416,15 @@ async function runTodoAgentForTask(
 				userId: args.userId,
 				completedTaskId: args.taskId,
 				completedTaskTitle: taskInfo?.title ?? args.taskId,
-				completedTaskSummary: effectiveSummary.slice(0, 200),
-				completedTaskStatus: effectiveStatus
+				completedTaskSummary: effective.summary.slice(0, 200),
+				completedTaskStatus: effective.status
 			});
 		} catch (e) {
 			console.error(`Failed to schedule cascade for task ${args.taskId}:`, e);
 		}
 	}
 
-	return resolution;
+	return effective;
 }
 
 /**

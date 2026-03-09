@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+	applyColumnGuard,
 	formatTodoAgentDebug,
 	resolveTodoRunOutcome,
 	shouldInjectTodoNearLimitReminder
@@ -121,6 +122,46 @@ describe('resolveTodoRunOutcome', () => {
 			status: 'done',
 			summary: 'Completed tasks'
 		});
+	});
+});
+
+describe('applyColumnGuard', () => {
+	const doneResolution = {
+		outcome: 'done' as const,
+		status: 'done' as const,
+		summary: 'Task completed successfully.'
+	};
+
+	const errorResolution = {
+		outcome: 'error' as const,
+		status: 'error' as const,
+		summary: 'Something went wrong.'
+	};
+
+	it('overrides done to error when task is stuck in working-on', () => {
+		const result = applyColumnGuard(doneResolution, 'working-on');
+		expect(result).toMatchObject({ outcome: 'error', status: 'error' });
+		expect(result.summary).toContain('finished without completing');
+	});
+
+	it('passes through done when task moved to done', () => {
+		const result = applyColumnGuard(doneResolution, 'done');
+		expect(result).toEqual(doneResolution);
+	});
+
+	it('passes through done when task moved to prepared', () => {
+		const result = applyColumnGuard(doneResolution, 'prepared');
+		expect(result).toEqual(doneResolution);
+	});
+
+	it('passes through error resolution regardless of column', () => {
+		const result = applyColumnGuard(errorResolution, 'working-on');
+		expect(result).toEqual(errorResolution);
+	});
+
+	it('handles undefined columnId gracefully', () => {
+		const result = applyColumnGuard(doneResolution, undefined);
+		expect(result).toEqual(doneResolution);
 	});
 });
 

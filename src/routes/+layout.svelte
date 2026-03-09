@@ -1,18 +1,13 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import { browser } from '$app/environment';
 	import { invalidate } from '$app/navigation';
 	import { env } from '$env/dynamic/public';
-	import { createSvelteAuthClient, useAuth } from '@mmailaender/convex-better-auth-svelte/svelte';
+	import { createSvelteAuthClient } from '@mmailaender/convex-better-auth-svelte/svelte';
 	import { setupAutumn } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
-	import { useConvexClient } from 'convex-svelte';
 	import { ModeWatcher } from 'mode-watcher';
 	import { initPosthog } from '$lib/analytics/posthog';
 	import { authClient } from '$lib/auth-client';
 	import { api } from '$lib/convex/_generated/api';
-	import { isAnonymousUser } from '$lib/convex/utils/anonymousUser';
-	import { commitOAuthSuccessIfPending } from '$lib/hooks/last-auth-method.svelte';
-	import PostHogIdentify from '$lib/components/analytics/PostHogIdentify.svelte';
 	import RouteProgress from '$lib/components/RouteProgress.svelte';
 	import SEOHead from '$lib/components/SEOHead.svelte';
 	import { Toaster } from '$lib/components/ui/sonner';
@@ -86,8 +81,6 @@
 		}
 	});
 
-	const auth = useAuth();
-
 	// Setup Autumn with SSR support and auto-invalidation
 	setupAutumn({
 		convexApi: (api as any).autumn,
@@ -96,42 +89,10 @@
 		},
 		invalidate
 	});
-
-	// Migrate anonymous support tickets to authenticated user
-	const convexClient = useConvexClient();
-	let migrationAttempted = false;
-
-	$effect(function commitPendingOAuthMethodEffect() {
-		if (!browser) return;
-		if (auth.isLoading || !auth.isAuthenticated) return;
-		commitOAuthSuccessIfPending();
-	});
-
-	$effect(function migrateAnonymousTicketsEffect() {
-		if (!browser || !data.viewer || migrationAttempted) return;
-		if (auth.isLoading || !auth.isAuthenticated) return;
-
-		const anonymousId = localStorage.getItem('supportUserId');
-		if (!anonymousId || !isAnonymousUser(anonymousId)) return;
-
-		migrationAttempted = true;
-		convexClient
-			.mutation(api.support.migration.migrateAnonymousTickets, {
-				anonymousUserId: anonymousId
-			})
-			.then(function onMigrationSuccess() {
-				localStorage.removeItem('supportUserId');
-			})
-			.catch(function onMigrationError(err: unknown) {
-				console.error('Failed to migrate anonymous tickets:', err);
-				migrationAttempted = false; // Allow retry on next navigation
-			});
-	});
 </script>
 
 <ModeWatcher />
 <SEOHead />
-<PostHogIdentify />
 <Toaster />
 
 <RouteProgress />

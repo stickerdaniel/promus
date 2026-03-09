@@ -5,17 +5,17 @@
 	import { cn } from '$lib/utils';
 	import { localizedHref } from '$lib/utils/i18n';
 	import { resolve } from '$app/paths';
+	import { page } from '$app/state';
 	import Menu from '@lucide/svelte/icons/menu';
 	import X from '@lucide/svelte/icons/x';
 	import LogOut from '@lucide/svelte/icons/log-out';
 	import Logo from '$lib/components/icons/logo.svelte';
-	import { useAuth } from '@mmailaender/convex-better-auth-svelte/svelte';
 	import { authClient } from '$lib/auth-client';
 	import { T, getTranslate } from '@tolgee/svelte';
 
 	const { t } = getTranslate();
 
-	const auth = useAuth();
+	const isAuthenticated = $derived(page.data.authState?.isAuthenticated ?? false);
 
 	// Scroll detection for button swap
 	let scrollY = $state(0);
@@ -42,7 +42,7 @@
 				<div class="hidden items-center gap-3 lg:flex">
 					<LightSwitch variant="ghost" />
 					<LanguageSwitcher variant="ghost" />
-					{#if auth.isAuthenticated}
+					{#if isAuthenticated}
 						<Button size="sm" href={localizedHref('/app')}>
 							<T keyName="nav.my_tasks" defaultValue="My tasks" />
 						</Button>
@@ -99,7 +99,7 @@
 			class="fixed top-24 right-4 left-4 z-30 rounded-2xl border border-white/[0.06] bg-background/95 p-6 backdrop-blur-xl lg:hidden"
 		>
 			<div class="flex flex-col gap-3">
-				{#if auth.isAuthenticated}
+				{#if isAuthenticated}
 					<Button size="sm" href={localizedHref('/app')} class="w-full">
 						<T keyName="nav.my_tasks" defaultValue="My tasks" />
 					</Button>

@@ -2,13 +2,14 @@
 	import { Tolgee, DevTools, TolgeeProvider } from '@tolgee/svelte';
 	import { FormatIcu } from '@tolgee/format-icu';
 	import { browser } from '$app/environment';
-	import CommandMenu from '$lib/components/global-search/command-menu.svelte';
+	import GlobalSearchShell from '$lib/components/global-search/global-search-shell.svelte';
+	import AppAuthOAuthBootstrap from '$lib/components/app/app-auth-oauth-bootstrap.svelte';
 	import { setGlobalSearchContext } from '$lib/components/global-search/context.svelte';
 	import { page } from '$app/state';
 	import type { LayoutData } from './$types';
 	import { watch } from 'runed';
 	import { languageContext } from '$lib/i18n/context';
-	import CustomerSupport from '$lib/components/customer-support/customer-support.svelte';
+	import LazyCustomerSupport from '$lib/components/customer-support/lazy-customer-support.svelte';
 
 	let { data, children }: { data: LayoutData; children: any } = $props();
 
@@ -69,9 +70,10 @@
 </script>
 
 <TolgeeProvider {tolgee}>
-	<CommandMenu />
+	<AppAuthOAuthBootstrap />
+	<GlobalSearchShell />
 	{@render children()}
 	{#if !isInternalRoute}
-		<CustomerSupport />
+		<LazyCustomerSupport />
 	{/if}
 </TolgeeProvider>

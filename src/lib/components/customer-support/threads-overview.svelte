@@ -2,6 +2,7 @@
 	import { useQuery } from 'convex-svelte';
 	import { getTranslate } from '@tolgee/svelte';
 	import { api } from '$lib/convex/_generated/api';
+	import { isAnonymousUser } from '$lib/convex/utils/anonymousUser';
 	import { Button } from '$lib/components/ui/button';
 	import { Avatar, AvatarImage, AvatarFallback } from '$lib/components/ui/avatar';
 	import BotIcon from '@lucide/svelte/icons/bot';
@@ -22,11 +23,16 @@
 
 	const ctx = supportThreadContext.get();
 
+	// Derive anonymous user ID for API calls
+	const anonymousUserId = $derived(
+		ctx.userId && isAnonymousUser(ctx.userId) ? ctx.userId : undefined
+	);
+
 	// Reactive query for threads - auto-updates when new threads are created
 	const threadsQuery = $derived(
 		ctx.userId
 			? useQuery(api.support.threads.listThreads, {
-					userId: ctx.userId,
+					anonymousUserId,
 					paginationOpts: { numItems: 20, cursor: null }
 				})
 			: undefined

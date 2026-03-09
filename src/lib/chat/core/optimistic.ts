@@ -19,6 +19,7 @@ export interface ListMessagesArgs {
 	threadId: string | null;
 	paginationOpts: { numItems: number; cursor: string | null };
 	streamArgs: { kind: 'list'; startOrder: number };
+	anonymousUserId?: string;
 }
 
 /**

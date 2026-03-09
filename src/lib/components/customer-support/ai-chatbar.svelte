@@ -5,6 +5,7 @@
 	import { toast } from 'svelte-sonner';
 	import { IsMounted } from 'runed';
 	import { api } from '$lib/convex/_generated/api';
+	import { isAnonymousUser } from '$lib/convex/utils/anonymousUser';
 	import { PromptInput, PromptInputTextarea } from '$lib/components/prompt-kit/prompt-input';
 	import { Button } from '$lib/components/ui/button/index.js';
 	import ArrowUpIcon from '@lucide/svelte/icons/arrow-up';
@@ -28,6 +29,11 @@
 
 	// Track delayed feedback open state
 	const delayedFeedbackOpen = $derived(isFeedbackOpen);
+
+	// Derive anonymous user ID for API calls
+	const anonymousUserId = $derived(
+		threadContext.userId && isAnonymousUser(threadContext.userId) ? threadContext.userId : undefined
+	);
 
 	// Local thread tracking - separate from shared context
 	// AI chatbar always creates fresh threads, stored locally until submit
@@ -101,7 +107,7 @@
 		if (value.trim() && !pendingThreadId && !threadCreationPromise) {
 			threadCreationPromise = client
 				.mutation(api.support.threads.createThread, {
-					userId: threadContext.userId || undefined,
+					anonymousUserId,
 					pageUrl: typeof window !== 'undefined' ? window.location.href : undefined
 				})
 				.then((result) => {
@@ -112,7 +118,8 @@
 					const preSubscribeArgs = {
 						threadId: result.threadId,
 						paginationOpts: { numItems: 50, cursor: null },
-						streamArgs: { kind: 'list' as const, startOrder: 0 }
+						streamArgs: { kind: 'list' as const, startOrder: 0 },
+						...(anonymousUserId ? { anonymousUserId } : {})
 					};
 					queryUnsubscribe = client.onUpdate(
 						api.support.messages.listMessages,

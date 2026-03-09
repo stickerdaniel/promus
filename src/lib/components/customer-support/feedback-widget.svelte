@@ -3,6 +3,7 @@
 	import { page } from '$app/state';
 	import { watch } from 'runed';
 	import { api } from '$lib/convex/_generated/api';
+	import { isAnonymousUser } from '$lib/convex/utils/anonymousUser';
 	import { supportThreadContext } from './support-thread-context.svelte';
 	import { lockscroll } from '@svelte-put/lockscroll';
 	import { IsMobile } from '$lib/hooks/is-mobile.svelte.js';
@@ -47,11 +48,14 @@
 	// Get Convex client
 	const client = useConvexClient();
 
+	// Derive anonymous user ID for API calls
+	const anonymousUserId = $derived(
+		threadContext.userId && isAnonymousUser(threadContext.userId) ? threadContext.userId : undefined
+	);
+
 	// Query thread status (for handoff state)
 	const threadQuery = useQuery(api.support.threads.getThread, () =>
-		threadContext.threadId
-			? { threadId: threadContext.threadId, userId: threadContext.userId || undefined }
-			: 'skip'
+		threadContext.threadId ? { threadId: threadContext.threadId, anonymousUserId } : 'skip'
 	);
 
 	// Derive assigned admin - use context value as primary, query as fallback/sync
@@ -223,6 +227,7 @@
 				api={chatApi}
 				externalCore={threadContext}
 				externalUIContext={chatUIContext}
+				listMessagesArgs={anonymousUserId ? { anonymousUserId } : undefined}
 			>
 				<!-- Messages container -->
 				<div class="relative min-h-0 w-full flex-1">

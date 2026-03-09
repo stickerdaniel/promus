@@ -57,6 +57,7 @@
 		uploadConfig,
 		userAlignment = 'right',
 		pageSize = 50,
+		listMessagesArgs,
 		children
 	}: {
 		/** Thread ID (required for loading messages) */
@@ -75,6 +76,8 @@
 		userAlignment?: ChatAlignment;
 		/** Number of messages per page */
 		pageSize?: number;
+		/** Additional args to spread into listMessages queries (e.g., anonymousUserId) */
+		listMessagesArgs?: Record<string, unknown>;
 		/** Child components */
 		children: Snippet;
 	} = $props();
@@ -117,7 +120,8 @@
 			? useQuery(api.listMessages, {
 					threadId: threadId,
 					paginationOpts: { numItems: pageSize, cursor: null },
-					streamArgs: { kind: 'list' as const, startOrder: 0 }
+					streamArgs: { kind: 'list' as const, startOrder: 0 },
+					...listMessagesArgs
 				})
 			: undefined
 	);
@@ -146,7 +150,8 @@
 							streamId,
 							cursor: 0
 						}))
-					}
+					},
+					...listMessagesArgs
 				})
 			: undefined
 	);

@@ -4,8 +4,11 @@ import * as val from 'valibot';
 import { supportAgent } from './agent';
 import { components, internal } from '../_generated/api';
 import { paginationOptsValidator } from 'convex/server';
-import { isAnonymousUser } from '../utils/anonymousUser';
-import { authComponent } from '../auth';
+import {
+	assertThreadOwnership,
+	getSupportOwnerIdentity,
+	requireSupportOwnerIdentity
+} from './ownership';
 import { t, extractLocaleFromUrl } from '../i18n/translations';
 
 /**
@@ -38,7 +41,7 @@ function buildSearchText(fields: {
  */
 export const createThread = mutation({
 	args: {
-		userId: v.optional(v.string()),
+		anonymousUserId: v.optional(v.string()),
 		title: v.optional(v.string()),
 		pageUrl: v.optional(v.string()) // URL of the page where user started the chat
 	},
@@ -47,9 +50,13 @@ export const createThread = mutation({
 		notificationEmail: v.optional(v.string())
 	}),
 	handler: async (ctx, args) => {
+		// Resolve user identity (authenticated or anonymous)
+		const owner = await requireSupportOwnerIdentity(ctx, args.anonymousUserId);
+		const resolvedUserId = owner.ownerId;
+
 		// Create agent thread (NO metadata field - it's ignored!)
 		const { threadId } = await supportAgent.createThread(ctx, {
-			userId: args.userId,
+			userId: resolvedUserId,
 			title: args.title || 'Customer Support',
 			summary: 'New support conversation'
 		});
@@ -58,18 +65,18 @@ export const createThread = mutation({
 		let userName: string | undefined;
 		let userEmail: string | undefined;
 
-		if (args.userId && !isAnonymousUser(args.userId)) {
+		if (!owner.isAnonymous) {
 			try {
 				const user = await ctx.runQuery(components.betterAuth.adapter.findOne, {
 					model: 'user',
-					where: [{ field: '_id', operator: 'eq', value: args.userId }]
+					where: [{ field: '_id', operator: 'eq', value: resolvedUserId }]
 				});
 				if (user) {
 					userName = user.name;
 					userEmail = user.email;
 				}
 			} catch (error) {
-				console.log(`[createThread] Failed to fetch user ${args.userId}:`, error);
+				console.log(`[createThread] Failed to fetch user ${resolvedUserId}:`, error);
 			}
 		}
 
@@ -81,7 +88,7 @@ export const createThread = mutation({
 		// Create supportThread record with admin metadata + search fields
 		await ctx.db.insert('supportThreads', {
 			threadId,
-			userId: args.userId,
+			userId: resolvedUserId,
 			status: 'open',
 			isHandedOff: false, // AI responds by default, user can request handoff
 			awaitingAdminResponse: true, // User is waiting for first response
@@ -116,7 +123,7 @@ export const createThread = mutation({
  */
 export const listThreads = query({
 	args: {
-		userId: v.optional(v.string()),
+		anonymousUserId: v.optional(v.string()),
 		paginationOpts: v.optional(paginationOptsValidator)
 	},
 	returns: v.object({
@@ -148,21 +155,13 @@ export const listThreads = query({
 		continueCursor: v.string()
 	}),
 	handler: async (ctx, args) => {
-		// Security: Use server-verified user ID for authenticated users
-		// For anonymous users (not authenticated), use client-provided userId
-		const authUser = await authComponent.safeGetAuthUser(ctx);
-		let effectiveUserId: string | undefined;
-
-		if (authUser) {
-			// Authenticated: Always use server-verified user ID (prevents spoofing)
-			effectiveUserId = authUser._id;
-		} else if (args.userId && isAnonymousUser(args.userId)) {
-			// Anonymous: Only allow querying with valid anonymous user IDs
-			effectiveUserId = args.userId;
-		} else {
+		// Resolve user identity (authenticated or anonymous)
+		const owner = await getSupportOwnerIdentity(ctx, args.anonymousUserId);
+		if (!owner) {
 			// No valid user ID - return empty results
 			return { page: [], isDone: true, continueCursor: '' };
 		}
+		const effectiveUserId = owner.ownerId;
 
 		// Get threads from the agent component
 		const threads = await ctx.runQuery(components.agent.threads.listThreadsByUserId, {
@@ -276,7 +275,7 @@ export const listThreads = query({
 export const getThread = query({
 	args: {
 		threadId: v.string(),
-		userId: v.optional(v.string()) // For anonymous users
+		anonymousUserId: v.optional(v.string()) // For anonymous users
 	},
 	returns: v.object({
 		_id: v.string(),
@@ -295,27 +294,11 @@ export const getThread = query({
 		)
 	}),
 	handler: async (ctx, args) => {
-		const thread = await supportAgent.getThreadMetadata(ctx, {
-			threadId: args.threadId
+		// Verify thread ownership
+		const { thread } = await assertThreadOwnership(ctx, {
+			threadId: args.threadId,
+			anonymousUserId: args.anonymousUserId
 		});
-
-		// Security: Verify ownership
-		const authUser = await authComponent.safeGetAuthUser(ctx);
-
-		if (authUser) {
-			// Authenticated: Must own the thread
-			if (thread.userId !== authUser._id) {
-				throw new Error("Unauthorized: Cannot access another user's thread");
-			}
-		} else if (args.userId && isAnonymousUser(args.userId)) {
-			// Anonymous: Must match the anonymous user ID
-			if (thread.userId !== args.userId) {
-				throw new Error("Unauthorized: Cannot access another user's thread");
-			}
-		} else {
-			// No valid user identification
-			throw new Error('Authentication required');
-		}
 
 		// Get supportThread to check handoff status and assigned admin
 		const supportThread = await ctx.db
@@ -361,29 +344,15 @@ export const getThread = query({
 export const updateThreadHandoff = mutation({
 	args: {
 		threadId: v.string(),
-		userId: v.optional(v.string()) // For anonymous users
+		anonymousUserId: v.optional(v.string()) // For anonymous users
 	},
 	returns: v.boolean(),
 	handler: async (ctx, args) => {
-		// Verify thread exists and user owns it
-		const thread = await supportAgent.getThreadMetadata(ctx, {
-			threadId: args.threadId
+		// Verify thread ownership
+		await assertThreadOwnership(ctx, {
+			threadId: args.threadId,
+			anonymousUserId: args.anonymousUserId
 		});
-
-		// Security: Verify ownership
-		const authUser = await authComponent.safeGetAuthUser(ctx);
-
-		if (authUser) {
-			if (thread.userId !== authUser._id) {
-				throw new Error("Unauthorized: Cannot access another user's thread");
-			}
-		} else if (args.userId && isAnonymousUser(args.userId)) {
-			if (thread.userId !== args.userId) {
-				throw new Error("Unauthorized: Cannot access another user's thread");
-			}
-		} else {
-			throw new Error('Authentication required');
-		}
 
 		// Get supportThread record
 		const supportThread = await ctx.db
@@ -455,60 +424,6 @@ export const updateThreadHandoff = mutation({
 		}
 
 		return true;
-	}
-});
-
-/**
- * Update thread metadata
- *
- * Update title or summary of a thread (e.g., after analyzing conversation content).
- * Also syncs the denormalized search fields.
- */
-export const updateThread = mutation({
-	args: {
-		threadId: v.string(),
-		title: v.optional(v.string()),
-		summary: v.optional(v.string())
-	},
-	returns: v.null(),
-	handler: async (ctx, args) => {
-		// Update agent thread metadata
-		await supportAgent.updateThreadMetadata(ctx, {
-			threadId: args.threadId,
-			patch: {
-				title: args.title,
-				summary: args.summary
-			}
-		});
-
-		// Sync denormalized search fields
-		await ctx.runMutation(internal.support.threads.updateThreadMetadata, {
-			threadId: args.threadId,
-			title: args.title,
-			summary: args.summary
-		});
-
-		return null;
-	}
-});
-
-/**
- * Delete a thread
- *
- * Deletes a thread and all its messages asynchronously.
- */
-export const deleteThread = mutation({
-	args: {
-		threadId: v.string()
-	},
-	returns: v.null(),
-	handler: async (ctx, args) => {
-		await supportAgent.deleteThreadAsync(ctx, {
-			threadId: args.threadId,
-			pageSize: 100
-		});
-
-		return null;
 	}
 });
 
@@ -596,7 +511,7 @@ export const updateNotificationEmail = mutation({
 	args: {
 		threadId: v.string(),
 		email: v.string(),
-		userId: v.optional(v.string()) // For anonymous users
+		anonymousUserId: v.optional(v.string()) // For anonymous users
 	},
 	returns: v.boolean(),
 	handler: async (ctx, args) => {
@@ -611,25 +526,11 @@ export const updateNotificationEmail = mutation({
 			throw new Error('Invalid email format');
 		}
 
-		// Verify thread exists and user owns it
-		const thread = await supportAgent.getThreadMetadata(ctx, {
-			threadId: args.threadId
+		// Verify thread ownership
+		await assertThreadOwnership(ctx, {
+			threadId: args.threadId,
+			anonymousUserId: args.anonymousUserId
 		});
-
-		// Security: Verify ownership
-		const authUser = await authComponent.safeGetAuthUser(ctx);
-
-		if (authUser) {
-			if (thread.userId !== authUser._id) {
-				throw new Error("Unauthorized: Cannot access another user's thread");
-			}
-		} else if (args.userId && isAnonymousUser(args.userId)) {
-			if (thread.userId !== args.userId) {
-				throw new Error("Unauthorized: Cannot access another user's thread");
-			}
-		} else {
-			throw new Error('Authentication required');
-		}
 
 		// Get supportThread record
 		const supportThread = await ctx.db

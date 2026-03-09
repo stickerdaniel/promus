@@ -94,7 +94,29 @@ export function getOpenAILanguageModel(
 				}
 			}
 
-			return fetch(url, { ...init, body, headers });
+			const response = await fetch(url, { ...init, body, headers });
+
+			// Log raw Codex API response for debugging finishReason issues
+			if (isCodexRequest) {
+				const cloned = response.clone();
+				cloned
+					.text()
+					.then((text) => {
+						// Extract status from SSE stream or JSON response
+						const statusMatch = text.match(/"status"\s*:\s*"([^"]+)"/);
+						const incompleteMatch = text.match(/"incomplete_details"\s*:\s*\{[^}]*\}/);
+						const errorMatch = text.match(/"error"\s*:\s*\{[^}]*\}/);
+						console.log(
+							`[codex-debug] status=${statusMatch?.[1] ?? 'unknown'}`,
+							incompleteMatch ? `incomplete=${incompleteMatch[0]}` : '',
+							errorMatch ? `error=${errorMatch[0]}` : '',
+							`bodyLen=${text.length}`
+						);
+					})
+					.catch(() => {});
+			}
+
+			return response;
 		}
 	});
 

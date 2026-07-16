@@ -2,6 +2,7 @@ import { Agent, createTool } from '@convex-dev/agent';
 import { z } from 'zod';
 import { components, internal } from '../_generated/api';
 import { getSupportLanguageModel } from '../support/llmProvider';
+import { executeWebSearch } from './webSearch';
 import type { ToolCtx } from '@convex-dev/agent';
 
 const MAX_RESULT = 4096;
@@ -379,41 +380,27 @@ export const readTaskNotes = createTool({
 
 export const webSearch = createTool({
 	description:
-		'Search the web using Brave Search. Returns titles, snippets, and URLs. Use this to research topics, find documentation, or answer factual questions.',
+		'Search the web and get extracted page content (not just snippets). Returns title, URL, published date, and relevant text per source. Use for research, documentation lookup, and factual questions. On rate_limited, wait before retrying; on invalid_query, shorten the query.',
 	inputSchema: z.object({
-		query: z.string().describe('Search query keywords'),
-		count: z.number().optional().describe('Number of results (default 5, max 20)')
+		query: z
+			.string()
+			.min(1)
+			.max(400)
+			.describe('Natural-language question or keywords to search for (1-400 characters)'),
+		count: z
+			.number()
+			.int()
+			.min(1)
+			.max(10)
+			.default(5)
+			.describe('Number of sources to return (1-10, default 5)'),
+		recentOnly: z
+			.boolean()
+			.optional()
+			.describe('When true, only return pages published in the last 30 days')
 	}),
 	execute: async (_ctx: ToolCtx, input): Promise<Record<string, unknown>> => {
-		const apiKey = process.env.BRAVE_SEARCH_API_KEY;
-		if (!apiKey) return { success: false, error: 'BRAVE_SEARCH_API_KEY not configured' };
-
-		const params = new URLSearchParams({
-			q: input.query,
-			count: String(input.count ?? 5)
-		});
-
-		const res = await fetch(`https://api.search.brave.com/res/v1/web/search?${params}`, {
-			headers: {
-				Accept: 'application/json',
-				'X-Subscription-Token': apiKey
-			}
-		});
-
-		if (!res.ok) {
-			return { success: false, error: `Brave API ${res.status}: ${await res.text()}` };
-		}
-
-		const data = await res.json();
-		const results = (data.web?.results ?? []).map(
-			(r: { title: string; url: string; description: string }) => ({
-				title: r.title,
-				url: r.url,
-				snippet: r.description
-			})
-		);
-
-		return { success: true, results };
+		return await executeWebSearch(input);
 	}
 });
 

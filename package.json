@@ -37,7 +37,7 @@
 		"@ai-sdk/provider-utils": "^4.0.17",
 		"@aws-sdk/client-bedrock-runtime": "^3.1000.0",
 		"@better-auth/passkey": "^1.4.10",
-		"@convex-dev/agent": "0.6.0-alpha.1",
+		"@convex-dev/agent": "0.7.1",
 		"@convex-dev/better-auth": "^0.10.0",
 		"@convex-dev/rate-limiter": "^0.3.2",
 		"@convex-dev/resend": "^0.2.0",

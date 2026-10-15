@@ -6,7 +6,7 @@ on:
 jobs:
   e2e-tests:
     name: E2E Tests
-    runs-on: ubicloud-standard-2
+    runs-on: ubuntu-latest
     # Only run on successful Vercel preview deployments
     if: |
       github.event.deployment_status.state == 'success' &&

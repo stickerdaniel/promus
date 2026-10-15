@@ -7,7 +7,7 @@ on:
 
 jobs:
   sync-pr-to-graphite:
-    runs-on: ubicloud-standard-2
+    runs-on: ubuntu-latest
     permissions:
       contents: write
       pull-requests: write

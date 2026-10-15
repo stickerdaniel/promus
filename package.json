@@ -70,7 +70,7 @@
 		"convex-helpers": "^0.1.108",
 		"convex-svelte": "npm:@mmailaender/convex-svelte@^0.15.1",
 		"date-fns": "^4.1.0",
-		"esbuild": "^0.27.3",
+		"esbuild": "^0.28.0",
 		"isomorphic-dompurify": "^3.0.0",
 		"just-bash": "^2.11.6",
 		"konva": "^10.0.8",

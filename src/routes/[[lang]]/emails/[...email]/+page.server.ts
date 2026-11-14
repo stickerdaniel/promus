@@ -1,7 +1,7 @@
 import { renderer } from '$lib/emails/renderer';
 import type { PageServerLoad } from './$types';
 import { createEmail, sendEmail } from 'better-svelte-email/preview';
-import { env } from '$env/dynamic/private';
+import { RESEND_API_KEY } from '$app/env/private';
 
 // Get list of all email templates using import.meta.glob
 const emailFiles = Object.keys(
@@ -28,10 +28,10 @@ export const load: PageServerLoad = async () => {
 // sendEmail is only available when RESEND_API_KEY is configured
 export const actions = {
 	...createEmail({ renderer }),
-	...(env.RESEND_API_KEY
+	...(RESEND_API_KEY
 		? sendEmail({
 				renderer,
-				resendApiKey: env.RESEND_API_KEY,
+				resendApiKey: RESEND_API_KEY,
 				from: 'Email Preview <noreply@daniel.sticker.name>'
 			})
 		: {})

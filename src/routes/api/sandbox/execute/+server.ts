@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { env } from '$env/dynamic/private';
+import { SANDBOX_INTERNAL_API_KEY, UNIPILE_API_KEY, UNIPILE_DSN } from '$app/env/private';
 import { executeScript } from '$lib/server/sandbox/script-executor';
 
 /**
@@ -12,7 +12,7 @@ import { executeScript } from '$lib/server/sandbox/script-executor';
  */
 export const POST: RequestHandler = async ({ request }) => {
 	const internalKey = request.headers.get('x-internal-key');
-	if (!internalKey || internalKey !== env.SANDBOX_INTERNAL_API_KEY) {
+	if (!internalKey || internalKey !== SANDBOX_INTERNAL_API_KEY) {
 		error(401, 'Invalid internal key');
 	}
 
@@ -29,10 +29,10 @@ export const POST: RequestHandler = async ({ request }) => {
 			? (rawIds as string[])
 			: [];
 
-	if (!env.UNIPILE_DSN || !env.UNIPILE_API_KEY) {
+	if (!UNIPILE_DSN || !UNIPILE_API_KEY) {
 		error(500, 'UNIPILE_DSN or UNIPILE_API_KEY not configured');
 	}
 
-	const result = await executeScript(code, env.UNIPILE_DSN, env.UNIPILE_API_KEY, allowedAccountIds);
+	const result = await executeScript(code, UNIPILE_DSN, UNIPILE_API_KEY, allowedAccountIds);
 	return json(result);
 };

@@ -17,7 +17,7 @@
 
 	let input = $state('');
 	let isFocused = $state(false);
-	const { isFeedbackOpen = false } = $props<{ isFeedbackOpen?: boolean }>();
+	const { isFeedbackOpen = false }: { isFeedbackOpen?: boolean } = $props();
 
 	// Get thread context
 	const threadContext = supportThreadContext.get();

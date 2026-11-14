@@ -15,7 +15,7 @@
 				DEMO
 			</h1>
 			<div class="h-1 w-16 rounded-full bg-primary"></div>
-			<a href={resolve('/')} class="mt-4">
+			<a href={resolve('/[[lang]]/(marketing)', {})} class="mt-4">
 				<Button variant="outline" size="lg">Start Demo</Button>
 			</a>
 		</div>

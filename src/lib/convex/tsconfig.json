@@ -12,6 +12,8 @@
 		"skipLibCheck": true,
 		"allowSyntheticDefaultImports": true,
 		"resolveJsonModule": true,
+		/* TypeScript 6 no longer loads every @types package by default. */
+		"types": ["node"],
 
 		/* These compiler options are required by Convex */
 		"target": "ESNext",

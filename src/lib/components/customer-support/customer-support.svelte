@@ -6,7 +6,7 @@
 	import FeedbackButton from '$lib/components/customer-support/feedback-button.svelte';
 	import { SupportThreadContext, supportThreadContext } from './support-thread-context.svelte';
 	import { ChatUIContext, type UploadConfig } from '$lib/chat';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 	import { generateAnonymousUserId } from '$lib/convex/utils/anonymousUser';
 	import { useSupportUrlState } from './use-support-url-state.svelte';
 

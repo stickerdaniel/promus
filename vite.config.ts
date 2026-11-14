@@ -1,3 +1,5 @@
+import adapter from '@sveltejs/adapter-auto';
+import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
 import devtoolsJson from 'vite-plugin-devtools-json';
 import tailwindcss from '@tailwindcss/vite';
 import { sveltekit } from '@sveltejs/kit/vite';
@@ -8,7 +10,20 @@ import type { PluginOption } from 'vite';
 export default defineConfig({
 	plugins: [
 		tailwindcss(),
-		sveltekit(),
+		sveltekit({
+			adapter: adapter(),
+			// Consult https://svelte.dev/docs/kit/integrations
+			// for more information about preprocessors
+			preprocess: vitePreprocess(),
+			// SvelteKit 3 replaced `$lib` with `#lib`; the alias keeps the existing imports.
+			alias: {
+				$lib: 'src/lib',
+				$blocks: 'src/blocks'
+			},
+			experimental: {
+				remoteFunctions: true
+			}
+		}),
 		devtoolsJson(),
 		// Bundle analyzer
 		visualizer({

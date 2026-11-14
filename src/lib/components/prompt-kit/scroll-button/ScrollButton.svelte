@@ -18,7 +18,7 @@
 	import { getTranslate } from '@tolgee/svelte';
 	import ChevronDown from '@lucide/svelte/icons/chevron-down';
 	import { chatContainerContext } from '../chat-container/chat-container-context.svelte.js';
-	import { browser } from '$app/environment';
+	import { browser } from '$app/env';
 
 	const { t } = getTranslate();
 

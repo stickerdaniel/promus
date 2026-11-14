@@ -158,6 +158,7 @@
 		"vitest": "4.1.12"
 	},
 	"patchedDependencies": {
-		"just-bash@2.11.6": "patches/just-bash@2.11.6.patch"
+		"just-bash@2.11.6": "patches/just-bash@2.11.6.patch",
+		"better-svelte-email@1.3.0": "patches/better-svelte-email@1.3.0.patch"
 	}
 }

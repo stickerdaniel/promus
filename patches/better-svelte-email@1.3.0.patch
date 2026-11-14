@@ -1,0 +1,14 @@
+diff --git a/dist/preview/EmailPreview.svelte b/dist/preview/EmailPreview.svelte
+index 8197a04d5f18fa9bbcb6a16e0d63c56cddb87df0..33c54765341aeff19f3aeb054aa399c960413598 100644
+--- a/dist/preview/EmailPreview.svelte
++++ b/dist/preview/EmailPreview.svelte
+@@ -183,8 +183,7 @@
+ 
+ 		void goto(`${url.pathname}${url.search}${url.hash}`, {
+ 			replaceState: true,
+-			noScroll: true,
+-			keepFocus: true
++			reset: false
+ 		});
+ 	}
+ 

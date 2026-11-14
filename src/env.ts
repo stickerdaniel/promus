@@ -11,7 +11,7 @@ const optional = (value: string | undefined) => value || undefined;
  */
 export const variables = defineEnvVars({
 	PUBLIC_CONVEX_URL: { public: true, static: true },
-	PUBLIC_CONVEX_SITE_URL: { public: true, static: true, schema: optional },
+	PUBLIC_CONVEX_SITE_URL: { public: true, static: true },
 	PUBLIC_POSTHOG_API_KEY: { public: true, schema: optional },
 	PUBLIC_POSTHOG_HOST: { public: true, schema: optional },
 	PUBLIC_POSTHOG_PROXY_HOST: { public: true, schema: optional },

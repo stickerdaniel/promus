@@ -22,7 +22,7 @@ from pathlib import Path
 from typing import Any, cast
 
 import weave
-from mistralai import Mistral
+from mistralai.client import Mistral
 
 
 def strip_markdown_fences(text: str) -> str:

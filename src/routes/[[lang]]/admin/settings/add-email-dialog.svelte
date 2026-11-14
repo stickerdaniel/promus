@@ -40,16 +40,16 @@
 			</Dialog.Description>
 		</Dialog.Header>
 		<form
-			{...addEmailForm.preflight(emailSchema).enhance(async ({ submit, form: formEl }) => {
+			{...addEmailForm.preflight(emailSchema).enhance(async (instance) => {
 				try {
-					await submit();
+					await instance.submit();
 					// Check if server returned validation errors (e.g., duplicate email)
 					const issues = addEmailForm.fields.email.issues() ?? [];
 					if (issues.length > 0) {
 						// Don't close dialog - let error be displayed
 						return;
 					}
-					formEl.reset();
+					instance.element.reset();
 					haptic.trigger('success');
 					toast.success($t('admin.settings.email_added'));
 					open = false;

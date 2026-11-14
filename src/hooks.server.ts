@@ -1,6 +1,6 @@
-import { sequence } from '@sveltejs/kit/hooks';
-import { redirect, type Handle, type Cookies } from '@sveltejs/kit';
-import { dev } from '$app/environment';
+import { sequence, type Handle } from '@sveltejs/kit/hooks';
+import { redirect, type Cookies } from '@sveltejs/kit';
+import { dev } from '$app/env';
 import { isSupportedLanguage, DEFAULT_LANGUAGE } from '$lib/i18n/languages';
 import { safeRedirectPath } from '$lib/utils/url';
 

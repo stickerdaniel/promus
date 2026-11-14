@@ -22,8 +22,8 @@
 	import GripVerticalIcon from '@lucide/svelte/icons/grip-vertical';
 	import PencilIcon from '@lucide/svelte/icons/pencil';
 	import PlusIcon from '@lucide/svelte/icons/plus';
-	import { dev } from '$app/environment';
-	import { browser } from '$app/environment';
+	import { dev } from '$app/env';
+	import { browser } from '$app/env';
 	import { haptic } from '$lib/hooks/use-haptic.svelte';
 
 	const DEFAULT_COLUMN_IDS: ColumnId[] = ['todo', 'working-on', 'prepared', 'done'];

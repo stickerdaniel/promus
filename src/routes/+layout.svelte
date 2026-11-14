@@ -1,7 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import { invalidate } from '$app/navigation';
-	import { env } from '$env/dynamic/public';
+	import { PUBLIC_CONVEX_URL, PUBLIC_POSTHOG_API_KEY, PUBLIC_POSTHOG_HOST } from '$app/env/public';
 	import { createSvelteAuthClient } from '@mmailaender/convex-better-auth-svelte/svelte';
 	import { setupAutumn } from '@stickerdaniel/convex-autumn-svelte/sveltekit';
 	import { ModeWatcher } from 'mode-watcher';
@@ -18,8 +18,6 @@
 
 	// Deferred PostHog initialization - loads after interaction or idle
 	onMount(function onMountPosthogInit() {
-		const PUBLIC_POSTHOG_API_KEY = env.PUBLIC_POSTHOG_API_KEY;
-		const PUBLIC_POSTHOG_HOST = env.PUBLIC_POSTHOG_HOST;
 		if (!PUBLIC_POSTHOG_API_KEY || !PUBLIC_POSTHOG_HOST) return;
 
 		let initialized = false;
@@ -76,6 +74,7 @@
 	// Initialize Better Auth client
 	createSvelteAuthClient({
 		authClient,
+		convexUrl: PUBLIC_CONVEX_URL,
 		getServerState() {
 			return data.authState;
 		}

@@ -4,7 +4,7 @@ import re
 from typing import Any, cast
 
 import weave
-from mistralai import Mistral
+from mistralai.client import Mistral
 
 
 def _strip_fences(text: str) -> str:

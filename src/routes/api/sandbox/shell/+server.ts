@@ -1,6 +1,6 @@
 import { json, error } from '@sveltejs/kit';
 import type { RequestHandler } from './$types';
-import { env } from '$env/dynamic/private';
+import { SANDBOX_INTERNAL_API_KEY } from '$app/env/private';
 import { execInSession } from '$lib/server/sandbox/shell-session';
 
 /**
@@ -12,7 +12,7 @@ import { execInSession } from '$lib/server/sandbox/shell-session';
  */
 export const POST: RequestHandler = async ({ request }) => {
 	const internalKey = request.headers.get('x-internal-key');
-	if (!internalKey || internalKey !== env.SANDBOX_INTERNAL_API_KEY) {
+	if (!internalKey || internalKey !== SANDBOX_INTERNAL_API_KEY) {
 		error(401, 'Invalid internal key');
 	}
 

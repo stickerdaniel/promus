@@ -1,5 +1,6 @@
 import type { LayoutServerLoad } from './$types';
 import { api } from '$lib/convex/_generated/api';
+import { PUBLIC_CONVEX_URL } from '$app/env/public';
 import { createConvexHttpClient } from '@mmailaender/convex-better-auth-svelte/sveltekit';
 import { createAutumnHandlers } from '@stickerdaniel/convex-autumn-svelte/sveltekit/server';
 
@@ -64,7 +65,10 @@ export const load: LayoutServerLoad = async (event) => {
 	const authState = { isAuthenticated };
 	const fallbackViewer = getViewerFromJwt(event.locals.token);
 
-	const client = createConvexHttpClient({ token: event.locals.token });
+	const client = createConvexHttpClient({
+		token: event.locals.token,
+		convexUrl: PUBLIC_CONVEX_URL
+	});
 
 	// Autumn handlers for billing/subscription data
 	const { getCustomer } = createAutumnHandlers({
